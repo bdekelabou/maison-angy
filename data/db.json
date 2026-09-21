@@ -1,0 +1,73 @@
+{
+  "settings": {
+    "storeName": "Maison Angy Collection",
+    "slogan": "Le style, pour tous. Sans compromis.",
+    "currency": "FCFA",
+    "whatsappCountryCode": "228",
+    "whatsappNumber": "93849200",
+    "fullWhatsapp": "22893849200",
+    "adminUsername": "93849200",
+    "adminPassword": "password2026",
+    "initialCash": 81500,
+    "currentCash": 81500,
+    "city": "Lomé, Togo",
+    "address": "Lomé, Togo",
+    "facebookUrl": "https://www.facebook.com/profile.php?id=61587838474305",
+    "logoUrl": "/images/logo.jpg"
+  },
+  "products": [],
+  "orders": [],
+  "deliveryPersons": [
+    {
+      "id": 1,
+      "name": "Livreur Kodjo (Express Moto)",
+      "phone": "90123456",
+      "zone": "Déckon, Tokoin, Bè, Grand Marché (Assigamé)",
+      "transportType": "Moto",
+      "status": "Actif",
+      "notes": "Courses rapides Lomé Centre & Bè (1 000 - 1 500 F)"
+    },
+    {
+      "id": 2,
+      "name": "Livreur Folly (Moto Nord)",
+      "phone": "91234567",
+      "zone": "Agoè (Nyivé, Cacavéli, 2 Lions), Hedzranawoé, Kégué",
+      "transportType": "Moto",
+      "status": "Actif",
+      "notes": "Zone Agoè & banlieue nord (1 500 - 2 000 F)"
+    },
+    {
+      "id": 3,
+      "name": "Livreur Mawuli (Moto Ouest)",
+      "phone": "92345678",
+      "zone": "Adidogomé, Avédji, Totsi, Amadahomé",
+      "transportType": "Moto",
+      "status": "Actif",
+      "notes": "Zone Ouest Lomé"
+    },
+    {
+      "id": 4,
+      "name": "Gare Routière / Compagnie (Expéditions Togo)",
+      "phone": "93456789",
+      "zone": "Intérieur : Tsévié, Kpalimé, Atakpamé, Sokodé, Kara",
+      "transportType": "Bus / Car",
+      "status": "Actif",
+      "notes": "Dépôt colis aux compagnies de transport"
+    }
+  ],
+  "trips": [],
+  "cashTransactions": [
+    {
+      "id": 1,
+      "dateTime": "2026-10-01 08:00:00",
+      "user": "Ange Ines",
+      "retrait": 0,
+      "depot": 81500,
+      "encaissement": 0,
+      "creditClient": "",
+      "ecart": 0,
+      "total": 81500,
+      "commentaires": "Report solde réel de trésorerie au 1er Octobre 2026"
+    }
+  ]
+}

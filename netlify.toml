@@ -1,0 +1,17 @@
+[build]
+  publish = "public"
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/all"
+  to = "/data/db.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/products"
+  to = "/data/db.json"
+  status = 200

@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+  <title>Maison Angy - Boutique & Mode au Féminin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Inlined fallbacks */
+    .icon { display: inline-flex; align-items: center; justify-content: center; width: 1.2em; height: 1.2em; }
+  
+    /* Admin Bar on Front-End */
+    .admin-bar-front {
+      background: #0f172a; color: #fff; padding: 0.6rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.85rem; border-bottom: 2px solid #c59b27; z-index: 200;
+      position: sticky; top: 0;
+    }
+    .admin-bar-actions { display: flex; align-items: center; gap: 0.6rem; }
+    .btn-admin-front {
+      background: #c59b27; color: #0f172a; border: none; padding: 0.35rem 0.8rem;
+      border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;
+    }
+    .btn-admin-front:hover { background: #9d7815; color: #fff; }
+    .product-admin-overlay {
+      position: absolute; top: 8px; right: 8px; z-index: 10;
+      display: flex; gap: 4px; background: rgba(15,23,42,0.9); padding: 4px;
+      border-radius: 6px; backdrop-filter: blur(4px);
+    }
+    .btn-card-admin {
+      background: transparent; border: none; color: #cbd5e1; cursor: pointer;
+      font-size: 0.85rem; padding: 3px 6px; border-radius: 4px;
+    }
+    .btn-card-admin:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .btn-card-admin.active { color: #c59b27; font-weight: bold; }
+    .badge-featured {
+      background: #c59b27; color: #0f172a; font-weight: 800; font-size: 0.7rem;
+      padding: 0.2rem 0.6rem; border-radius: 9999px; text-transform: uppercase;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Top Admin Bar for Store Manager -->
+  <div class="admin-bar-front" id="adminBarFront" style="display: none;">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <span style="background: #c59b27; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 0.7rem;">ADMIN</span>
+      <span>👑 <strong>Mode Gérante Actif</strong> (Ange Ines)</span>
+    </div>
+    <div class="admin-bar-actions">
+      <button class="btn-admin-front" onclick="openFrontProductModal()">
+        <span>+ Ajouter un Article</span>
+      </button>
+      <a href="/admin" class="btn-admin-front" style="background: #1e293b; color: #fff; border: 1px solid #c59b27;">
+        <span>📊 Espace Caisse</span>
+      </a>
+      <button onclick="logoutFrontAdmin()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 0.35rem 0.65rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem;">
+        Quitter
+      </button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header-client">
+    <div class="header-container">
+      <a href="/" class="brand-logo" style="display:flex; align-items:center; gap:0.85rem; text-decoration:none;">
+        <img src="/images/logo.jpg" alt="Maison Angy" style="width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid #c59b27; box-shadow:0 4px 12px rgba(197,155,39,0.35); flex-shrink:0;" />
+        <div class="brand-text">
+          <h1 id="storeName" style="font-family:'Playfair Display',serif; font-size:1.4rem; margin:0; color:#0f172a; line-height:1.2; font-weight:700;">Maison Angy</h1>
+          <span id="storeSlogan" style="font-size:0.72rem; color:#c59b27; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">Le style, pour tous. Sans compromis.</span>
+        </div>
+      </a>
+
+      <div class="header-actions" style="display:flex; align-items:center; gap:0.6rem;">
+        <a href="https://www.facebook.com/profile.php?id=61587838474305" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Page Facebook Maison Angy" style="display:inline-flex; align-items:center; gap:0.35rem; color:#1877f2; background:#f0f7ff; padding:0.45rem 0.8rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; border:1px solid #bfdbfe;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          <span style="font-size:0.8rem;">Facebook</span>
+        </a>
+
+        <a href="/admin" class="admin-link" title="Espace de Gestion Caisse & Stock" onclick="handleFrontAdminLink(event)">
+          <span id="navAdminLabel">🔒 Espace Gestion</span>
+        </a>
+
+        <button class="btn-cart" onclick="openCart()">
+          <span>🛍️ Mon Panier</span>
+          <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-pill">
+        ✨ Collection & Nouveautés Tendance
+      </div>
+      <h2 class="hero-title">Le Style, Pour Tous. Sans Compromis.</h2>
+      <p class="hero-subtitle">
+        Maison Angy Collection — Lingerie fine galbante, boubous chics, coffrets cadeaux, turbans & accessoires de charme.
+        Commandez en direct avec livraison rapide à Lomé et expéditions partout au Togo !
+      </p>
+      <div class="hero-perks">
+        <span>👙 Lingerie de Charme</span>
+        <span>🎁 Coffrets Cadeaux</span>
+        <span>👑 Turbans & Mode</span>
+        <span>🛵 Livraison Lomé & Togo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters & Search -->
+  <section class="filter-section">
+    <div class="category-pills" id="categoryPills">
+      <button class="cat-btn active" onclick="setCategory('TOUS')">✨ Tout afficher</button>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Rechercher un collant, boubou..."
+        oninput="handleSearch(this.value)"
+        className="search-input"
+        style="width: 100%; padding: 0.55rem 1rem 0.55rem 2.25rem; border: 1px solid #cbd5e1; border-radius: 9999px; font-size: 0.9rem;"
+      />
+    </div>
+  </section>
+
+  <!-- Products Grid -->
+  <main class="products-grid" id="productsGrid">
+    <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+      <p style="color: #64748b;">Chargement des articles de la boutique...</p>
+    </div>
+  </main>
+
+  <!-- Luxury Footer -->
+  <footer style="background:#130308; color:#f8fafc; border-top:3px solid #c59b27; padding:3.5rem 1.5rem 2rem; margin-top:4rem;">
+    <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:2.5rem;">
+      <!-- Brand column -->
+      <div>
+        <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:1rem;">
+          <img src="/images/logo.jpg" alt="Maison Angy" style="width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid #c59b27; box-shadow:0 4px 15px rgba(197,155,39,0.4);" />
+          <div>
+            <h3 style="font-family:'Playfair Display',serif; font-size:1.35rem; color:#fff; margin:0;">Maison Angy</h3>
+            <span style="color:#c59b27; font-size:0.75rem; font-weight:700; letter-spacing:0.5px;">COLLECTION</span>
+          </div>
+        </div>
+        <p style="color:#cbd5e1; font-size:0.88rem; line-height:1.6; margin-bottom:1rem; font-style:italic;">
+          « Le style, pour tous. Sans compromis. »
+        </p>
+        <p style="color:#94a3b8; font-size:0.82rem; line-height:1.5;">
+          Boutique exclusive de mode féminine, lingerie galbante, turbans chics, coffrets cadeaux et accessoires de charme à Lomé, Togo.
+        </p>
+      </div>
+
+      <!-- Quick links & services -->
+      <div>
+        <h4 style="color:#c59b27; font-size:1rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:1px; font-weight:700;">
+          Nos Services à Lomé
+        </h4>
+        <ul style="list-style:none; padding:0; margin:0; line-height:2; font-size:0.88rem; color:#cbd5e1;">
+          <li>🛵 <strong>Livraison rapide à domicile</strong> (Tous quartiers de Lomé)</li>
+          <li>🏪 <strong>Retrait direct en boutique</strong></li>
+          <li>📦 <strong>Expéditions gares</strong> (Tsévié, Atakpamé, Kpalimé, Sokodé, Kara)</li>
+          <li>💬 <strong>Commande directe WhatsApp 1-Clic</strong></li>
+        </ul>
+      </div>
+
+      <!-- Contact & Social -->
+      <div>
+        <h4 style="color:#c59b27; font-size:1rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:1px; font-weight:700;">
+          Nous Rejoindre
+        </h4>
+        <p style="color:#cbd5e1; font-size:0.88rem; margin-bottom:1rem;">
+          📍 Lomé, Togo<br>
+          📞 WhatsApp : <strong>+228 93 84 92 00</strong>
+        </p>
+        <div style="display:flex; flex-direction:column; gap:0.6rem;">
+          <a href="https://www.facebook.com/profile.php?id=61587838474305" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.5rem; background:#1877f2; color:#fff; padding:0.6rem 1rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; width:fit-content;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <span>Suivre sur Facebook</span>
+          </a>
+          <a href="https://wa.me/22893849200" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.5rem; background:#25d366; color:#fff; padding:0.6rem 1rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; width:fit-content;">
+            <span>💬 Écrire sur WhatsApp (+228 93 84 92 00)</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div style="max-width:1200px; margin:2.5rem auto 0; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; font-size:0.8rem; color:#64748b;">
+      <div>
+        © 2026 <strong>Maison Angy Collection</strong>. Tous droits réservés.
+      </div>
+      <div>
+        <a href="/admin" onclick="handleFrontAdminLink(event)" style="color:#94a3b8; text-decoration:none;">Accès Privé Gérante</a>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- Cart Drawer Modal -->
+  <div class="modal-overlay" id="cartModal" onclick="closeCart(event)">
+    <div class="cart-drawer" onclick="event.stopPropagation()">
+      <div class="cart-header">
+        <h3 id="cartHeaderTitle">🛍️ Mon Panier (0)</h3>
+        <button class="close-btn" onclick="closeCart()">&times;</button>
+      </div>
+
+      <div class="cart-body" id="cartBody">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModalContainer"></div>
+  <div id="frontProductModalContainer"></div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Client JavaScript Logic -->
+  <script>
+    let products = [];
+    let cart = [];
+    let settings = {
+      storeName: 'Maison Angy',
+      slogan: 'Mode & Élégance au Féminin',
+      currency: 'FCFA',
+      fullWhatsapp: '22893849200',
+      whatsappNumber: '93849200'
+    };
+    let activeCategory = 'TOUS';
+    let searchQuery = '';
+    let deliveryMode = 'LIVRAISON_DOMICILE';
+
+    let isAdminLoggedIn = false;
+
+    function checkFrontAuth() {
+      isAdminLoggedIn = Boolean(sessionStorage.getItem('angy_auth') || localStorage.getItem('angy_auth'));
+      const bar = document.getElementById('adminBarFront');
+      if (bar) bar.style.display = isAdminLoggedIn ? 'flex' : 'none';
+      renderProducts();
+    }
+
+    function logoutFrontAdmin() {
+      sessionStorage.removeItem('angy_auth');
+      localStorage.removeItem('angy_auth');
+      checkFrontAuth();
+      showToast('Mode gérante désactivé.');
+    }
+
+
+    function showToast(msg) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = '<span>✨ ' + msg + '</span>';
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    async function initStore() {
+      try {
+        const res = await fetch('/api/all');
+        const data = await res.json();
+        if (data.products) products = data.products.filter(p => p.available !== false);
+        if (data.settings) {
+          settings = data.settings;
+          document.getElementById('storeName').textContent = settings.storeName || 'Maison Angy';
+          document.getElementById('storeSlogan').textContent = settings.slogan || 'Mode & Élégance au Féminin';
+        }
+        renderCategories();
+        renderProducts();
+      } catch (e) {
+        console.error('Erreur chargement boutique:', e);
+        document.getElementById('productsGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:red;">Erreur de connexion au serveur.</div>';
+      }
+    }
+
+    function renderCategories() {
+      const set = new Set(products.map(p => p.category).filter(Boolean));
+      const cats = ['TOUS', ...Array.from(set)];
+      const container = document.getElementById('categoryPills');
+      container.innerHTML = cats.map(c => `
+        <button class="cat-btn ${activeCategory === c ? 'active' : ''}" onclick="setCategory('${c}')">
+          ${c === 'TOUS' ? '✨ Tout afficher' : c}
+        </button>
+      `).join('');
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      renderCategories();
+      renderProducts();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.toLowerCase().trim();
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productsGrid');
+      const curr = settings.currency || 'FCFA';
+
+      const filtered = products.filter(p => {
+        const matchCat = activeCategory === 'TOUS' || p.category === activeCategory;
+        const matchQuery = !searchQuery || p.name.toLowerCase().includes(searchQuery) ||
+                           (p.description && p.description.toLowerCase().includes(searchQuery));
+        return matchCat && matchQuery;
+      });
+
+      if (filtered.length === 0) {
+        if (products.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4.5rem 1.5rem; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 700px; margin: 2rem auto;">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>
+              <h3 style="font-size: 1.6rem; color: #0f172a; margin-bottom: 0.5rem; font-family: 'Playfair Display', serif;">
+                Arrivage de la Nouvelle Collection d'Octobre !
+              </h3>
+              <p style="color: #64748b; font-size: 1rem; margin-bottom: 1.5rem; line-height: 1.6;">
+                Maison Angy prépare actuellement ses nouveaux arrivages exclusifs (collants, boubous, ensembles et accessoires). Les articles seront mis en ligne au fur et à mesure !
+              </p>
+              ${isAdminLoggedIn ? `
+                <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem;">
+                  <button onclick="openFrontProductModal()" class="btn-action-primary" style="padding:0.75rem 1.5rem; font-size:0.95rem; cursor:pointer; border-radius:8px;">
+                    ➕ Ajouter le 1er Article de la Collection
+                  </button>
+                  <a href="/admin" class="btn-secondary" style="padding:0.75rem 1.5rem; font-size:0.95rem; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center;">
+                    📊 Accéder à la Caisse & Back-Office
+                  </a>
+                </div>
+              ` : `
+                <a href="https://wa.me/${settings.fullWhatsapp || '22893849200'}" target="_blank" class="btn-whatsapp-order" style="display: inline-flex; width: auto; padding: 0.75rem 1.75rem; text-decoration: none; margin: 0 auto;">
+                  💬 CONTACTER LA BOUTIQUE SUR WHATSAPP
+                </a>
+                <p style="margin-top:1.2rem; font-size:0.85rem; color:#94a3b8;">
+                  Vous êtes la gérante ? <a href="#" onclick="openFrontLoginModal(event)" style="color:#c59b27; text-decoration:underline; font-weight:600;">Connectez-vous ici pour publier vos articles</a>
+                </p>
+              `}
+            </div>
+          `;
+        } else {
+          grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #fff; border-radius: 12px;">
+              <h3>Aucun article trouvé</h3>
+              <p style="color: #64748b;">Essayez une autre recherche ou cliquez sur "Tout afficher".</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      // Sort featured products first
+      filtered.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+
+      grid.innerHTML = filtered.map(p => {
+        // If not admin, do not show unpublished products
+        if (!isAdminLoggedIn && p.published === false) return '';
+
+        const activePrice = p.isPromo ? p.promoPrice : p.salePrice;
+        return `
+          <div class="product-card" style="${p.published === false ? 'opacity: 0.6; border: 2px dashed #94a3b8;' : ''}">
+            <div class="product-image-wrap">
+              <img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy" />
+              
+              <div class="product-badges">
+                ${p.isFeatured ? '<span class="badge-featured">⭐ En Vedette</span>' : ''}
+                ${p.isPromo ? '<span class="badge-promo">🏷️ Promo</span>' : ''}
+                ${p.stock <= p.minStockAlert ? `<span class="badge-stock">Dernières pièces (${p.stock})</span>` : ''}
+                ${p.published === false ? '<span class="badge-stock" style="background:#64748b;">👁️ Masqué</span>' : ''}
+              </div>
+
+              ${isAdminLoggedIn ? `
+                <div class="product-admin-overlay">
+                  <button class="btn-card-admin ${p.isFeatured ? 'active' : ''}" onclick="toggleFrontFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la une' : 'Mettre en avant'}">⭐</button>
+                  <button class="btn-card-admin ${p.isPromo ? 'active' : ''}" onclick="toggleFrontPromo(${p.id})" title="${p.isPromo ? 'Désactiver promo' : 'Mettre en promo'}">🏷️</button>
+                  <button class="btn-card-admin" onclick="toggleFrontPublish(${p.id})" title="${p.published === false ? 'Publier' : 'Masquer'}">${p.published === false ? '👁️' : '🕶️'}</button>
+                  <button class="btn-card-admin" onclick="openFrontProductModal(${p.id})" title="Modifier">✏️</button>
+                  <button class="btn-card-admin" onclick="deleteFrontProduct(${p.id})" title="Supprimer" style="color:#ef4444;">🗑️</button>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="product-info">
+              <span class="product-category">${p.category}</span>
+              <h3 class="product-title">${p.name}</h3>
+              <p class="product-desc">${p.description || ''}</p>
+
+              <div class="product-footer">
+                <div class="price-box">
+                  <span class="current-price">${activePrice.toLocaleString('fr-FR')} ${curr}</span>
+                  ${p.isPromo ? `<span class="old-price">${p.salePrice.toLocaleString('fr-FR')} ${curr}</span>` : ''}
+                </div>
+
+                <button class="btn-add" onclick="addToCart(${p.id})" ${p.stock <= 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                  <span>${p.stock > 0 ? '+ Ajouter' : 'Épuisé'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addToCart(prodId) {
+      const prod = products.find(p => p.id === prodId);
+      if (!prod) return;
+
+      const activePrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
+      const existing = cart.find(i => i.productId === prodId);
+
+      if (existing) {
+        if (existing.quantity >= prod.stock) {
+          showToast('Stock maximal atteint pour cet article !');
+          return;
+        }
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          productId: prod.id,
+          productName: prod.name,
+          price: activePrice,
+          image: prod.image,
+          quantity: 1,
+          maxStock: prod.stock
+        });
+      }
+
+      updateCartUI();
+      showToast('Ajouté au panier !');
+    }
+
+    function updateQty(prodId, delta) {
+      const item = cart.find(i => i.productId === prodId);
+      if (!item) return;
+
+      item.quantity += delta;
+      if (item.quantity <= 0) {
+        cart = cart.filter(i => i.productId !== prodId);
+      } else if (item.quantity > item.maxStock) {
+        item.quantity = item.maxStock;
+        showToast('Stock maximal atteint.');
+      }
+      updateCartUI();
+    }
+
+    function removeFromCart(prodId) {
+      cart = cart.filter(i => i.productId !== prodId);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const badge = document.getElementById('cartBadge');
+      const totalCount = cart.reduce((sum, it) => sum + it.quantity, 0);
+      if (totalCount > 0) {
+        badge.style.display = 'inline-block';
+        badge.textContent = totalCount;
+      } else {
+        badge.style.display = 'none';
+      }
+      document.getElementById('cartHeaderTitle').textContent = `🛍️ Mon Panier (${totalCount})`;
+      renderCartBody();
+    }
+
+    function openCart() {
+      document.getElementById('cartModal').classList.add('active');
+      renderCartBody();
+    }
+
+    function closeCart(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('close-btn')) return;
+      document.getElementById('cartModal').classList.remove('active');
+    }
+
+    function setDeliveryMode(mode) {
+      deliveryMode = mode;
+      renderCartBody();
+    }
+
+    function renderCartBody() {
+      const body = document.getElementById('cartBody');
+      const curr = settings.currency || 'FCFA';
+
+      if (cart.length === 0) {
+        body.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🛒</div>
+            <h4>Votre panier est vide</h4>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.5rem;">
+              Ajoutez des collants, boubous ou robes pour passer commande.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+      const deliveryFee = deliveryMode === 'LIVRAISON_DOMICILE' ? 1500 : (deliveryMode === 'EXPEDITION' ? 2000 : 0);
+      const grandTotal = subtotal + deliveryFee;
+
+      body.innerHTML = `
+        <div>
+          ${cart.map(it => `
+            <div class="cart-item">
+              <img src="${it.image}" alt="${it.productName}" class="cart-item-img" />
+              <div class="cart-item-details">
+                <div class="cart-item-title">${it.productName}</div>
+                <div class="cart-item-price">${(it.price * it.quantity).toLocaleString('fr-FR')} ${curr}</div>
+                <div class="cart-qty-ctrls">
+                  <button class="qty-btn" onclick="updateQty(${it.productId}, -1)">-</button>
+                  <span class="qty-num">${it.quantity}</span>
+                  <button class="qty-btn" onclick="updateQty(${it.productId}, 1)">+</button>
+                </div>
+              </div>
+              <button class="cart-item-remove" onclick="removeFromCart(${it.productId})">🗑️</button>
+            </div>
+          `).join('')}
+
+          <form onsubmit="handleCheckout(event)" class="order-form-section">
+            <div class="form-title">
+              <span>📍 Coordonnées & Livraison</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Votre Nom & Prénom *</label>
+              <input type="text" id="cust_name" required placeholder="Ex: Madame Afiwa..." class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Numéro Téléphone / WhatsApp *</label>
+              <input type="tel" id="cust_phone" required placeholder="Ex: 90 00 00 00" class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Mode de Réception *</label>
+              <div class="delivery-options-grid">
+                <div class="delivery-card-radio ${deliveryMode === 'LIVRAISON_DOMICILE' ? 'active' : ''}" onclick="setDeliveryMode('LIVRAISON_DOMICILE')">
+                  <span class="icon">🛵</span>
+                  <span>Lomé Domicile</span>
+                </div>
+                <div class="delivery-card-radio ${deliveryMode === 'RETRAIT_BOUTIQUE' ? 'active' : ''}" onclick="setDeliveryMode('RETRAIT_BOUTIQUE')">
+                  <span class="icon">🏪</span>
+                  <span>Boutique Lomé</span>
+                </div>
+                <div class="delivery-card-radio ${deliveryMode === 'EXPEDITION' ? 'active' : ''}" onclick="setDeliveryMode('EXPEDITION')">
+                  <span class="icon">📦</span>
+                  <span>Expédition Togo</span>
+                </div>
+              </div>
+            </div>
+
+            ${deliveryMode !== 'RETRAIT_BOUTIQUE' ? `
+              <div class="form-group">
+                <label class="form-label">Quartier / Ville & Point de repère *</label>
+                <input type="text" id="cust_address" required placeholder="Ex: Agoè 2 Lions, Tokoin Wuiti, Déckon, Adidogomé..." class="form-input" />
+              </div>
+            ` : ''}
+
+            <div class="form-group">
+              <label class="form-label">Notes particulières (optionnel)</label>
+              <input type="text" id="cust_notes" placeholder="Ex: Appeler avant d'arriver..." class="form-input" />
+            </div>
+
+            <div class="cart-footer" style="padding:0; margin-top:1rem; border:none;">
+              <div class="summary-row">
+                <span>Sous-total articles :</span>
+                <span>${subtotal.toLocaleString('fr-FR')} ${curr}</span>
+              </div>
+              <div class="summary-row">
+                <span>Frais livraison estimés :</span>
+                <span>${deliveryFee > 0 ? deliveryFee.toLocaleString('fr-FR') + ' ' + curr : 'Gratuit (Retrait)'}</span>
+              </div>
+              <div class="summary-row summary-total">
+                <span>Total à régler :</span>
+                <span style="color: #9d7815;">${grandTotal.toLocaleString('fr-FR')} ${curr}</span>
+              </div>
+
+              <button type="submit" class="btn-whatsapp-order">
+                <span>💬 COMMANDER SUR WHATSAPP</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    async function handleCheckout(e) {
+      e.preventDefault();
+      const name = document.getElementById('cust_name').value.trim();
+      const phone = document.getElementById('cust_phone').value.trim();
+      const address = document.getElementById('cust_address') ? document.getElementById('cust_address').value.trim() : 'Boutique Maison Angy';
+      const notes = document.getElementById('cust_notes') ? document.getElementById('cust_notes').value.trim() : '';
+
+      const deliveryFee = deliveryMode === 'LIVRAISON_DOMICILE' ? 1500 : (deliveryMode === 'EXPEDITION' ? 2000 : 0);
+      const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+      const grandTotal = subtotal + deliveryFee;
+
+      // 1. Post order to back-office
+      let orderCode = 'CMD-' + Math.floor(1000 + Math.random() * 9000);
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: name,
+            customerPhone: phone,
+            customerAddress: address,
+            deliveryMode: deliveryMode,
+            deliveryFee: deliveryFee,
+            deliveryFeePayer: 'CLIENT',
+            notes: notes,
+            items: cart.map(it => ({
+              productId: it.productId,
+              productName: it.productName,
+              quantity: it.quantity,
+              unitPrice: it.price
+            }))
+          })
+        });
+        const d = await res.json();
+        if (d.success && d.order) orderCode = d.order.id;
+      } catch (err) {
+        console.warn('Sync offline:', err);
+      }
+
+      // 2. Format WhatsApp Message
+      let modeLabel = '🛵 Livraison à domicile (Lomé)';
+      if (deliveryMode === 'RETRAIT_BOUTIQUE') modeLabel = '🏪 Retrait en boutique Maison Angy (Lomé)';
+      if (deliveryMode === 'EXPEDITION') modeLabel = '📦 Expédition province (Gare / Compagnie Togo)';
+
+      let msg = `Bonjour Maison Angy ! ✨\nJe souhaite passer commande :\n\n`;
+      msg += `📋 *COMMANDE : ${orderCode}*\n`;
+      msg += `------------------------\n`;
+      cart.forEach(item => {
+        msg += `• ${item.quantity}x ${item.productName} : ${(item.price * item.quantity).toLocaleString('fr-FR')} ${settings.currency}\n`;
+      });
+      msg += `------------------------\n`;
+      msg += `💰 *Sous-total :* ${subtotal.toLocaleString('fr-FR')} ${settings.currency}\n`;
+      if (deliveryFee > 0) {
+        msg += `🛵 *Livraison :* ${deliveryFee.toLocaleString('fr-FR')} ${settings.currency}\n`;
+      }
+      msg += `⭐ *TOTAL À RÉGLER :* ${grandTotal.toLocaleString('fr-FR')} ${settings.currency}\n\n`;
+      msg += `👤 *MES INFORMATIONS :*\n`;
+      msg += `• Nom : ${name}\n`;
+      msg += `• Téléphone : ${phone}\n`;
+      msg += `• Mode : ${modeLabel}\n`;
+      if (address) msg += `• Adresse / Quartier : ${address}\n`;
+      if (notes) msg += `• Note : ${notes}\n`;
+      msg += `\nMerci de me confirmer la disponibilité et le délai svp !`;
+
+      const targetPhone = settings.fullWhatsapp || '22893849200';
+      const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`;
+
+      // Show success modal
+      document.getElementById('successModalContainer').innerHTML = `
+        <div class="modal-overlay active">
+          <div class="admin-modal-card" style="max-width:480px; text-align:center; padding:2rem; background:#fff; border-radius:12px; margin:auto;">
+            <div style="font-size:3rem; margin-bottom:1rem;">✅</div>
+            <h3 style="font-size:1.3rem; margin-bottom:0.5rem; color:#0f172a;">
+              Commande ${orderCode} Enregistrée !
+            </h3>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:1.5rem;">
+              Votre commande a été transmise au Back-Office de Maison Angy. Cliquez sur le bouton vert ci-dessous pour finaliser sur WhatsApp :
+            </p>
+            <div style="background:#f8fafc; padding:0.85rem; border-radius:8px; margin-bottom:1.5rem; font-weight:bold; font-size:1.1rem; color:#c59b27;">
+              Total : ${grandTotal.toLocaleString('fr-FR')} ${settings.currency}
+            </div>
+            <a href="${waUrl}" target="_blank" class="btn-whatsapp-order" style="text-decoration:none; margin-bottom:1rem;">
+              💬 OUVRIR WHATSAPP POUR CONFIRMER
+            </a>
+            <button class="btn-secondary" style="width:100%; padding:0.6rem;" onclick="closeSuccessModal()">
+              Fermer
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Reset cart
+      cart = [];
+      updateCartUI();
+      document.getElementById('cartModal').classList.remove('active');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModalContainer').innerHTML = '';
+    }
+
+    // Launch store
+    
+    async function toggleFrontFeatured(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFeatured: !p.isFeatured })
+      });
+      showToast(p.isFeatured ? 'Retiré de la une.' : '⭐ Mis en avant sur la boutique !');
+      initStore();
+    }
+
+    async function toggleFrontPromo(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      const willBePromo = !p.isPromo;
+      const promoPrice = willBePromo ? (p.promoPrice || Math.round(p.salePrice * 0.85)) : p.promoPrice;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPromo: willBePromo, promoPrice })
+      });
+      showToast(willBePromo ? '🏷️ Article mis en promotion !' : 'Promotion désactivée.');
+      initStore();
+    }
+
+    async function toggleFrontPublish(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      const willPublish = p.published === false;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published: willPublish })
+      });
+      showToast(willPublish ? '👁️ Article publié !' : 'Article masqué de la boutique.');
+      initStore();
+    }
+
+    async function deleteFrontProduct(id) {
+      if (confirm('Voulez-vous supprimer cet article ?')) {
+        await fetch('/api/products/' + id, { method: 'DELETE' });
+        showToast('Article supprimé.');
+        initStore();
+      }
+    }
+
+    
+    function handleFrontAdminLink(e) {
+      if (!isAdminLoggedIn) {
+        e.preventDefault();
+        openFrontLoginModal();
+      }
+    }
+
+    function openFrontLoginModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('frontProductModalContainer').innerHTML = `
+        <div class="modal-overlay active">
+          <div class="admin-modal-card" style="max-width:400px; background:#fff; border-radius:12px; margin:auto; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <div style="background:#0f172a; color:#fff; padding:1.2rem; display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="color:#fff; font-size:1.1rem; display:flex; align-items:center; gap:0.5rem;">
+                👑 Connexion Gérante
+              </h3>
+              <button class="close-btn" onclick="closeFrontModal()">&times;</button>
+            </div>
+            <form onsubmit="handleFrontLoginSubmit(event)" style="padding:1.5rem;">
+              <div id="frontLoginError" style="display:none; background:#fef2f2; color:#b91c1c; padding:0.6rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem; border:1px solid #fecaca;"></div>
+              
+              <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Numéro de téléphone</label>
+                <input type="text" id="fl_phone" value="93849200" required style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem;" />
+              </div>
+
+              <div style="margin-bottom:1.5rem;">
+                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Mot de passe</label>
+                <input type="password" id="fl_password" required placeholder="Mot de passe" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem;" />
+              </div>
+
+              <button type="submit" class="btn-action-primary" style="width:100%; padding:0.75rem; font-size:0.95rem; border-radius:6px;">
+                Se connecter en Mode Gérante
+              </button>
+
+              <div style="text-align:center; margin-top:1rem;">
+                <a href="/admin" style="font-size:0.8rem; color:#64748b; text-decoration:underline;">
+                  Aller directement au Back-Office Caisse &rarr;
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      setTimeout(() => {
+        const p = document.getElementById('fl_password');
+        if (p) p.focus();
+      }, 100);
+    }
+
+    async function handleFrontLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('fl_phone').value.trim();
+      const p = document.getElementById('fl_password').value.trim();
+      const errBox = document.getElementById('frontLoginError');
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const d = await res.json();
+        if (d.success) {
+          sessionStorage.setItem('angy_auth', d.token);
+          localStorage.setItem('angy_auth', d.token);
+          closeFrontModal();
+          checkFrontAuth();
+          showToast('Bienvenue Ange Ines ! Mode Gérante activé.');
+        } else {
+          errBox.style.display = 'block';
+          errBox.textContent = '⚠️ ' + (d.error || 'Numéro ou mot de passe incorrect.');
+        }
+      } catch (err) {
+        if (u === '93849200' && p === 'password2026') {
+          sessionStorage.setItem('angy_auth', 'local_token');
+          localStorage.setItem('angy_auth', 'local_token');
+          closeFrontModal();
+          checkFrontAuth();
+          showToast('Bienvenue Ange Ines ! Mode Gérante activé.');
+        } else {
+          errBox.style.display = 'block';
+          errBox.textContent = 'Erreur de connexion.';
+        }
+      }
+    }
+
+    function openFrontProductModal(id) {
+      const p = id ? products.find(item => item.id === id) : null;
+      const curr = settings.currency || 'FCFA';
+
+      document.getElementById('frontProductModalContainer').innerHTML = `
+        <div class="modal-overlay active">
+          <div class="admin-modal-card" style="max-width:550px; background:#fff; border-radius:12px; margin:auto; overflow:hidden;">
+            <div class="modal-head" style="background:#0f172a; color:#fff; padding:1.2rem; display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="color:#fff; font-size:1.15rem;">${p ? "Modifier l'Article" : "Ajouter un Article Directement"}</h3>
+              <button class="close-btn" onclick="closeFrontModal()">&times;</button>
+            </div>
+            <form onsubmit="handleFrontSaveProduct(event, ${p ? p.id : 'null'})" style="padding:1.5rem;">
+              <div style="margin-bottom:0.85rem;">
+                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Nom de l'article *</label>
+                <input type="text" id="fp_name" required placeholder="Ex: Collant Gainant, Boubou Caviar..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Catégorie</label>
+                  <input type="text" id="fp_category" value="${p ? p.category : 'Collants & Lingerie'}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Quantité en Stock</label>
+                  <input type="number" id="fp_stock" required value="${p ? p.stock : 10}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; margin-bottom:0.85rem;">
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.8rem; margin-bottom:0.3rem;">Coût Achat</label>
+                  <input type="number" id="fp_cost" required value="${p ? p.costPrice : 3500}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.8rem; margin-bottom:0.3rem;">Prix Normal</label>
+                  <input type="number" id="fp_sale" required value="${p ? p.salePrice : 6500}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.8rem; margin-bottom:0.3rem;">Prix Promo</label>
+                  <input type="number" id="fp_promo" value="${p ? p.promoPrice : 5500}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem; background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0;">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                  <input type="checkbox" id="fp_isPromo" ${p && p.isPromo ? 'checked' : ''} />
+                  <span>🏷️ En Promotion</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                  <input type="checkbox" id="fp_isFeatured" ${p && p.isFeatured ? 'checked' : ''} />
+                  <span>⭐ En Vedette</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer; grid-column:1/-1;">
+                  <input type="checkbox" id="fp_published" ${!p || p.published !== false ? 'checked' : ''} />
+                  <span>👁️ Publié sur la boutique</span>
+                </label>
+              </div>
+
+              <div style="margin-bottom:1.2rem;">
+                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Lien Image</label>
+                <input type="url" id="fp_image" value="${p ? p.image : 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80'}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                <button type="button" class="btn-secondary" onclick="closeFrontModal()">Annuler</button>
+                <button type="submit" class="btn-action-primary">Enregistrer l'Article</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function closeFrontModal() {
+      document.getElementById('frontProductModalContainer').innerHTML = '';
+    }
+
+    async function handleFrontSaveProduct(e, id) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('fp_name').value,
+        category: document.getElementById('fp_category').value,
+        stock: parseInt(document.getElementById('fp_stock').value) || 0,
+        costPrice: parseFloat(document.getElementById('fp_cost').value) || 0,
+        salePrice: parseFloat(document.getElementById('fp_sale').value) || 0,
+        promoPrice: parseFloat(document.getElementById('fp_promo').value) || 0,
+        isPromo: document.getElementById('fp_isPromo').checked,
+        isFeatured: document.getElementById('fp_isFeatured').checked,
+        published: document.getElementById('fp_published').checked,
+        image: document.getElementById('fp_image').value
+      };
+
+      const url = id ? '/api/products/' + id : '/api/products';
+      const method = id ? 'PUT' : 'POST';
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      closeFrontModal();
+      showToast('Article enregistré avec succès !');
+      initStore();
+    }
+
+    checkFrontAuth();
+    initStore();
+  </script>
+</body>
+</html>

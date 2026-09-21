@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+  <title>Maison Angy - Espace de Gestion & Caisse</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* Login screen styling */
+    .login-container {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; z-index: 10000;
+    }
+    .login-card {
+      background: #ffffff; border-radius: 16px; width: 100%; max-width: 420px;
+      padding: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      text-align: center; border-top: 4px solid #c59b27;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .login-logo {
+      width: 60px; height: 60px; background: #0f172a; border: 2px solid #c59b27;
+      border-radius: 50%; color: #c59b27; font-size: 1.75rem; font-weight: bold;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;
+    }
+    .toast-msg {
+      position: fixed; bottom: 20px; right: 20px; background: #0f172a; color: #fff;
+      padding: 12px 20px; border-radius: 8px; border-left: 4px solid #c59b27;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- 1. LOGIN SCREEN (Visible if not authenticated) -->
+  <div class="login-container" id="loginScreen" style="display: flex;">
+    <div class="login-card">
+      <img src="/images/logo.jpg" alt="Maison Angy" style="width:75px; height:75px; border-radius:50%; object-fit:cover; border:3px solid #c59b27; margin:0 auto 1.25rem; display:block; box-shadow:0 6px 20px rgba(197,155,39,0.35);" />
+      <h2 style="font-size: 1.5rem; color: #0f172a; margin-bottom: 0.35rem;">Maison Angy</h2>
+      <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 1.75rem;">Espace de Gestion & Caisse Privé</p>
+
+      <form onsubmit="handleLogin(event)">
+        <div style="text-align: left; margin-bottom: 1rem;">
+          <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; color: #334155;">
+            Numéro de Téléphone
+          </label>
+          <input
+            type="text"
+            id="loginUsername"
+            required
+            placeholder="Ex: 93849200"
+            value="93849200"
+            style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;"
+          />
+        </div>
+
+        <div style="text-align: left; margin-bottom: 1.5rem;">
+          <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; color: #334155;">
+            Mot de Passe
+          </label>
+          <input
+            type="password"
+            id="loginPassword"
+            required
+            placeholder="Entrez votre mot de passe"
+            style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;"
+          />
+        </div>
+
+        <div id="loginError" style="color: #ef4444; font-size: 0.85rem; margin-bottom: 1rem; display: none;">
+          ⚠️ Identifiant ou mot de passe incorrect.
+        </div>
+
+        <button
+          type="submit"
+          class="btn-action-primary"
+          style="width: 100%; padding: 0.8rem; justify-content: center; font-size: 1rem;"
+        >
+          Se Connecter à l'Espace
+        </button>
+      </form>
+
+      <div style="margin-top: 1.5rem; font-size: 0.8rem; color: #94a3b8;">
+        Accès réservé exclusivement à Ange Ines - Maison Angy
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MAIN APPLICATION INTERFACE -->
+  <div id="appContainer" style="display: none; width: 100vw; height: 100vh; overflow: hidden;">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="/images/logo.jpg" alt="Maison Angy" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid #c59b27; margin-right:0.75rem; flex-shrink:0;" />
+        <div class="sidebar-title">
+          <h2 id="brandStoreName">Maison Angy</h2>
+          <span style="color:#c59b27; font-size:0.72rem; font-weight:700;">COLLECTION</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" onclick="switchView('DASHBOARD')" id="nav-DASHBOARD">
+          <span>📊</span>
+          <span>Tableau de bord</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('ORDERS')" id="nav-ORDERS">
+          <span>🛍️</span>
+          <span>Commandes & Livraisons</span>
+          <span class="nav-badge" id="pendingOrdersBadge" style="display:none;">0</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('DELIVERY_PERSONS')" id="nav-DELIVERY_PERSONS">
+          <span>🛵</span>
+          <span>Livreurs & Coursiers</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('PRODUCTS')" id="nav-PRODUCTS">
+          <span>👗</span>
+          <span>Stock & Articles</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('TRIPS')" id="nav-TRIPS">
+          <span>⛽</span>
+          <span>Déplacements & Frais</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('CASH')" id="nav-CASH">
+          <span>💰</span>
+          <span>Caisse & Trésorerie</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('PROFITS')" id="nav-PROFITS">
+          <span>📈</span>
+          <span>Bénéfices & Rentabilité</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('SETTINGS')" id="nav-SETTINGS">
+          <span>⚙️</span>
+          <span>Réglages WhatsApp</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer" style="flex-direction: column; gap: 0.5rem;">
+        <a href="/" target="_blank" class="btn-view-store">
+          <span>↗️ Voir Boutique Cliente</span>
+        </a>
+        <button
+          onclick="handleLogout()"
+          style="background: transparent; border: 1px solid rgba(239,68,68,0.3); color: #ef4444; width: 100%; padding: 0.45rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;"
+        >
+          🚪 Déconnexion
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+          <div class="topbar-title" id="pageTitle">Tableau de Bord - Octobre 2026</div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="cash-pill" title="Trésorerie disponible en caisse">
+            <span>🪙 Caisse : <strong id="topbarCash">81 500 FCFA</strong></span>
+          </div>
+
+          <div class="topbar-actions">
+            <button class="btn-action-primary" onclick="openProductModal()">
+              <span>+ Article</span>
+            </button>
+            <button class="btn-action-primary" style="background: #0f172a; color: #fff;" onclick="openDeliveryPersonModal()">
+              <span>+ Livreur</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <main class="content-area" id="mainContent">
+        <!-- Injected by renderView() -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Global Modal Container -->
+  <div id="modalContainer"></div>
+
+  <!-- Client Script -->
+  <script>
+    let appData = {
+      settings: { storeName: 'Maison Angy', currency: 'FCFA', currentCash: 81500, fullWhatsapp: '22893849200', whatsappNumber: '93849200' },
+      products: [],
+      orders: [],
+      deliveryPersons: [],
+      trips: [],
+      cashTransactions: [],
+      stats: {}
+    };
+    let currentView = 'DASHBOARD';
+    let orderFilter = 'ALL';
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast-msg';
+      t.innerHTML = '✨ ' + msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // --- AUTHENTICATION ---
+    function checkAuth() {
+      const token = sessionStorage.getItem('angy_auth') || localStorage.getItem('angy_auth');
+      if (token) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'flex';
+        loadData();
+      } else {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('appContainer').style.display = 'none';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value.trim();
+      const errBox = document.getElementById('loginError');
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const d = await res.json();
+        if (d.success) {
+          sessionStorage.setItem('angy_auth', d.token);
+          localStorage.setItem('angy_auth', d.token);
+          errBox.style.display = 'none';
+          checkAuth();
+        } else {
+          errBox.style.display = 'block';
+          errBox.textContent = '⚠️ ' + (d.error || 'Identifiant ou mot de passe incorrect.');
+        }
+      } catch (err) {
+        if (u === '93849200' && p === 'password2026') {
+          sessionStorage.setItem('angy_auth', 'local_token');
+          localStorage.setItem('angy_auth', 'local_token');
+          checkAuth();
+        } else {
+          errBox.style.display = 'block';
+        }
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('angy_auth');
+      localStorage.removeItem('angy_auth');
+      checkAuth();
+    }
+
+    async function toggleProductFeatured(id) {
+      const p = appData.products.find(item => item.id === id);
+      if (!p) return;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFeatured: !p.isFeatured })
+      });
+      showToast(p.isFeatured ? 'Retiré de la mise en avant.' : '⭐ Article mis en avant sur la boutique !');
+      loadData();
+    }
+
+    async function toggleProductPublished(id) {
+      const p = appData.products.find(item => item.id === id);
+      if (!p) return;
+      const willPublish = p.published === false;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published: willPublish })
+      });
+      showToast(willPublish ? '👁️ Article publié sur la boutique !' : 'Article masqué de la boutique.');
+      loadData();
+    }
+
+    // --- DATA ---
+    async function loadData() {
+      try {
+        const res = await fetch('/api/all');
+        appData = await res.json();
+        updateTopBar();
+        renderView();
+      } catch (e) {
+        console.error('Erreur API:', e);
+      }
+    }
+
+    function updateTopBar() {
+      const cash = appData.settings?.currentCash !== undefined ? appData.settings.currentCash : 81500;
+      const curr = appData.settings?.currency || 'FCFA';
+      document.getElementById('topbarCash').textContent = cash.toLocaleString('fr-FR') + ' ' + curr;
+      document.getElementById('brandStoreName').textContent = appData.settings?.storeName || 'Maison Angy';
+
+      const pending = (appData.orders || []).filter(o => o.status !== 'LIVRE' && o.status !== 'ANNULE').length;
+      const badge = document.getElementById('pendingOrdersBadge');
+      if (pending > 0) {
+        badge.style.display = 'inline-block';
+        badge.textContent = pending;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    function switchView(viewName) {
+      currentView = viewName;
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const activeBtn = document.getElementById('nav-' + viewName);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const titles = {
+        'DASHBOARD': 'Tableau de Bord - Octobre 2026',
+        'ORDERS': 'Commandes, Livraisons & Expéditions',
+        'DELIVERY_PERSONS': 'Annuaire des Livreurs & Coursiers',
+        'PRODUCTS': 'Stock & Nouveaux Articles',
+        'TRIPS': 'Déplacements & Frais Logistiques',
+        'CASH': 'Journal de Caisse & Trésorerie',
+        'PROFITS': 'Bénéfices & Rentabilité',
+        'SETTINGS': 'Configuration & WhatsApp'
+      };
+      document.getElementById('pageTitle').textContent = titles[viewName] || viewName;
+      document.getElementById('sidebar').classList.remove('open');
+      renderView();
+    }
+
+    function renderView() {
+      const c = document.getElementById('mainContent');
+      if (currentView === 'DASHBOARD') c.innerHTML = renderDashboard();
+      else if (currentView === 'ORDERS') c.innerHTML = renderOrders();
+      else if (currentView === 'DELIVERY_PERSONS') c.innerHTML = renderDeliveryPersons();
+      else if (currentView === 'PRODUCTS') c.innerHTML = renderProducts();
+      else if (currentView === 'TRIPS') c.innerHTML = renderTrips();
+      else if (currentView === 'CASH') c.innerHTML = renderCash();
+      else if (currentView === 'PROFITS') c.innerHTML = renderProfits();
+      else if (currentView === 'SETTINGS') c.innerHTML = renderSettings();
+    }
+
+    // 1. DASHBOARD
+    function renderDashboard() {
+      const s = appData.stats || {};
+      const curr = appData.settings.currency || 'FCFA';
+      const cash = appData.settings?.currentCash !== undefined ? appData.settings.currentCash : 81500;
+      const pending = (appData.orders || []).filter(o => o.status !== 'LIVRE' && o.status !== 'ANNULE');
+      const products = appData.products || [];
+
+      return `
+        <!-- Welcome Banner with carried-over cash of 81 500 F -->
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; border-radius:12px; padding:1.75rem; margin-bottom:1.5rem; border-bottom:3px solid #c59b27;">
+          <span style="background:rgba(197,155,39,0.2); border:1px solid #c59b27; padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.75rem; font-weight:bold; text-transform:uppercase; color:#fef3c7;">
+            ✨ Nouveau Départ - Octobre 2026
+          </span>
+          <h2 style="font-size:1.6rem; margin-top:0.5rem;">Bienvenue dans votre Espace de Gestion Maison Angy</h2>
+          <p style="color:#94a3b8; font-size:0.9rem; margin-top:0.25rem;">
+            Votre trésorerie réelle de <strong>${cash.toLocaleString('fr-FR')} ${curr}</strong> est conservée. Vos stocks et commandes sont prêts pour accueillir vos nouveaux arrivages d'octobre !
+          </p>
+          <div style="display:flex; gap:0.75rem; margin-top:1.25rem; flex-wrap:wrap;">
+            <button class="btn-action-primary" onclick="openProductModal()">
+              <span>+ Ajouter un Article d'Octobre</span>
+            </button>
+            <button class="btn-action-primary" style="background:#0f172a; border:1px solid #c59b27; color:#fef3c7;" onclick="openDeliveryPersonModal()">
+              <span>+ Ajouter un Livreur</span>
+            </button>
+            <button class="btn-action-primary" style="background:#10b981; color:#fff;" onclick="openCashModal('DEPOT')">
+              <span>+ Dépôt / Vente Caisse</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card gold">
+            <div class="kpi-icon gold">🪙</div>
+            <div class="kpi-info">
+              <h4>Trésorerie Disponible</h4>
+              <div class="kpi-value">${cash.toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Solde en espèces en caisse</div>
+            </div>
+          </div>
+
+          <div class="kpi-card green">
+            <div class="kpi-icon green">💰</div>
+            <div class="kpi-info">
+              <h4>Marge Nette Octobre</h4>
+              <div class="kpi-value">${(s.totalNetMargin || 0).toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Bénéfice réalisé</div>
+            </div>
+          </div>
+
+          <div class="kpi-card blue">
+            <div class="kpi-icon blue">🛵</div>
+            <div class="kpi-info">
+              <h4>Livreurs Enregistrés</h4>
+              <div class="kpi-value">${(appData.deliveryPersons || []).length}</div>
+              <div class="kpi-sub">Prêts pour livrer</div>
+            </div>
+          </div>
+
+          <div class="kpi-card orange">
+            <div class="kpi-icon orange">👗</div>
+            <div class="kpi-info">
+              <h4>Articles en Stock</h4>
+              <div class="kpi-value">${products.length}</div>
+              <div class="kpi-sub">Prêt pour octobre</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">⭐ Commandes Récentes</div>
+            <button class="btn-sm-action primary" onclick="switchView('ORDERS')">Voir tout</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Commande</th>
+                  <th>Cliente & Contact</th>
+                  <th>Articles</th>
+                  <th>Mode Réception</th>
+                  <th>Livreur</th>
+                  <th>Montant</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(appData.orders || []).length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:3rem;">
+                      <div style="font-size:2rem; margin-bottom:0.5rem;">🛍️</div>
+                      <h4>Aucune commande en cours</h4>
+                      <p style="color:#64748b; font-size:0.85rem;">Dès qu'une cliente commande sur la boutique, elle apparaîtra ici.</p>
+                    </td>
+                  </tr>
+                ` : appData.orders.slice(0, 5).map(o => `
+                  <tr>
+                    <td><strong>${o.id}</strong></td>
+                    <td><strong>${o.customerName}</strong><div>${o.customerPhone}</div></td>
+                    <td>${o.items.map(i => `<div>${i.quantity}x ${i.productName}</div>`).join('')}</td>
+                    <td>${getDeliveryBadge(o.deliveryMode)}</td>
+                    <td>${o.deliveryPersonName || 'Non assigné'}</td>
+                    <td><strong>${o.totalOrder.toLocaleString('fr-FR')} ${curr}</strong></td>
+                    <td>${getStatusBadge(o.status)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. ORDERS VIEW
+    function renderOrders() {
+      const curr = appData.settings.currency || 'FCFA';
+      const orders = orderFilter === 'ALL' ? appData.orders : appData.orders.filter(o => o.status === orderFilter);
+
+      return `
+        <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+          ${[
+            { id: 'ALL', label: 'Toutes les commandes' },
+            { id: 'A_PREPARER', label: '🟡 À préparer' },
+            { id: 'EN_LIVRAISON', label: '🟠 En livraison' },
+            { id: 'A_RECUPERER', label: '🔵 À récupérer' },
+            { id: 'EXPEDITION', label: '🟣 Expéditions' },
+            { id: 'LIVRE', label: '🟢 Livrées & Encaissées' }
+          ].map(f => `
+            <button class="btn-sm-action ${orderFilter === f.id ? 'primary' : ''}" onclick="filterOrders('${f.id}')">
+              ${f.label}
+            </button>
+          `).join('')}
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🚚 Gestion des Commandes & Livraisons (${orders.length})</div>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Date</th>
+                  <th>Cliente & Contact</th>
+                  <th>Articles</th>
+                  <th>Mode & Livreur</th>
+                  <th>Montant & Gain</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orders.length === 0 ? '<tr><td colspan="8" style="text-align:center; padding:3rem;">Aucune commande dans cette liste.</td></tr>' : orders.map(o => `
+                  <tr>
+                    <td><strong>${o.id}</strong></td>
+                    <td style="font-size:0.8rem; color:#64748b;">${o.createdAt}</td>
+                    <td>
+                      <strong>${o.customerName}</strong>
+                      <div><a href="https://wa.me/${(o.customerPhone||'').replace(/[^0-9]/g,'')}" target="_blank" style="color:#16a34a; font-weight:600; text-decoration:none;">💬 WhatsApp</a></div>
+                      <div style="font-size:0.75rem; color:#64748b;">📍 ${o.customerAddress}</div>
+                    </td>
+                    <td>${o.items.map(it => `<div><strong>${it.quantity}x</strong> ${it.productName}</div>`).join('')}</td>
+                    <td>
+                      <div>${getDeliveryBadge(o.deliveryMode)}</div>
+                      ${o.deliveryPersonName ? `
+                        <div style="font-size:0.8rem; margin-top:0.25rem;">Livreur: <strong>${o.deliveryPersonName}</strong></div>
+                      ` : `
+                        <button class="btn-sm-action" style="margin-top:0.35rem;" onclick="openAssignModal('${o.id}')">+ Choisir livreur</button>
+                      `}
+                    </td>
+                    <td>
+                      <strong>${o.totalOrder.toLocaleString('fr-FR')} ${curr}</strong>
+                      <div style="color:#10b981; font-size:0.75rem; font-weight:600;">+ ${(o.marginNet||0).toLocaleString('fr-FR')} F gain</div>
+                    </td>
+                    <td>${getStatusBadge(o.status)}</td>
+                    <td>
+                      ${o.status !== 'LIVRE' ? `
+                        <button class="btn-sm-action success" onclick="markDelivered('${o.id}')">✓ Livré & Encaissé</button>
+                      ` : ''}
+                      <button class="btn-sm-action" onclick="openAssignModal('${o.id}')">✏️ Gérer</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function filterOrders(f) {
+      orderFilter = f;
+      renderView();
+    }
+
+    // 3. DELIVERY PERSONS (ANNUAIRE LIVREURS)
+    function renderDeliveryPersons() {
+      const dps = appData.deliveryPersons || [];
+
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🛵 Annuaire des Livreurs & Coursiers (${dps.length})</div>
+            <button class="btn-action-primary" onclick="openDeliveryPersonModal()">+ Nouveau Livreur</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nom & Prénom</th>
+                  <th>Téléphone / WhatsApp</th>
+                  <th>Zone Habituelle</th>
+                  <th>Moyen de Transport</th>
+                  <th>Statut</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${dps.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:3rem;">
+                      <div style="font-size:2rem; margin-bottom:0.5rem;">🛵</div>
+                      <h4>Aucun livreur enregistré</h4>
+                      <p style="color:#64748b; font-size:0.85rem;">Enregistrez vos livreurs réguliers pour pouvoir les assigner facilement aux commandes de vos clientes.</p>
+                      <button class="btn-action-primary" onclick="openDeliveryPersonModal()" style="margin-top:1rem;">
+                        + Enregistrer un Livreur
+                      </button>
+                    </td>
+                  </tr>
+                ` : dps.map(d => `
+                  <tr>
+                    <td><strong>${d.name}</strong></td>
+                    <td>
+                      <a href="https://wa.me/${(d.phone||'').replace(/[^0-9]/g,'')}" target="_blank" style="color:#16a34a; font-weight:600; text-decoration:none;">
+                        💬 ${d.phone}
+                      </a>
+                    </td>
+                    <td>📍 ${d.zone || 'Toute la ville'}</td>
+                    <td><span class="badge-status status-a-recuperer">${d.transportType || 'Moto'}</span></td>
+                    <td>
+                      <span class="badge-status ${d.status === 'Actif' ? 'status-livre' : 'status-annule'}">
+                        ${d.status === 'Actif' ? '🟢 Actif' : '⚪ Inactif'}
+                      </span>
+                    </td>
+                    <td style="font-size:0.85rem; color:#64748b;">${d.notes || '-'}</td>
+                    <td>
+                      <div style="display:flex; gap:0.35rem;">
+                        <button class="btn-sm-action" onclick="openDeliveryPersonModal(${d.id})" title="Modifier">✏️</button>
+                        <button class="btn-sm-action danger" onclick="deleteDeliveryPerson(${d.id})" title="Supprimer">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 4. PRODUCTS VIEW
+    function renderProducts() {
+      const curr = appData.settings.currency || 'FCFA';
+      const products = appData.products || [];
+
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">👗 Articles & Nouveautés Octobre (${products.length})</div>
+            <button class="btn-action-primary" onclick="openProductModal()">+ Ajouter un Nouvel Article</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Article</th>
+                  <th>Catégorie</th>
+                  <th>Coût Achat</th>
+                  <th>Prix Normal</th>
+                  <th>Prix Promo</th>
+                  <th>Marge Unitaire</th>
+                  <th>Stock Actuel</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${products.length === 0 ? `
+                  <tr>
+                    <td colspan="8" style="text-align:center; padding:4rem 1rem;">
+                      <div style="font-size:3rem; margin-bottom:1rem;">✨</div>
+                      <h3>Prêt pour votre nouveau stock d'Octobre !</h3>
+                      <p style="color:#64748b; margin-top:0.5rem; margin-bottom:1.5rem;">
+                        Cliquez sur le bouton ci-dessous pour ajouter votre premier article (collants, boubous, robes, ensembles...).
+                      </p>
+                      <button class="btn-action-primary" onclick="openProductModal()" style="margin:0 auto;">
+                        + Ajouter le Premier Article
+                      </button>
+                    </td>
+                  </tr>
+                ` : products.map(p => {
+                  const effective = p.isPromo ? p.promoPrice : p.salePrice;
+                  const margin = effective - p.costPrice;
+                  const pct = effective > 0 ? Math.round((margin / effective) * 100) : 0;
+                  const isLow = p.stock <= (p.minStockAlert || 3);
+                  return `
+                    <tr>
+                      <td>
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                          <img src="${p.image}" alt="${p.name}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; background:#f1f5f9;" />
+                          <div>
+                            <strong>${p.name}</strong>
+                            <div style="display:flex; gap:0.25rem; margin-top:0.2rem;">
+                              ${p.isFeatured ? '<span class="badge-status status-en-livraison" style="font-size:0.65rem;">⭐ EN AVANT</span>' : ''}
+                              ${p.isPromo ? '<span class="badge-status status-annule" style="font-size:0.65rem;">🏷️ PROMO</span>' : ''}
+                              ${p.published === false ? '<span class="badge-status" style="background:#cbd5e1; color:#334155; font-size:0.65rem;">👁️ MASQUÉ</span>' : '<span class="badge-status status-livre" style="font-size:0.65rem;">VISIBLE</span>'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>${p.category}</td>
+                      <td>${p.costPrice.toLocaleString('fr-FR')} ${curr}</td>
+                      <td style="${p.isPromo ? 'text-decoration:line-through; color:#94a3b8;' : 'font-weight:600;'}">${p.salePrice.toLocaleString('fr-FR')} ${curr}</td>
+                      <td>${p.isPromo ? `<strong style="color:#ef4444;">${p.promoPrice.toLocaleString('fr-FR')} ${curr}</strong>` : '-'}</td>
+                      <td><strong style="color:${margin > 0 ? '#10b981' : '#ef4444'};">+${margin.toLocaleString('fr-FR')} F (${pct}%)</strong></td>
+                      <td>
+                        <span style="padding:0.25rem 0.6rem; border-radius:9999px; font-weight:bold; font-size:0.85rem; background:${isLow ? '#fee2e2' : '#ecfdf5'}; color:${isLow ? '#b91c1c' : '#15803d'};">
+                          ${p.stock} pcs ${isLow ? '⚠️' : ''}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn-sm-action" onclick="toggleProductFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la mise en avant' : 'Mettre en avant sur la page'}">
+                          ${p.isFeatured ? '⭐ Retirer' : '⭐ Mettre en avant'}
+                        </button>
+                        <button class="btn-sm-action" onclick="toggleProductPublished(${p.id})" title="${p.published === false ? 'Publier sur la boutique' : 'Masquer de la boutique'}">
+                          ${p.published === false ? '👁️ Publier' : '👁️ Masquer'}
+                        </button>
+                        <button class="btn-sm-action" onclick="openProductModal(${p.id})" title="Modifier">✏️</button>
+                        <button class="btn-sm-action danger" onclick="deleteProduct(${p.id})" title="Supprimer">🗑️</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 5. TRIPS VIEW
+    function renderTrips() {
+      const curr = appData.settings.currency || 'FCFA';
+      const trips = appData.trips || [];
+      const totalCost = trips.reduce((sum, t) => sum + (t.cost || 0), 0);
+
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🛵 Déplacements & Frais Logistiques (${trips.length})</div>
+            <div class="panel-tools">
+              <span style="font-weight:700; color:#b91c1c;">Total : ${totalCost.toLocaleString('fr-FR')} ${curr}</span>
+              <button class="btn-action-primary" onclick="openTripModal()">+ Nouveau Déplacement</button>
+            </div>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Motif / Destination</th>
+                  <th>Moyen Transport</th>
+                  <th>Montant Payé</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${trips.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:3rem;">Aucun déplacement enregistré pour octobre.</td></tr>' : trips.map(t => `
+                  <tr>
+                    <td>${t.dateTime}</td>
+                    <td><strong>${t.description}</strong></td>
+                    <td><span class="badge-status status-a-recuperer">${t.transportType}</span></td>
+                    <td><strong style="color:#b91c1c;">-${t.cost.toLocaleString('fr-FR')} ${curr}</strong></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 6. CASH VIEW (81 500 F)
+    function renderCash() {
+      const curr = appData.settings.currency || 'FCFA';
+      const cash = appData.settings?.currentCash !== undefined ? appData.settings.currentCash : 81500;
+      const txs = appData.cashTransactions || [];
+
+      return `
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; border-radius:12px; padding:1.75rem; margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; border-bottom:3px solid #c59b27;">
+          <div>
+            <span style="font-size:0.8rem; color:#c59b27; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Solde de Caisse en Direct</span>
+            <h2 style="font-size:2.2rem; margin-top:0.25rem;">${cash.toLocaleString('fr-FR')} ${curr}</h2>
+            <p style="color:#94a3b8; font-size:0.85rem;">Solde réel prêt pour vos nouveaux arrivages d'Octobre 2026</p>
+          </div>
+          <div style="display:flex; gap:0.75rem;">
+            <button class="btn-action-primary" style="background:#10b981; color:#fff;" onclick="openCashModal('DEPOT')">+ Dépôt / Entrée Espèces</button>
+            <button class="btn-action-primary" style="background:#ef4444; color:#fff;" onclick="openCashModal('RETRAIT')">+ Retrait / Dépense</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🧾 Journal des Opérations de Caisse</div>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date/Heure</th>
+                  <th>Commentaire</th>
+                  <th>Entrée (Encaissement / Dépôt)</th>
+                  <th>Sortie (Retrait)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${txs.slice().reverse().map(t => `
+                  <tr>
+                    <td style="font-size:0.8rem; color:#64748b;">${t.dateTime}</td>
+                    <td><strong>${t.commentaires || 'Opération'}</strong></td>
+                    <td>
+                      ${t.encaissement > 0 ? `<span style="color:#10b981; font-weight:700;">+${t.encaissement.toLocaleString('fr-FR')} F (Vente)</span>` : ''}
+                      ${t.depot > 0 ? `<span style="color:#3b82f6; font-weight:700;">+${t.depot.toLocaleString('fr-FR')} F (Dépôt)</span>` : ''}
+                      ${t.encaissement === 0 && t.depot === 0 ? '-' : ''}
+                    </td>
+                    <td>${t.retrait > 0 ? `<span style="color:#ef4444; font-weight:700;">-${t.retrait.toLocaleString('fr-FR')} F</span>` : '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 7. PROFITS VIEW
+    function renderProfits() {
+      const s = appData.stats || {};
+      const curr = appData.settings.currency || 'FCFA';
+
+      return `
+        <div class="kpi-grid">
+          <div class="kpi-card green">
+            <div class="kpi-icon green">🪙</div>
+            <div class="kpi-info">
+              <h4>Ventes Encaissées</h4>
+              <div class="kpi-value">${(s.totalSales || 0).toLocaleString('fr-FR')} ${curr}</div>
+            </div>
+          </div>
+
+          <div class="kpi-card gold">
+            <div class="kpi-icon gold">📈</div>
+            <div class="kpi-info">
+              <h4>Bénéfice Net Réalisé</h4>
+              <div class="kpi-value">${(s.totalNetMargin || 0).toLocaleString('fr-FR')} ${curr}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🔎 Rentabilité Détaillée des Ventes d'Octobre</div>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Commande</th>
+                  <th>Articles</th>
+                  <th>Prix Vente</th>
+                  <th>Coût Achat</th>
+                  <th>Bénéfice Net</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(appData.orders || []).filter(o => o.status === 'LIVRE').length === 0 ? `
+                  <tr><td colspan="5" style="text-align:center; padding:3rem;">Vos calculs de rentabilité nette apparaîtront dès que vos premières commandes d'octobre seront livrées.</td></tr>
+                ` : appData.orders.filter(o => o.status === 'LIVRE').map(o => `
+                  <tr>
+                    <td><strong>${o.id}</strong> (${o.customerName})</td>
+                    <td>${o.items.map(i => i.productName).join(', ')}</td>
+                    <td>${o.totalItems.toLocaleString('fr-FR')} F</td>
+                    <td>${(o.totalItems - o.marginGross).toLocaleString('fr-FR')} F</td>
+                    <td><strong style="color:#059669;">+${o.marginNet.toLocaleString('fr-FR')} F</strong></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 8. SETTINGS VIEW
+    function renderSettings() {
+      const s = appData.settings || {};
+      return `
+        <div style="max-width:700px; margin:0 auto;">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">⚙️ Configuration & Sécurité</div>
+            </div>
+            <form onsubmit="handleSaveSettings(event)" style="padding:1.5rem;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.9rem; margin-bottom:0.4rem;">Nom de la Boutique</label>
+                  <input type="text" id="cfg_storeName" value="${s.storeName || 'Maison Angy Collection'}" required style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.9rem; margin-bottom:0.4rem;">Slogan Officiel</label>
+                  <input type="text" id="cfg_slogan" value="${s.slogan || 'Le style, pour tous. Sans compromis.'}" required style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+              </div>
+
+              <div style="margin-bottom:1.25rem;">
+                <label style="display:block; font-weight:600; font-size:0.9rem; margin-bottom:0.4rem;">Lien Page Facebook</label>
+                <input type="url" id="cfg_facebookUrl" value="${s.facebookUrl || 'https://www.facebook.com/profile.php?id=61587838474305'}" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 2fr; gap:1rem; margin-bottom:1.25rem;">
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.9rem; margin-bottom:0.4rem;">Indicatif Pays</label>
+                  <select id="cfg_countryCode" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;">
+                    <option value="228" ${s.whatsappCountryCode === '228' ? 'selected' : ''}>+228 (Togo)</option>
+                    <option value="229" ${s.whatsappCountryCode === '229' ? 'selected' : ''}>+229 (Bénin)</option>
+                    <option value="225" ${s.whatsappCountryCode === '225' ? 'selected' : ''}>+225 (Côte d'Ivoire)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.9rem; margin-bottom:0.4rem;">Numéro WhatsApp *</label>
+                  <input type="text" id="cfg_whatsappNumber" value="${s.whatsappNumber || '93849200'}" required style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+              </div>
+
+              <div style="margin-bottom:1.25rem; background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0;">
+                <h4 style="font-size:0.9rem; margin-bottom:0.5rem; color:#0f172a;">🔒 Mot de passe d'accès à l'Espace Gestion</h4>
+                <div style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem;">
+                  Votre mot de passe actuel est : <strong>${s.adminPassword || 'password2026'}</strong>
+                </div>
+                <input type="text" id="cfg_password" value="${s.adminPassword || 'password2026'}" required style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+              </div>
+
+              <button type="submit" class="btn-action-primary" style="width:100%; justify-content:center;">
+                💾 Enregistrer les Modifications
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleSaveSettings(e) {
+      e.preventDefault();
+      const payload = {
+        storeName: document.getElementById('cfg_storeName').value,
+        slogan: document.getElementById('cfg_slogan').value,
+        facebookUrl: document.getElementById('cfg_facebookUrl').value,
+        whatsappCountryCode: document.getElementById('cfg_countryCode').value,
+        whatsappNumber: document.getElementById('cfg_whatsappNumber').value,
+        adminPassword: document.getElementById('cfg_password').value
+      };
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      showToast('Paramètres mis à jour !');
+      loadData();
+    }
+
+    // --- MODALS ---
+    function closeModal() {
+      document.getElementById('modalContainer').innerHTML = '';
+    }
+
+    // Modal: Livreur
+    function openDeliveryPersonModal(id) {
+      const dp = id ? appData.deliveryPersons.find(d => d.id === id) : null;
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card">
+            <div class="modal-head">
+              <h3>${dp ? "Modifier le Livreur" : "Ajouter un Nouveau Livreur"}</h3>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveDeliveryPerson(event, ${dp ? dp.id : 'null'})">
+              <div class="modal-body">
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Nom & Prénom du Livreur *</label>
+                  <input type="text" id="dp_name" required placeholder="Ex: Livreur Moussa Express" value="${dp ? dp.name : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Téléphone / WhatsApp *</label>
+                    <input type="tel" id="dp_phone" required placeholder="Ex: 90 12 34 56" value="${dp ? dp.phone : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Moyen de transport</label>
+                    <select id="dp_transport" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;">
+                      <option value="Moto" ${dp && dp.transportType === 'Moto' ? 'selected' : ''}>Moto</option>
+                      <option value="Voiture / Taxi" ${dp && dp.transportType === 'Voiture / Taxi' ? 'selected' : ''}>Voiture / Taxi</option>
+                      <option value="Bus / Car" ${dp && dp.transportType === 'Bus / Car' ? 'selected' : ''}>Bus / Car (Expédition)</option>
+                      <option value="À pied / Vélo" ${dp && dp.transportType === 'À pied / Vélo' ? 'selected' : ''}>À pied / Vélo</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Zone habituelle / Quartiers</label>
+                    <input type="text" id="dp_zone" placeholder="Ex: Agoè, Déckon, Tokoin, Adidogomé, Bè, Hedzranawoé..." value="${dp ? (dp.zone || '') : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Statut</label>
+                    <select id="dp_status" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;">
+                      <option value="Actif" ${!dp || dp.status === 'Actif' ? 'selected' : ''}>🟢 Actif</option>
+                      <option value="Inactif" ${dp && dp.status === 'Inactif' ? 'selected' : ''}>⚪ Inactif</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Notes particulières (tarifs, horaires...)</label>
+                  <input type="text" id="dp_notes" placeholder="Ex: Tarif 1000 F en ville, dispo après-midi..." value="${dp ? (dp.notes || '') : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+              </div>
+              <div class="modal-foot">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal">Enregistrer le Livreur</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleSaveDeliveryPerson(e, id) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('dp_name').value,
+        phone: document.getElementById('dp_phone').value,
+        transportType: document.getElementById('dp_transport').value,
+        zone: document.getElementById('dp_zone').value,
+        status: document.getElementById('dp_status').value,
+        notes: document.getElementById('dp_notes').value
+      };
+
+      const url = id ? `/api/delivery-persons/${id}` : '/api/delivery-persons';
+      const method = id ? 'PUT' : 'POST';
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      closeModal();
+      showToast('Livreur enregistré avec succès !');
+      loadData();
+    }
+
+    async function deleteDeliveryPerson(id) {
+      if (confirm('Voulez-vous retirer ce livreur de l\'annuaire ?')) {
+        await fetch(`/api/delivery-persons/${id}`, { method: 'DELETE' });
+        showToast('Livreur retiré.');
+        loadData();
+      }
+    }
+
+    // Modal: Product
+    function openProductModal(prodId) {
+      const p = prodId ? appData.products.find(pr => pr.id === prodId) : null;
+      const curr = appData.settings.currency || 'FCFA';
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card">
+            <div class="modal-head">
+              <h3>${p ? "Modifier l'Article" : "Ajouter un Article (Octobre)"}</h3>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveProduct(event, ${p ? p.id : 'null'})">
+              <div class="modal-body">
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Nom de l'article *</label>
+                  <input type="text" id="p_name" required placeholder="Ex: Collant Gainant, Boubou Caviar..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Catégorie</label>
+                    <input type="text" id="p_category" value="${p ? p.category : 'Collants & Lingerie'}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Quantité en stock</label>
+                    <input type="number" id="p_stock" required value="${p ? p.stock : 10}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.35rem;">Coût Achat (${curr})</label>
+                    <input type="number" id="p_cost" required value="${p ? p.costPrice : 3500}" oninput="calcMarginPreview()" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.35rem;">Prix Normal</label>
+                    <input type="number" id="p_sale" required value="${p ? p.salePrice : 6500}" oninput="calcMarginPreview()" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.35rem;">Prix Promo</label>
+                    <input type="number" id="p_promo" value="${p ? p.promoPrice : 5500}" oninput="calcMarginPreview()" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem; background:#f8fafc; padding:0.85rem; border-radius:8px; border:1px solid #e2e8f0;">
+                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                    <input type="checkbox" id="p_isPromo" ${p && p.isPromo ? 'checked' : ''} onchange="calcMarginPreview()" />
+                    <span>🏷️ Mettre en Promotion</span>
+                  </label>
+
+                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                    <input type="checkbox" id="p_isFeatured" ${p && p.isFeatured ? 'checked' : ''} />
+                    <span>⭐ Mettre en Avant (Vedette)</span>
+                  </label>
+
+                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:600; font-size:0.85rem; grid-column:1/-1;">
+                    <input type="checkbox" id="p_published" ${!p || p.published !== false ? 'checked' : ''} />
+                    <span>👁️ Publié sur la boutique (décocher pour masquer)</span>
+                  </label>
+                </div>
+
+                <div class="margin-preview-box" id="marginPreviewBox">
+                  <span>Bénéfice estimé par vente :</span>
+                  <strong id="marginValPreview">+3 000 FCFA (46% de marge)</strong>
+                </div>
+
+                <div style="margin-top:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Lien Image</label>
+                  <input type="url" id="p_image" value="${p ? p.image : 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80'}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+              </div>
+              <div class="modal-foot">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal">Enregistrer l'article</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      calcMarginPreview();
+    }
+
+    function calcMarginPreview() {
+      const cost = parseFloat(document.getElementById('p_cost')?.value) || 0;
+      const isPromo = document.getElementById('p_isPromo')?.checked;
+      const sale = parseFloat(document.getElementById('p_sale')?.value) || 0;
+      const promo = parseFloat(document.getElementById('p_promo')?.value) || 0;
+      const activePrice = isPromo ? promo : sale;
+      const margin = activePrice - cost;
+      const pct = activePrice > 0 ? Math.round((margin / activePrice) * 100) : 0;
+      const el = document.getElementById('marginValPreview');
+      if (el) {
+        el.textContent = '+' + margin.toLocaleString('fr-FR') + ' FCFA (' + pct + '% de marge)';
+      }
+    }
+
+    async function handleSaveProduct(e, id) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('p_name').value,
+        category: document.getElementById('p_category').value,
+        stock: parseInt(document.getElementById('p_stock').value) || 0,
+        costPrice: parseFloat(document.getElementById('p_cost').value) || 0,
+        salePrice: parseFloat(document.getElementById('p_sale').value) || 0,
+        promoPrice: parseFloat(document.getElementById('p_promo').value) || 0,
+        isPromo: document.getElementById('p_isPromo').checked,
+        isFeatured: document.getElementById('p_isFeatured').checked,
+        published: document.getElementById('p_published').checked,
+        image: document.getElementById('p_image').value
+      };
+
+      const url = id ? `/api/products/${id}` : '/api/products';
+      const method = id ? 'PUT' : 'POST';
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      closeModal();
+      showToast('Article ajouté au stock !');
+      loadData();
+    }
+
+    async function deleteProduct(id) {
+      if (confirm('Voulez-vous supprimer cet article ?')) {
+        await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        showToast('Article supprimé.');
+        loadData();
+      }
+    }
+
+    // Modal: Trip
+    function openTripModal() {
+      const curr = appData.settings.currency || 'FCFA';
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card">
+            <div class="modal-head">
+              <h3>Enregistrer un Déplacement ou Frais Logistique</h3>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveTrip(event)">
+              <div class="modal-body">
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Motif / Destination *</label>
+                  <input type="text" id="trip_desc" required placeholder="Ex: Taxi aller-retour Grand Marché (Assigamé), Assiyéyé, colis gare..." style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Montant payé (${curr}) *</label>
+                    <input type="number" id="trip_cost" required value="2000" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Transport</label>
+                    <select id="trip_type" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;">
+                      <option value="TAXI_MOTO">Moto / Zémidjan</option>
+                      <option value="TAXI">Taxi Ville</option>
+                      <option value="BUS_CAR">Car / Agence</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-foot">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal">Enregistrer la sortie</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleSaveTrip(e) {
+      e.preventDefault();
+      await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: document.getElementById('trip_desc').value,
+          cost: parseFloat(document.getElementById('trip_cost').value) || 0,
+          transportType: document.getElementById('trip_type').value
+        })
+      });
+      closeModal();
+      showToast('Déplacement déduit de la caisse.');
+      loadData();
+    }
+
+    // Modal: Cash
+    function openCashModal(type) {
+      const isDepot = type === 'DEPOT';
+      const curr = appData.settings.currency || 'FCFA';
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card">
+            <div class="modal-head" style="background:${isDepot ? '#10b981' : '#ef4444'};">
+              <h3>${isDepot ? "Nouveau Dépôt / Entrée d'Espèces" : "Nouveau Retrait / Dépense"}</h3>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveCash(event, '${type}')">
+              <div class="modal-body">
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Montant (${curr}) *</label>
+                  <input type="number" id="cash_amount" required value="10000" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Motif / Commentaire *</label>
+                  <input type="text" id="cash_comment" required placeholder="${isDepot ? 'Ex: Apport de fonds, vente spéciale...' : 'Ex: Salaire gérante, internet, sacs...'}" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+              </div>
+              <div class="modal-foot">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal">Valider l'opération</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleSaveCash(e, type) {
+      e.preventDefault();
+      const isDepot = type === 'DEPOT';
+      const amt = parseFloat(document.getElementById('cash_amount').value) || 0;
+      const cmt = document.getElementById('cash_comment').value;
+
+      await fetch('/api/cash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user: 'Ange Ines',
+          retrait: isDepot ? 0 : amt,
+          depot: isDepot ? amt : 0,
+          encaissement: 0,
+          ecart: 0,
+          commentaires: cmt
+        })
+      });
+      closeModal();
+      showToast('Opération de caisse enregistrée !');
+      loadData();
+    }
+
+    // Modal: Assign Livreur to Order
+    function openAssignModal(orderId) {
+      const o = appData.orders.find(ord => ord.id === orderId);
+      if (!o) return;
+      const curr = appData.settings.currency || 'FCFA';
+      const dps = appData.deliveryPersons || [];
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card">
+            <div class="modal-head">
+              <h3>Assigner Livreur - ${o.id}</h3>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div style="background:#f8fafc; padding:1rem; border-radius:8px; margin-bottom:1.25rem;">
+                <div><strong>Cliente :</strong> ${o.customerName} (${o.customerPhone})</div>
+                <div><strong>Adresse :</strong> ${o.customerAddress}</div>
+                <div><strong>Articles :</strong> ${o.items.map(i => `${i.quantity}x ${i.productName}`).join(', ')}</div>
+                <div style="margin-top:0.5rem; font-weight:700; color:#c59b27;">
+                  Total : ${o.totalOrder.toLocaleString('fr-FR')} ${curr}
+                </div>
+              </div>
+
+              <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Choisir un Livreur de l'Annuaire *</label>
+                <select id="assign_dp_select" onchange="onSelectDpChange(this)" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;">
+                  <option value="">-- Sélectionner un livreur --</option>
+                  ${dps.map(d => `
+                    <option value="${d.name} (${d.phone})" ${o.deliveryPersonName && o.deliveryPersonName.includes(d.name) ? 'selected' : ''}>
+                      ${d.name} - ${d.phone} (${d.zone || 'Ville'})
+                    </option>
+                  `).join('')}
+                  <option value="AUTRE">Autre (saisir manuellement)</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:1rem;" id="manualDpWrap">
+                <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Nom & Numéro du Livreur</label>
+                <input type="text" id="assign_dp_name" value="${o.deliveryPersonName || ''}" placeholder="Ex: Livreur Moussa (90 12 34 56)" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div>
+                  <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Frais de course (${curr})</label>
+                  <input type="number" id="assign_fee" value="${o.deliveryFee || 1500}" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Qui paie ?</label>
+                  <select id="assign_payer" style="width:100%; padding:0.65rem; border-radius:6px; border:1px solid #cbd5e1;">
+                    <option value="CLIENT" ${o.deliveryFeePayer === 'CLIENT' ? 'selected' : ''}>Le Client</option>
+                    <option value="BOUTIQUE" ${o.deliveryFeePayer === 'BOUTIQUE' ? 'selected' : ''}>Maison Angy</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+              <button class="btn-primary-modal" onclick="confirmAssign('${o.id}')">Confirmer l'assignation</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function onSelectDpChange(el) {
+      if (el.value && el.value !== 'AUTRE') {
+        document.getElementById('assign_dp_name').value = el.value;
+      }
+    }
+
+    async function confirmAssign(orderId) {
+      const name = document.getElementById('assign_dp_name').value;
+      const fee = parseFloat(document.getElementById('assign_fee').value) || 0;
+      const payer = document.getElementById('assign_payer').value;
+
+      await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deliveryPersonName: name,
+          deliveryFee: fee,
+          deliveryFeePayer: payer,
+          status: 'EN_LIVRAISON'
+        })
+      });
+      closeModal();
+      showToast('Livreur assigné !');
+      loadData();
+    }
+
+    async function markDelivered(orderId) {
+      if (confirm('Confirmer que la commande a été livrée et que l\'argent est rentré en caisse ?')) {
+        await fetch(`/api/orders/${orderId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'LIVRE' })
+        });
+        showToast('Commande livrée et ajoutée à la caisse !');
+        loadData();
+      }
+    }
+
+    function getStatusBadge(st) {
+      if (st === 'A_PREPARER') return '<span class="badge-status status-a-preparer">🟡 À préparer</span>';
+      if (st === 'EN_LIVRAISON') return '<span class="badge-status status-en-livraison">🟠 En livraison</span>';
+      if (st === 'A_RECUPERER') return '<span class="badge-status status-a-recuperer">🔵 À récupérer</span>';
+      if (st === 'EXPEDITION') return '<span class="badge-status status-expedition">🟣 Expédié</span>';
+      if (st === 'LIVRE') return '<span class="badge-status status-livre">🟢 Livré</span>';
+      return st;
+    }
+
+    function getDeliveryBadge(mode) {
+      if (mode === 'LIVRAISON_DOMICILE') return '<span class="badge-status status-en-livraison">🛵 Domicile</span>';
+      if (mode === 'RETRAIT_BOUTIQUE') return '<span class="badge-status status-a-recuperer">🏪 Boutique</span>';
+      if (mode === 'EXPEDITION') return '<span class="badge-status status-expedition">📦 Gare</span>';
+      return mode;
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>
