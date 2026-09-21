@@ -139,9 +139,14 @@
           <span>Bénéfices & Rentabilité</span>
         </button>
 
+        <button class="nav-item" onclick="switchView('TEAM')" id="nav-TEAM">
+          <span>👥</span>
+          <span>Équipe & Gérantes</span>
+        </button>
+
         <button class="nav-item" onclick="switchView('SETTINGS')" id="nav-SETTINGS">
           <span>⚙️</span>
-          <span>Réglages WhatsApp</span>
+          <span>Configuration & Réseaux</span>
         </button>
       </nav>
 
@@ -664,6 +669,9 @@
             </button>
             <button class="btn-action-primary" style="background:#10b981; color:#fff;" onclick="openCashModal('DEPOT')">
               <span>+ Dépôt / Vente Caisse</span>
+            </button>
+            <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="switchView('TEAM')">
+              <span>👥 Gérer l'Équipe & Gérantes</span>
             </button>
           </div>
         </div>
