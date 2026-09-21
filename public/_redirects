@@ -1,0 +1,3 @@
+/admin /admin.html 200
+/api/all /data/db.json 200
+/api/products /data/db.json 200

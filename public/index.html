@@ -48,7 +48,7 @@
   <div class="admin-bar-front" id="adminBarFront" style="display: none;">
     <div style="display: flex; align-items: center; gap: 0.5rem;">
       <span style="background: #c59b27; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 0.7rem;">ADMIN</span>
-      <span>👑 <strong>Mode Gérante Actif</strong> (Ange Ines)</span>
+      <span id="frontManagerTitle">👑 <strong>Mode Gestion Actif</strong></span>
     </div>
     <div class="admin-bar-actions">
       <button class="btn-admin-front" onclick="openFrontProductModal()">
@@ -196,8 +196,8 @@
       <div>
         © 2026 <strong>Maison Angy Collection</strong>. Tous droits réservés.
       </div>
-      <div>
-        <a href="/admin" onclick="handleFrontAdminLink(event)" style="color:#94a3b8; text-decoration:none;">Accès Privé Gérante</a>
+      <div style="color:#64748b; font-size:0.75rem;">
+        Maison Angy • Lomé, Togo
       </div>
     </div>
   </footer>
@@ -244,7 +244,19 @@
     function checkFrontAuth() {
       isAdminLoggedIn = Boolean(sessionStorage.getItem('angy_auth') || localStorage.getItem('angy_auth'));
       const bar = document.getElementById('adminBarFront');
-      if (bar) bar.style.display = isAdminLoggedIn ? 'flex' : 'none';
+      const user = JSON.parse(sessionStorage.getItem('angy_user') || localStorage.getItem('angy_user') || '{}');
+      
+      if (bar) {
+        bar.style.display = isAdminLoggedIn ? 'flex' : 'none';
+        const titleEl = document.getElementById('frontManagerTitle');
+        if (titleEl && isAdminLoggedIn) {
+          if (user.role === 'ADMIN') {
+            titleEl.innerHTML = '👑 <strong>Propriétaire</strong> (' + (user.name || 'Ange Ines') + ')';
+          } else {
+            titleEl.innerHTML = '💼 <strong>Gérante</strong> (' + (user.name || 'Équipe') + ')';
+          }
+        }
+      }
       renderProducts();
     }
 
@@ -340,9 +352,7 @@
                 <a href="https://wa.me/${settings.fullWhatsapp || '22893849200'}" target="_blank" class="btn-whatsapp-order" style="display: inline-flex; width: auto; padding: 0.75rem 1.75rem; text-decoration: none; margin: 0 auto;">
                   💬 CONTACTER LA BOUTIQUE SUR WHATSAPP
                 </a>
-                <p style="margin-top:1.2rem; font-size:0.85rem; color:#94a3b8;">
-                  Vous êtes la gérante ? <a href="#" onclick="openFrontLoginModal(event)" style="color:#c59b27; text-decoration:underline; font-weight:600;">Connectez-vous ici pour publier vos articles</a>
-                </p>
+                
               `}
             </div>
           `;
@@ -808,9 +818,11 @@
         if (d.success) {
           sessionStorage.setItem('angy_auth', d.token);
           localStorage.setItem('angy_auth', d.token);
+          sessionStorage.setItem('angy_user', JSON.stringify(d.user));
+          localStorage.setItem('angy_user', JSON.stringify(d.user));
           closeFrontModal();
           checkFrontAuth();
-          showToast('Bienvenue Ange Ines ! Mode Gérante activé.');
+          showToast('Bienvenue ' + (d.user.name || '') + ' ! Accès ' + (d.user.roleLabel || 'Gestion') + ' activé.');
         } else {
           errBox.style.display = 'block';
           errBox.textContent = '⚠️ ' + (d.error || 'Numéro ou mot de passe incorrect.');

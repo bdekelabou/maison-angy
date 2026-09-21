@@ -69,5 +69,25 @@
       "total": 81500,
       "commentaires": "Report solde réel de trésorerie au 1er Octobre 2026"
     }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Ange Ines",
+      "phone": "93849200",
+      "password": "password2026",
+      "role": "ADMIN",
+      "roleLabel": "Propriétaire & Administratrice",
+      "createdAt": "2026-09-21"
+    },
+    {
+      "id": 2,
+      "name": "Gérante Boutique",
+      "phone": "90000000",
+      "password": "gerante2026",
+      "role": "GERANTE",
+      "roleLabel": "Gérante de Vente",
+      "createdAt": "2026-09-21"
+    }
   ]
 }

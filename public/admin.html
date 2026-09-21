@@ -168,6 +168,7 @@
         </div>
 
         <div class="topbar-right">
+          <div id="topUserBadge" style="font-size:0.85rem; color:#64748b; background:#f1f5f9; padding:0.4rem 0.8rem; border-radius:8px; display:inline-flex; align-items:center; gap:0.35rem;"></div>
           <div class="cash-pill" title="Trésorerie disponible en caisse">
             <span>🪙 Caisse : <strong id="topbarCash">81 500 FCFA</strong></span>
           </div>
@@ -225,10 +226,38 @@
       if (token) {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('appContainer').style.display = 'flex';
+        applyRolePermissions();
         loadData();
       } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appContainer').style.display = 'none';
+      }
+    }
+
+    function getCurrentUser() {
+      return JSON.parse(sessionStorage.getItem('angy_user') || localStorage.getItem('angy_user') || '{"role":"ADMIN","name":"Ange Ines"}');
+    }
+
+    function applyRolePermissions() {
+      const u = getCurrentUser();
+      const isAdmin = u.role === 'ADMIN';
+
+      // Hide Cash and Profits menus for Gerante
+      const cashNav = document.getElementById('nav-CASH');
+      const profitsNav = document.getElementById('nav-PROFITS');
+      const teamNav = document.getElementById('nav-TEAM');
+      const topCash = document.querySelector('.cash-pill');
+
+      if (cashNav) cashNav.style.display = isAdmin ? 'flex' : 'none';
+      if (profitsNav) profitsNav.style.display = isAdmin ? 'flex' : 'none';
+      if (teamNav) teamNav.style.display = isAdmin ? 'flex' : 'none';
+      if (topCash) topCash.style.display = isAdmin ? 'inline-flex' : 'none';
+
+      const userBadge = document.getElementById('topUserBadge');
+      if (userBadge) {
+        userBadge.innerHTML = isAdmin 
+          ? '👑 <strong>' + (u.name || 'Ange Ines') + '</strong> (Propriétaire)'
+          : '💼 <strong>' + (u.name || 'Gérante') + '</strong> (Gérante)';
       }
     }
 
@@ -248,6 +277,8 @@
         if (d.success) {
           sessionStorage.setItem('angy_auth', d.token);
           localStorage.setItem('angy_auth', d.token);
+          sessionStorage.setItem('angy_user', JSON.stringify(d.user));
+          localStorage.setItem('angy_user', JSON.stringify(d.user));
           errBox.style.display = 'none';
           checkAuth();
         } else {
@@ -268,6 +299,8 @@
     function handleLogout() {
       sessionStorage.removeItem('angy_auth');
       localStorage.removeItem('angy_auth');
+      sessionStorage.removeItem('angy_user');
+      localStorage.removeItem('angy_user');
       checkAuth();
     }
 
@@ -294,6 +327,151 @@
       });
       showToast(willPublish ? '👁️ Article publié sur la boutique !' : 'Article masqué de la boutique.');
       loadData();
+    }
+
+    
+    // 9. TEAM & GERANTES MANAGEMENT VIEW
+    function renderTeamView() {
+      const users = appData.users || [
+        { id: 1, name: "Ange Ines", phone: "93849200", password: "password2026", role: "ADMIN", roleLabel: "Propriétaire & Administratrice" }
+      ];
+
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">👥 Équipe & Comptes d'Accès</div>
+              <p style="color:#64748b; font-size:0.85rem; margin-top:0.25rem;">
+                En tant que propriétaire, vous pouvez créer ici des comptes pour vos gérantes de boutique avec leur propre numéro et mot de passe.
+              </p>
+            </div>
+            <button class="btn-action-primary" onclick="openUserModal()">
+              <span>+ Créer un Accès Gérante</span>
+            </button>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nom / Collaboratrice</th>
+                  <th>Numéro Téléphone (Identifiant)</th>
+                  <th>Mot de passe</th>
+                  <th>Rôle & Pouvoir</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${users.map(u => `
+                  <tr>
+                    <td>
+                      <strong style="color:#0f172a; font-size:0.95rem;">${u.name}</strong>
+                      ${u.role === 'ADMIN' ? '<span style="margin-left:0.5rem; background:#fef3c7; color:#92400e; font-size:0.7rem; font-weight:bold; padding:2px 8px; border-radius:9999px;">PROPRIÉTAIRE</span>' : ''}
+                    </td>
+                    <td>
+                      <span style="font-family:monospace; font-weight:600; font-size:0.95rem; color:#1e293b;">
+                        📞 ${u.phone}
+                      </span>
+                    </td>
+                    <td>
+                      <span style="font-family:monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.85rem;">
+                        ${u.password || '••••••••'}
+                      </span>
+                    </td>
+                    <td>
+                      <span style="font-size:0.85rem; font-weight:600; color:${u.role === 'ADMIN' ? '#c59b27' : '#2563eb'};">
+                        ${u.role === 'ADMIN' ? '👑 Accès Total (Caisse, Bénéfices, Direction)' : '💼 Ventes, Stocks & Commandes'}
+                      </span>
+                    </td>
+                    <td style="text-align:right;">
+                      <button class="btn-table-action" onclick="openUserModal(${u.id})" title="Modifier">✏️</button>
+                      ${u.role !== 'ADMIN' ? `
+                        <button class="btn-table-action" onclick="deleteUser(${u.id})" title="Supprimer" style="color:#ef4444;">🗑️</button>
+                      ` : ''}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function openUserModal(userId) {
+      const users = appData.users || [];
+      const u = userId ? users.find(item => item.id === userId) : null;
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:450px;">
+            <div class="modal-header">
+              <div class="modal-title">${u ? "Modifier le Compte" : "Créer un Nouvel Accès Gérante"}</div>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveUser(event, ${u ? u.id : 'null'})">
+              <div class="modal-body">
+                <div class="form-group">
+                  <label class="form-label">Nom de la personne *</label>
+                  <input type="text" class="form-input" id="u_name" required value="${u ? u.name : ''}" placeholder="Ex: Akossiwa Gérante" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Numéro de Téléphone (Identifiant de connexion) *</label>
+                  <input type="text" class="form-input" id="u_phone" required value="${u ? u.phone : ''}" placeholder="Ex: 90123456" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Mot de passe de connexion *</label>
+                  <input type="text" class="form-input" id="u_password" required value="${u ? u.password : 'gerante2026'}" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Rôle attribué</label>
+                  <select class="form-input" id="u_role" ${u && u.role === 'ADMIN' ? 'disabled' : ''}>
+                    <option value="GERANTE" ${!u || u.role === 'GERANTE' ? 'selected' : ''}>💼 Gérante (Ventes, Stocks, Commandes - Caisse masquée)</option>
+                    <option value="ADMIN" ${u && u.role === 'ADMIN' ? 'selected' : ''}>👑 Administratrice (Accès Complet Caisse & Trésorerie)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn-action-primary" style="background:#64748b;" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-action-primary">Enregistrer le Compte</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleSaveUser(e, id) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('u_name').value.trim(),
+        phone: document.getElementById('u_phone').value.trim().replace(/[^0-9]/g, ''),
+        password: document.getElementById('u_password').value.trim(),
+        role: document.getElementById('u_role').value
+      };
+
+      const url = id ? '/api/users/' + id : '/api/users';
+      const method = id ? 'PUT' : 'POST';
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      closeModal();
+      showToast('Compte enregistré avec succès !');
+      loadData();
+    }
+
+    async function deleteUser(id) {
+      if (confirm('Voulez-vous vraiment supprimer cet accès gérante ?')) {
+        await fetch('/api/users/' + id, { method: 'DELETE' });
+        showToast('Accès gérante supprimé.');
+        loadData();
+      }
     }
 
     // --- DATA ---
@@ -338,6 +516,7 @@
         'TRIPS': 'Déplacements & Frais Logistiques',
         'CASH': 'Journal de Caisse & Trésorerie',
         'PROFITS': 'Bénéfices & Rentabilité',
+        'TEAM': 'Gestion de l\'Équipe & Accès Gérantes',
         'SETTINGS': 'Configuration & WhatsApp'
       };
       document.getElementById('pageTitle').textContent = titles[viewName] || viewName;
@@ -355,6 +534,7 @@
       else if (currentView === 'CASH') c.innerHTML = renderCash();
       else if (currentView === 'PROFITS') c.innerHTML = renderProfits();
       else if (currentView === 'SETTINGS') c.innerHTML = renderSettings();
+      if (currentView === 'TEAM') c.innerHTML = renderTeamView();
     }
 
     // 1. DASHBOARD

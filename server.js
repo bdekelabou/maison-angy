@@ -142,20 +142,47 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     const db = readDb();
 
-    // POST /api/login (Authentication)
+    // POST /api/login (Multi-User Authentication: Admin or Gérante)
     if (pathname === '/api/login' && req.method === 'POST') {
       const data = await parseBody(req);
-      const user = (data.username || '').toString().trim();
-      const pass = (data.password || '').toString().trim();
-      const adminUser = (db.settings.adminUsername || '93849200').toString().trim();
-      const adminPass = (db.settings.adminPassword || 'password2026').toString().trim();
+      const userPhone = (data.username || '').toString().trim().replace(/[^0-9]/g, '');
+      const userPass = (data.password || '').toString().trim();
 
-      if (user === adminUser && pass === adminPass) {
+      const users = db.users || [
+        { id: 1, name: "Ange Ines", phone: "93849200", password: "password2026", role: "ADMIN", roleLabel: "Propriétaire & Administratrice" }
+      ];
+
+      // Match either by phone and password in users list, or fallback to admin settings
+      const found = users.find(u => {
+        const uClean = (u.phone || '').toString().trim().replace(/[^0-9]/g, '');
+        return uClean === userPhone && u.password === userPass;
+      });
+
+      if (found) {
         res.writeHead(200);
         res.end(JSON.stringify({
           success: true,
-          token: 'angy_token_' + Date.now(),
-          user: adminUser
+          token: 'angy_token_' + found.id + '_' + Date.now(),
+          user: {
+            id: found.id,
+            name: found.name,
+            phone: found.phone,
+            role: found.role,
+            roleLabel: found.roleLabel || (found.role === 'ADMIN' ? 'Propriétaire' : 'Gérante')
+          }
+        }));
+      } else if (userPhone === (db.settings.adminUsername || '93849200').replace(/[^0-9]/g, '') && userPass === (db.settings.adminPassword || 'password2026')) {
+        res.writeHead(200);
+        res.end(JSON.stringify({
+          success: true,
+          token: 'angy_token_admin_' + Date.now(),
+          user: {
+            id: 1,
+            name: "Ange Ines",
+            phone: db.settings.adminUsername || "93849200",
+            role: "ADMIN",
+            roleLabel: "Propriétaire & Administratrice"
+          }
         }));
       } else {
         res.writeHead(401);
@@ -164,6 +191,69 @@ const server = http.createServer(async (req, res) => {
           error: 'Numéro ou mot de passe incorrect.'
         }));
       }
+      return;
+    }
+
+    // --- USERS MANAGEMENT (Admin creates / manages Gérantes) ---
+    if (pathname === '/api/users' && req.method === 'GET') {
+      res.writeHead(200);
+      res.end(JSON.stringify(db.users || []));
+      return;
+    }
+
+    if (pathname === '/api/users' && req.method === 'POST') {
+      const data = await parseBody(req);
+      if (!db.users) db.users = [];
+      const newUser = {
+        id: db.users.length > 0 ? Math.max(...db.users.map(u => u.id)) + 1 : 1,
+        name: data.name || 'Nouvelle Gérante',
+        phone: (data.phone || '').toString().trim().replace(/[^0-9]/g, ''),
+        password: data.password || 'gerante2026',
+        role: data.role || 'GERANTE',
+        roleLabel: data.role === 'ADMIN' ? 'Propriétaire' : 'Gérante de Vente',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      db.users.push(newUser);
+      saveDb(db);
+      res.writeHead(201);
+      res.end(JSON.stringify({ success: true, user: newUser }));
+      return;
+    }
+
+    if (pathname.startsWith('/api/users/') && req.method === 'PUT') {
+      const id = parseInt(pathname.split('/')[3]);
+      const data = await parseBody(req);
+      if (!db.users) db.users = [];
+      const idx = db.users.findIndex(u => u.id === id);
+      if (idx !== -1) {
+        // Prevent changing master admin role to non-admin
+        if (db.users[idx].role === 'ADMIN' && data.role && data.role !== 'ADMIN') {
+          delete data.role;
+        }
+        db.users[idx] = { ...db.users[idx], ...data, id };
+        saveDb(db);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, user: db.users[idx] }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'User not found' }));
+      }
+      return;
+    }
+
+    if (pathname.startsWith('/api/users/') && req.method === 'DELETE') {
+      const id = parseInt(pathname.split('/')[3]);
+      if (!db.users) db.users = [];
+      const userToDelete = db.users.find(u => u.id === id);
+      if (userToDelete && userToDelete.role === 'ADMIN') {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'Impossible de supprimer le compte Propriétaire principal.' }));
+        return;
+      }
+      db.users = db.users.filter(u => u.id !== id);
+      saveDb(db);
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true }));
       return;
     }
 
@@ -179,6 +269,7 @@ const server = http.createServer(async (req, res) => {
         trips: db.trips,
         cashTransactions: db.cashTransactions.slice(-50), // last 50
         cashCount: db.cashTransactions.length,
+        users: db.users || [],
         stats: computeStats(db)
       }));
       return;
