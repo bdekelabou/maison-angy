@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
   <title>Maison Angy - Boutique & Mode au Féminin</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Maison Angy">
+  <link rel="apple-touch-icon" href="/images/logo.jpg">
   <link rel="stylesheet" href="/css/style.css">
   <style>
     /* Inlined fallbacks */
@@ -519,6 +526,41 @@
               </button>
               <p class="product-desc">${p.description || ''}</p>
 
+              ${(p.sizes || p.colors) ? `
+              <div style="margin-bottom:0.6rem; display:flex; flex-direction:column; gap:0.4rem;">
+                ${p.sizes ? `
+                <div>
+                  <span style="font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase;">Tailles</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.3rem;">
+                    ${p.sizes.split(',').map(s => s.trim()).filter(Boolean).map(s => `
+                      <span style="border:1.5px solid #cbd5e1; border-radius:5px; padding:2px 8px; font-size:0.75rem; font-weight:600; color:#0f172a; background:#f8fafc; cursor:default;">${s}</span>
+                    `).join('')}
+                  </div>
+                </div>` : ''}
+                ${p.colors ? `
+                <div>
+                  <span style="font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase;">Couleurs</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.3rem;">
+                    ${p.colors.split(',').map(c => c.trim()).filter(Boolean).map(c => {
+                      const colorMap = {
+                        'noir': '#0f172a', 'blanc': '#f8fafc', 'rouge': '#ef4444', 'bleu': '#3b82f6',
+                        'vert': '#22c55e', 'jaune': '#eab308', 'rose': '#ec4899', 'orange': '#f97316',
+                        'violet': '#a855f7', 'gris': '#9ca3af', 'beige': '#d4a574', 'marron': '#92400e',
+                        'caramel': '#c59b27', 'bordeaux': '#881337', 'marine': '#1e3a5f', 'kaki': '#65a30d',
+                        'corail': '#fb7185', 'lavande': '#c084fc', 'turquoise': '#2dd4bf'
+                      };
+                      const bg = colorMap[c.toLowerCase()] || '#94a3b8';
+                      const isDark = ['noir','bleu','rouge','bordeaux','marine','violet','marron'].some(d => c.toLowerCase().includes(d));
+                      return `<span title="${c}" style="display:inline-flex; align-items:center; gap:4px; border:1.5px solid #e2e8f0; border-radius:20px; padding:2px 8px; font-size:0.72rem; font-weight:600; background:#fff; color:#0f172a; cursor:default;">
+                        <span style="width:12px; height:12px; border-radius:50%; background:${bg}; border:1.5px solid rgba(0,0,0,0.15); display:inline-block; flex-shrink:0;"></span>
+                        ${c}
+                      </span>`;
+                    }).join('')}
+                  </div>
+                </div>` : ''}
+              </div>
+              ` : ''}
+
               ${(p.price3 || p.price6 || p.price12) ? `
               <div style="background:#fefce8; border:1px solid #fde047; border-radius:8px; padding:0.55rem 0.75rem; margin-bottom:0.6rem;">
                 <div style="font-size:0.72rem; font-weight:800; color:#92400e; margin-bottom:0.35rem; letter-spacing:0.5px; text-transform:uppercase;">💰 Prix Gros & Détail</div>
@@ -559,12 +601,102 @@
       }).join('');
     }
 
-    function addToCart(prodId) {
+    function openSizeColorPicker(prodId) {
+      const prod = products.find(p => p.id === prodId);
+      if (!prod) return;
+      const curr = settings.currency || 'FCFA';
+      const activePrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
+      const sizes = prod.sizes ? prod.sizes.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const colors = prod.colors ? prod.colors.split(',').map(c => c.trim()).filter(Boolean) : [];
+
+      const colorMap = {
+        'noir': '#0f172a', 'blanc': '#f0f0f0', 'rouge': '#ef4444', 'bleu': '#3b82f6',
+        'vert': '#22c55e', 'jaune': '#eab308', 'rose': '#ec4899', 'orange': '#f97316',
+        'violet': '#a855f7', 'gris': '#9ca3af', 'beige': '#d4a574', 'marron': '#92400e',
+        'caramel': '#c59b27', 'bordeaux': '#881337', 'marine': '#1e3a5f', 'kaki': '#65a30d',
+        'corail': '#fb7185', 'lavande': '#c084fc', 'turquoise': '#2dd4bf'
+      };
+
+      let selectedSize = sizes.length === 1 ? sizes[0] : '';
+      let selectedColor = colors.length === 1 ? colors[0] : '';
+
+      const modal = document.createElement('div');
+      modal.id = 'sizeColorModal';
+      modal.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.7); z-index:5000; display:flex; align-items:flex-end; justify-content:center; padding:0;';
+
+      function renderPicker() {
+        modal.innerHTML = `
+          <div style="background:#fff; width:100%; max-width:500px; border-radius:16px 16px 0 0; padding:1.5rem; max-height:85vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+              <div>
+                <div style="font-weight:800; font-size:1rem; color:#0f172a;">${prod.name}</div>
+                <div style="color:#c59b27; font-weight:700; font-size:0.95rem; margin-top:2px;">${activePrice.toLocaleString('fr-FR')} ${curr}</div>
+              </div>
+              <button onclick="document.getElementById('sizeColorModal').remove()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b; line-height:1;">✕</button>
+            </div>
+
+            ${sizes.length > 0 ? `
+            <div style="margin-bottom:1.25rem;">
+              <div style="font-weight:700; font-size:0.85rem; color:#475569; margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.5px;">Choisissez votre Taille</div>
+              <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                ${sizes.map(s => `
+                  <button onclick="selectedSize='${s}'; renderPicker();"
+                    style="border:${selectedSize === s ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1'}; background:${selectedSize === s ? '#0f172a' : '#fff'}; color:${selectedSize === s ? '#fff' : '#0f172a'}; border-radius:8px; padding:0.5rem 1rem; font-weight:700; font-size:0.9rem; cursor:pointer; transition:all 0.15s;">
+                    ${s}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            ` : ''}
+
+            ${colors.length > 0 ? `
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-weight:700; font-size:0.85rem; color:#475569; margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.5px;">Choisissez la Couleur</div>
+              <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                ${colors.map(c => {
+                  const bg = colorMap[c.toLowerCase()] || '#94a3b8';
+                  return `
+                  <button onclick="selectedColor='${c}'; renderPicker();"
+                    title="${c}"
+                    style="display:inline-flex; align-items:center; gap:6px; border:${selectedColor === c ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1'}; background:${selectedColor === c ? '#f8fafc' : '#fff'}; border-radius:20px; padding:6px 12px; cursor:pointer; font-size:0.82rem; font-weight:600; color:#0f172a;">
+                    <span style="width:16px; height:16px; border-radius:50%; background:${bg}; border:1.5px solid rgba(0,0,0,0.12); flex-shrink:0;"></span>
+                    ${c}
+                  </button>`;
+                }).join('')}
+              </div>
+            </div>
+            ` : ''}
+
+            <button
+              onclick="${(sizes.length > 0 && !selectedSize) || (colors.length > 0 && !selectedColor) ? `alert('Veuillez choisir ${sizes.length > 0 && !selectedSize ? 'une taille' : ''}${sizes.length > 0 && !selectedSize && colors.length > 0 && !selectedColor ? ' et ' : ''}${colors.length > 0 && !selectedColor ? 'une couleur' : ''} avant de continuer.');' : `addToCart(${prodId}, selectedSize, selectedColor); document.getElementById('sizeColorModal').remove();`}"
+              style="width:100%; background:#0f172a; color:#fff; border:none; padding:0.9rem; border-radius:10px; font-weight:800; font-size:1rem; cursor:pointer; margin-top:0.5rem;">
+              🛍️ Ajouter au Panier
+            </button>
+          </div>
+        `;
+      }
+      renderPicker();
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    }
+
+    function addToCart(prodId, preselectedSize, preselectedColor) {
       const prod = products.find(p => p.id === prodId);
       if (!prod) return;
 
+      // If product has sizes or colors and no preselection yet, show picker modal
+      const hasSizes = prod.sizes && prod.sizes.trim();
+      const hasColors = prod.colors && prod.colors.trim();
+      if ((hasSizes || hasColors) && preselectedSize === undefined) {
+        openSizeColorPicker(prodId);
+        return;
+      }
+
       const activePrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
-      const existing = cart.find(i => i.productId === prodId);
+      const sizeLabel = preselectedSize || '';
+      const colorLabel = preselectedColor || '';
+      const cartKey = prodId + '|' + sizeLabel + '|' + colorLabel;
+      const existing = cart.find(i => i.cartKey === cartKey);
 
       if (existing) {
         if (existing.quantity >= prod.stock) {
@@ -574,6 +706,9 @@
         existing.quantity += 1;
       } else {
         cart.push({
+          cartKey,
+          selectedSize: sizeLabel,
+          selectedColor: colorLabel,
           productId: prod.id,
           productName: prod.name,
           price: activePrice,
@@ -588,12 +723,12 @@
     }
 
     function updateQty(prodId, delta) {
-      const item = cart.find(i => i.productId === prodId);
+      const item = cart.find(i => (i.cartKey || i.productId) === (prodId));
       if (!item) return;
 
       item.quantity += delta;
       if (item.quantity <= 0) {
-        cart = cart.filter(i => i.productId !== prodId);
+        cart = cart.filter(i => (i.cartKey || i.productId) !== prodId);
       } else if (item.quantity > item.maxStock) {
         item.quantity = item.maxStock;
         showToast('Stock maximal atteint.');
@@ -601,8 +736,8 @@
       updateCartUI();
     }
 
-    function removeFromCart(prodId) {
-      cart = cart.filter(i => i.productId !== prodId);
+    function removeFromCart(key) {
+      cart = cart.filter(i => (i.cartKey || i.productId) !== key);
       updateCartUI();
     }
 
@@ -701,12 +836,16 @@
                 <div class="cart-item-title">${it.productName}</div>
                 <div class="cart-item-price">${(it.price * it.quantity).toLocaleString('fr-FR')} ${curr}</div>
                 <div class="cart-qty-ctrls">
-                  <button class="qty-btn" onclick="updateQty(${it.productId}, -1)">-</button>
+                  <button class="qty-btn" onclick="updateQty('${it.cartKey || it.productId}', -1)">-</button>
                   <span class="qty-num">${it.quantity}</span>
-                  <button class="qty-btn" onclick="updateQty(${it.productId}, 1)">+</button>
+                  <button class="qty-btn" onclick="updateQty('${it.cartKey || it.productId}', 1)">+</button>
                 </div>
               </div>
-              <button class="cart-item-remove" onclick="removeFromCart(${it.productId})">🗑️</button>
+              <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                ${it.selectedSize ? '<span style="background:#f1f5f9; border-radius:4px; padding:1px 6px; font-weight:600;">'+it.selectedSize+'</span> ' : ''}
+                ${it.selectedColor ? '<span style="background:#fef9c3; border-radius:4px; padding:1px 6px; font-weight:600;">'+it.selectedColor+'</span>' : ''}
+              </div>
+              <button class="cart-item-remove" onclick="removeFromCart('${it.cartKey || it.productId}')">🗑️</button>
             </div>
           `).join('')}
 
@@ -873,7 +1012,12 @@
       msg += `📋 *COMMANDE : ${orderCode}*\n`;
       msg += `------------------------\n`;
       cart.forEach(item => {
-        msg += `• ${item.quantity}x ${item.productName} : ${(item.price * item.quantity).toLocaleString('fr-FR')} ${settings.currency}\n`;
+        let itemDetail = `• ${item.quantity}x ${item.productName}`;
+        if (item.selectedSize || item.selectedColor) {
+          itemDetail += ` (${[item.selectedSize, item.selectedColor].filter(Boolean).join(', ')})`;
+        }
+        itemDetail += ` : ${(item.price * item.quantity).toLocaleString('fr-FR')} ${settings.currency}\n`;
+        msg += itemDetail;
       });
       msg += `------------------------\n`;
       msg += `💰 *Sous-total :* ${subtotal.toLocaleString('fr-FR')} ${settings.currency}\n`;
@@ -1455,6 +1599,66 @@
 
     checkFrontAuth();
     initStore();
+  </script>
+
+  <!-- PWA: Install Banner + Service Worker -->
+  <div id="pwaInstallBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#0f172a; color:#fff; padding:0.85rem 1.25rem; display:none; align-items:center; justify-content:space-between; gap:1rem; box-shadow:0 -4px 20px rgba(0,0,0,0.3); border-top:2px solid #c59b27;">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <img src="/images/logo.jpg" style="width:40px; height:40px; border-radius:50%; border:1.5px solid #c59b27;" />
+      <div>
+        <div style="font-weight:700; font-size:0.9rem;">📱 Installer Maison Angy</div>
+        <div style="font-size:0.75rem; color:#94a3b8;">Accès rapide depuis votre écran d'accueil !</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+      <button id="pwaInstallBtn" style="background:#c59b27; color:#0f172a; border:none; padding:0.5rem 1rem; border-radius:8px; font-weight:800; cursor:pointer; font-size:0.85rem;">
+        Installer
+      </button>
+      <button onclick="document.getElementById('pwaInstallBanner').style.display='none';" style="background:transparent; color:#94a3b8; border:1px solid #334155; padding:0.5rem 0.75rem; border-radius:8px; cursor:pointer; font-size:0.85rem;">
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('SW registered:', reg.scope);
+        }).catch(err => console.warn('SW error:', err));
+      });
+    }
+
+    // PWA Install Prompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('pwaInstallBanner');
+      if (banner) banner.style.display = 'flex';
+    });
+
+    document.getElementById('pwaInstallBtn').addEventListener('click', () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choice => {
+        deferredPrompt = null;
+        document.getElementById('pwaInstallBanner').style.display = 'none';
+      });
+    });
+
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('pwaInstallBanner').style.display = 'none';
+      deferredPrompt = null;
+    });
+
+    // Auto-open cart if ?panier=1
+    if (window.location.search.includes('panier=1')) {
+      window.addEventListener('load', () => setTimeout(() => {
+        if (typeof openCart === 'function') openCart();
+      }, 800));
+    }
   </script>
 </body>
 </html>

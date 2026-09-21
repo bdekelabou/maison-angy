@@ -1,0 +1,41 @@
+{
+  "name": "Maison Angy Collection",
+  "short_name": "Maison Angy",
+  "description": "Boutique Mode & Élégance au Féminin - Lomé, Togo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/images/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "shopping",
+    "lifestyle"
+  ],
+  "shortcuts": [
+    {
+      "name": "Voir la Boutique",
+      "url": "/",
+      "description": "Parcourir les articles"
+    },
+    {
+      "name": "Commander sur WhatsApp",
+      "url": "/?panier=1",
+      "description": "Passer commande"
+    }
+  ]
+}

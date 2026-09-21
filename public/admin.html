@@ -1726,6 +1726,26 @@
                   <strong id="marginValPreview">+3 000 FCFA (46% de marge)</strong>
                 </div>
 
+                <!-- TAILLES & COULEURS -->
+                <div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; padding:1rem; margin-bottom:1rem;">
+                  <div style="font-weight:700; font-size:0.88rem; color:#166534; margin-bottom:0.65rem; display:flex; align-items:center; gap:0.4rem;">
+                    <span>👗</span>
+                    <span>Tailles & Couleurs disponibles — Optionnel</span>
+                  </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div>
+                      <label style="display:block; font-weight:600; font-size:0.8rem; color:#166534; margin-bottom:0.3rem;">Tailles disponibles</label>
+                      <input type="text" id="p_sizes" placeholder="Ex: S, M, L, XL, XXL ou Taille unique" value="${p && p.sizes ? p.sizes : ''}" style="width:100%; padding:0.5rem; border-radius:6px; border:1.5px solid #86efac; font-size:0.88rem;" />
+                      <div style="font-size:0.72rem; color:#15803d; margin-top:0.25rem;">Séparez par des virgules</div>
+                    </div>
+                    <div>
+                      <label style="display:block; font-weight:600; font-size:0.8rem; color:#166534; margin-bottom:0.3rem;">Couleurs disponibles</label>
+                      <input type="text" id="p_colors" placeholder="Ex: Noir, Blanc, Rouge, Beige" value="${p && p.colors ? p.colors : ''}" style="width:100%; padding:0.5rem; border-radius:6px; border:1.5px solid #86efac; font-size:0.88rem;" />
+                      <div style="font-size:0.72rem; color:#15803d; margin-top:0.25rem;">Séparez par des virgules</div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- PALIERS DE PRIX (LOT DÉTAILLANT / GROSSISTE) -->
                 <div style="background:#fefce8; border:1.5px solid #fde047; border-radius:10px; padding:1rem; margin-bottom:1rem;">
                   <div style="font-weight:700; font-size:0.88rem; color:#854d0e; margin-bottom:0.65rem; display:flex; align-items:center; gap:0.4rem;">
@@ -2030,6 +2050,8 @@
         isFeatured: document.getElementById('p_isFeatured').checked,
         published: document.getElementById('p_published').checked,
         description: (document.getElementById('p_description') ? document.getElementById('p_description').value.trim() : ''),
+        sizes: (document.getElementById('p_sizes') ? document.getElementById('p_sizes').value.trim() : ''),
+        colors: (document.getElementById('p_colors') ? document.getElementById('p_colors').value.trim() : ''),
         price3: document.getElementById('p_price3') && document.getElementById('p_price3').value ? parseFloat(document.getElementById('p_price3').value) : null,
         price6: document.getElementById('p_price6') && document.getElementById('p_price6').value ? parseFloat(document.getElementById('p_price6').value) : null,
         price12: document.getElementById('p_price12') && document.getElementById('p_price12').value ? parseFloat(document.getElementById('p_price12').value) : null,
