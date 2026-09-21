@@ -334,6 +334,8 @@ const server = http.createServer(async (req, res) => {
         cashTransactions: db.cashTransactions.slice(-50), // last 50
         cashCount: db.cashTransactions.length,
         users: db.users || [],
+        shipments: db.shipments || [],
+        suppliers: db.suppliers || ['Grossiste Assigamé (Lomé)', 'Fournisseur Cotonou / Nigéria', 'Importateur Chine / Dubaï', 'Autre Fournisseur'],
         stats: computeStats(db)
       }));
       return;
@@ -343,6 +345,79 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/stats' && req.method === 'GET') {
       res.writeHead(200);
       res.end(JSON.stringify(computeStats(db)));
+      return;
+    }
+
+    // --- SHIPMENTS & RECEPTIONS (HIBOUTIK STYLE) ---
+    if (pathname === '/api/shipments' && req.method === 'GET') {
+      res.writeHead(200);
+      res.end(JSON.stringify(db.shipments || []));
+      return;
+    }
+
+    if (pathname === '/api/shipments' && req.method === 'POST') {
+      const data = await parseBody(req);
+      if (!db.shipments) db.shipments = [];
+      if (!db.products) db.products = [];
+
+      const count = db.shipments.length + 1;
+      const shipmentNumber = data.number || ('ARR-' + new Date().getFullYear() + '-' + String(count).padStart(3, '0'));
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      let totalQty = 0;
+      let totalCost = 0;
+
+      const processedItems = items.map(it => {
+        const prodId = parseInt(it.productId);
+        const p = db.products.find(prod => prod.id === prodId);
+        const qty = parseInt(it.quantity) || 0;
+        const cost = parseFloat(it.costPrice) || (p ? p.costPrice : 0);
+        const sale = parseFloat(it.salePrice) || (p ? p.salePrice : 0);
+
+        if (p && qty > 0) {
+          p.stock = (p.stock || 0) + qty;
+          p.costPrice = cost; // met à jour le coût d'achat au dernier arrivage
+          if (it.salePrice && parseFloat(it.salePrice) > 0) {
+            p.salePrice = parseFloat(it.salePrice); // met à jour le prix de vente habituel si spécifié
+          }
+        }
+
+        const lineTotal = qty * cost;
+        totalQty += qty;
+        totalCost += lineTotal;
+
+        return {
+          productId: prodId,
+          productName: p ? p.name : (it.productName || 'Article'),
+          quantity: qty,
+          costPrice: cost,
+          salePrice: sale,
+          totalCost: lineTotal
+        };
+      });
+
+      const newShipment = {
+        id: db.shipments.length > 0 ? Math.max(...db.shipments.map(s => s.id)) + 1 : 1,
+        number: shipmentNumber,
+        supplier: data.supplier || 'Fournisseur Général',
+        date: data.date || new Date().toISOString().split('T')[0],
+        items: processedItems,
+        totalQuantity: totalQty,
+        totalCost: totalCost,
+        notes: data.notes || '',
+        registeredBy: data.registeredBy || 'Ange Ines',
+        createdAt: new Date().toISOString()
+      };
+
+      db.shipments.unshift(newShipment);
+      saveDb(db);
+
+      res.writeHead(201);
+      res.end(JSON.stringify({
+        success: true,
+        shipment: newShipment,
+        products: db.products
+      }));
       return;
     }
 

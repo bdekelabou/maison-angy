@@ -124,6 +124,11 @@
           <span>Stock & Articles</span>
         </button>
 
+        <button class="nav-item" onclick="switchView('SHIPMENTS')" id="nav-SHIPMENTS">
+          <span>📦</span>
+          <span>Arrivages & Fournisseurs</span>
+        </button>
+
         <button class="nav-item" onclick="switchView('TRIPS')" id="nav-TRIPS">
           <span>⛽</span>
           <span>Déplacements & Frais</span>
@@ -257,6 +262,7 @@
       const navCash = document.getElementById('nav-CASH');
       const navProfits = document.getElementById('nav-PROFITS');
       const navTeam = document.getElementById('nav-TEAM');
+      const navShipments = document.getElementById('nav-SHIPMENTS');
       const navSettings = document.getElementById('nav-SETTINGS');
       const topCash = document.querySelector('.cash-pill');
 
@@ -267,6 +273,7 @@
       if (navCash) navCash.style.display = (isAdmin || perms.cash === true) ? 'flex' : 'none';
       if (navProfits) navProfits.style.display = (isAdmin || perms.profits === true) ? 'flex' : 'none';
       if (navTeam) navTeam.style.display = isAdmin ? 'flex' : 'none';
+      if (navShipments) navShipments.style.display = (isAdmin || perms.products !== false) ? 'flex' : 'none';
       if (navSettings) navSettings.style.display = (isAdmin || perms.settings === true) ? 'flex' : 'none';
 
       if (topCash) topCash.style.display = (isAdmin || perms.cash === true) ? 'inline-flex' : 'none';
@@ -622,6 +629,7 @@
         'CASH': 'Journal de Caisse & Trésorerie',
         'PROFITS': 'Bénéfices & Rentabilité',
         'TEAM': 'Gestion de l\'Équipe & Accès Gérantes',
+        'SHIPMENTS': '📦 Arrivages & Réassort Fournisseurs (Type Hiboutik)',
         'SETTINGS': 'Configuration & WhatsApp'
       };
       document.getElementById('pageTitle').textContent = titles[viewName] || viewName;
@@ -638,6 +646,7 @@
       else if (currentView === 'TRIPS') c.innerHTML = renderTrips();
       else if (currentView === 'CASH') c.innerHTML = renderCash();
       else if (currentView === 'PROFITS') c.innerHTML = renderProfits();
+      else if (currentView === 'SHIPMENTS') c.innerHTML = renderShipmentsView();
       else if (currentView === 'SETTINGS') c.innerHTML = renderSettings();
       if (currentView === 'TEAM') c.innerHTML = renderTeamView();
     }
@@ -919,7 +928,12 @@
         <div class="panel">
           <div class="panel-header">
             <div class="panel-title">👗 Articles & Nouveautés Octobre (${products.length})</div>
-            <button class="btn-action-primary" onclick="openProductModal()">+ Ajouter un Nouvel Article</button>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="openNewShipmentModal()">
+                <span>📦 + Nouvel Arrivage Fournisseur</span>
+              </button>
+              <button class="btn-action-primary" onclick="openProductModal()">+ Créer un Article</button>
+            </div>
           </div>
           <div class="data-table-wrap">
             <table class="data-table">
@@ -2012,6 +2026,426 @@
     }
 
     checkAuth();
+
+    // ==========================================
+    // 10. ARRIVAGES & FOURNISSEURS (HIBOUTIK STYLE)
+    // ==========================================
+    function renderShipmentsView() {
+      const shipments = appData.shipments || [];
+      const curr = appData.settings.currency || 'FCFA';
+
+      let totalPieces = 0;
+      let totalCostInvested = 0;
+      shipments.forEach(s => {
+        totalPieces += (s.totalQuantity || 0);
+        totalCostInvested += (s.totalCost || 0);
+      });
+
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">📦 Gestion des Arrivages & Réassort Fournisseurs</div>
+              <p style="color:#64748b; font-size:0.85rem; margin-top:0.25rem;">
+                Enregistrez chaque réception de marchandise par N° d'arrivage et fournisseur. Les stocks augmentent automatiquement et vos prix de vente habituels restent protégés (système type Hiboutik).
+              </p>
+            </div>
+            <button class="btn-action-primary" onclick="openNewShipmentModal()">
+              <span>+ Enregistrer un Nouvel Arrivage</span>
+            </button>
+          </div>
+
+          <!-- CARTES STATISTIQUES ARRIVAGES -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; padding:1.25rem; background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+            <div style="background:#fff; padding:1rem; border-radius:8px; border:1px solid #cbd5e1; border-left:4px solid #c59b27;">
+              <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Total Arrivages Reçus</div>
+              <div style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-top:0.2rem;">${shipments.length} arrivage(s)</div>
+            </div>
+            <div style="background:#fff; padding:1rem; border-radius:8px; border:1px solid #cbd5e1; border-left:4px solid #2563eb;">
+              <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Total Pièces Réceptionnées</div>
+              <div style="font-size:1.4rem; font-weight:800; color:#2563eb; margin-top:0.2rem;">+${totalPieces.toLocaleString('fr-FR')} pièces</div>
+            </div>
+            <div style="background:#fff; padding:1rem; border-radius:8px; border:1px solid #cbd5e1; border-left:4px solid #10b981;">
+              <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Total Investi en Stock</div>
+              <div style="font-size:1.4rem; font-weight:800; color:#10b981; margin-top:0.2rem;">${totalCostInvested.toLocaleString('fr-FR')} ${curr}</div>
+            </div>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Arrivage</th>
+                  <th>Date</th>
+                  <th>Fournisseur</th>
+                  <th>Détails Articles</th>
+                  <th>Total Pièces</th>
+                  <th>Montant Achat</th>
+                  <th>Enregistré Par</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${shipments.length === 0 ? `
+                  <tr>
+                    <td colspan="8" style="text-align:center; padding:3.5rem 1rem;">
+                      <div style="font-size:2.8rem; margin-bottom:0.75rem;">📦 ✨</div>
+                      <h3>Aucun arrivage enregistré pour le moment</h3>
+                      <p style="color:#64748b; margin-top:0.5rem; margin-bottom:1.25rem;">
+                        Quand vous recevez de nouveaux cartons de collants, boubous ou robes, enregistrez votre arrivage ici.
+                      </p>
+                      <button class="btn-action-primary" onclick="openNewShipmentModal()" style="margin:0 auto;">
+                        + Enregistrer le Premier Arrivage
+                      </button>
+                    </td>
+                  </tr>
+                ` : shipments.map(s => `
+                  <tr>
+                    <td>
+                      <span style="font-family:monospace; font-weight:800; color:#c59b27; font-size:0.95rem;">
+                        ${s.number}
+                      </span>
+                    </td>
+                    <td>
+                      <span style="color:#475569; font-size:0.85rem; font-weight:600;">${s.date}</span>
+                    </td>
+                    <td>
+                      <strong style="color:#0f172a;">${s.supplier}</strong>
+                    </td>
+                    <td>
+                      <div style="font-size:0.82rem; color:#475569; max-width:240px;">
+                        ${(s.items || []).map(it => `${it.productName} (+${it.quantity})`).join(', ')}
+                      </div>
+                    </td>
+                    <td>
+                      <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:9999px; font-weight:700; font-size:0.85rem;">
+                        +${s.totalQuantity} pcs
+                      </span>
+                    </td>
+                    <td>
+                      <strong style="color:#0f172a;">${(s.totalCost || 0).toLocaleString('fr-FR')} ${curr}</strong>
+                    </td>
+                    <td>
+                      <span style="font-size:0.82rem; color:#64748b;">${s.registeredBy || 'Ange Ines'}</span>
+                    </td>
+                    <td style="text-align:right;">
+                      <button class="btn-sm-action primary" onclick="openShipmentDetailModal(${s.id})" title="Voir le bordereau complet">
+                        👁️ Bordereau
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // Modal Nouvel Arrivage (Style Hiboutik)
+    window.currentShipmentRows = [];
+
+    function openNewShipmentModal() {
+      const products = appData.products || [];
+      if (products.length === 0) {
+        alert('Veuillez d\'abord créer au moins un article dans votre catalogue avant d\'enregistrer un arrivage.');
+        openProductModal();
+        return;
+      }
+
+      const shipments = appData.shipments || [];
+      const nextNum = 'ARR-' + new Date().getFullYear() + '-' + String(shipments.length + 1).padStart(3, '0');
+      const today = new Date().toISOString().split('T')[0];
+
+      // Initialiser avec une première ligne
+      window.currentShipmentRows = [
+        {
+          productId: products[0].id,
+          quantity: 10,
+          costPrice: products[0].costPrice || 3000,
+          salePrice: products[0].salePrice || 6500
+        }
+      ];
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:750px;">
+            <div class="modal-head">
+              <div>
+                <h3>📦 Nouvel Arrivage Fournisseur (Type Hiboutik)</h3>
+                <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Le stock sera incrémenté automatiquement selon les quantités reçues</div>
+              </div>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <form onsubmit="handleSaveShipment(event)">
+              <div class="modal-body">
+                <!-- INFOS FOURNISSEUR & ARREST -->
+                <div style="display:grid; grid-template-columns:1fr 1.5fr 1fr; gap:0.75rem; margin-bottom:1rem; background:#f8fafc; padding:0.85rem; border-radius:8px; border:1px solid #cbd5e1;">
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.25rem;">N° Arrivage *</label>
+                    <input type="text" id="ship_number" required value="${nextNum}" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-weight:700; color:#c59b27;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.25rem;">Nom Fournisseur *</label>
+                    <input type="text" id="ship_supplier" required placeholder="Ex: Grossiste Assigamé, Cotonou, Chine..." value="Grossiste Assigamé (Lomé)" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.25rem;">Date Réception *</label>
+                    <input type="date" id="ship_date" required value="${today}" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                  </div>
+                </div>
+
+                <!-- LIGNES DES ARTICLES RECUS -->
+                <div style="margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700; color:#0f172a; font-size:0.9rem;">
+                    📋 Articles Reçus dans cet arrivage :
+                  </label>
+                  <button type="button" onclick="addShipmentRow()" class="btn-sm-action primary" style="padding:0.35rem 0.75rem; font-size:0.8rem;">
+                    + Ajouter un article
+                  </button>
+                </div>
+
+                <div id="shipmentRowsContainer" style="display:flex; flex-direction:column; gap:0.6rem; max-height:280px; overflow-y:auto; padding-right:4px;">
+                  <!-- Rendu dynamique des lignes d'articles -->
+                </div>
+
+                <!-- TOTAL GENERAL RECAP -->
+                <div style="margin-top:1rem; padding:0.85rem 1.1rem; background:#f0fdf4; border:1.5px solid #86efac; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <div style="font-size:0.8rem; color:#166534; font-weight:600;">Total Pièces Reçues :</div>
+                    <div id="shipTotalQtyPreview" style="font-size:1.3rem; font-weight:800; color:#15803d;">0 pièces</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-size:0.8rem; color:#166534; font-weight:600;">Montant Total Coût d'Achat :</div>
+                    <div id="shipTotalCostPreview" style="font-size:1.3rem; font-weight:800; color:#15803d;">0 FCFA</div>
+                  </div>
+                </div>
+
+                <!-- NOTES BORDEREAU -->
+                <div style="margin-top:0.75rem;">
+                  <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.25rem;">Notes / Référence Colis (facultatif)</label>
+                  <input type="text" id="ship_notes" placeholder="Ex: Carton N°2, livré par moto-taxi, frais transport inclus..." style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+                </div>
+
+              </div>
+              <div class="modal-foot">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal" style="background:#10b981;">
+                  ✅ Valider l'Arrivage & Incrémenter les Stocks
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      renderShipmentRows();
+    }
+
+    function renderShipmentRows() {
+      const container = document.getElementById('shipmentRowsContainer');
+      if (!container) return;
+      const products = appData.products || [];
+      const curr = appData.settings.currency || 'FCFA';
+
+      let totalQty = 0;
+      let totalCost = 0;
+
+      container.innerHTML = window.currentShipmentRows.map((row, idx) => {
+        const prod = products.find(p => p.id === row.productId) || products[0];
+        const lineTotal = (row.quantity || 0) * (row.costPrice || 0);
+        totalQty += (row.quantity || 0);
+        totalCost += lineTotal;
+
+        return `
+          <div style="display:grid; grid-template-columns:2.5fr 1fr 1.2fr 1.2fr auto; gap:0.5rem; align-items:center; background:#fff; padding:0.55rem 0.75rem; border:1px solid #cbd5e1; border-radius:6px;">
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Article sélectionné</label>
+              <select onchange="updateShipmentRowProduct(${idx}, this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.82rem; font-weight:600;">
+                ${products.map(p => `
+                  <option value="${p.id}" ${p.id === row.productId ? 'selected' : ''}>
+                    ${p.name} (Stock actuel: ${p.stock} pcs)
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Quantité reçue</label>
+              <input type="number" min="1" value="${row.quantity}" oninput="updateShipmentRowField(${idx}, 'quantity', this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem; font-weight:700; color:#2563eb;" />
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Prix d'Achat payé (${curr})</label>
+              <input type="number" min="0" value="${row.costPrice}" oninput="updateShipmentRowField(${idx}, 'costPrice', this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem; font-weight:600;" />
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Prix Vente habituel (${curr})</label>
+              <input type="number" min="0" value="${row.salePrice}" oninput="updateShipmentRowField(${idx}, 'salePrice', this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem; font-weight:600; color:#0f172a;" />
+            </div>
+
+            <div style="text-align:right; padding-top:1rem;">
+              ${window.currentShipmentRows.length > 1 ? `
+                <button type="button" onclick="removeShipmentRow(${idx})" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer;" title="Retirer cette ligne">
+                  ✕
+                </button>
+              ` : `
+                <div style="width:28px; height:28px;"></div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const qtyPreview = document.getElementById('shipTotalQtyPreview');
+      const costPreview = document.getElementById('shipTotalCostPreview');
+      if (qtyPreview) qtyPreview.textContent = `+${totalQty} pièces`;
+      if (costPreview) costPreview.textContent = `${totalCost.toLocaleString('fr-FR')} ${curr}`;
+    }
+
+    function addShipmentRow() {
+      const products = appData.products || [];
+      window.currentShipmentRows.push({
+        productId: products[0] ? products[0].id : 1,
+        quantity: 10,
+        costPrice: products[0] ? (products[0].costPrice || 3000) : 3000,
+        salePrice: products[0] ? (products[0].salePrice || 6500) : 6500
+      });
+      renderShipmentRows();
+    }
+
+    function removeShipmentRow(idx) {
+      if (window.currentShipmentRows.length <= 1) return;
+      window.currentShipmentRows.splice(idx, 1);
+      renderShipmentRows();
+    }
+
+    function updateShipmentRowProduct(idx, prodId) {
+      const pId = parseInt(prodId);
+      const prod = (appData.products || []).find(p => p.id === pId);
+      if (prod) {
+        window.currentShipmentRows[idx].productId = pId;
+        window.currentShipmentRows[idx].costPrice = prod.costPrice || 3000;
+        window.currentShipmentRows[idx].salePrice = prod.salePrice || 6500;
+      }
+      renderShipmentRows();
+    }
+
+    function updateShipmentRowField(idx, field, val) {
+      window.currentShipmentRows[idx][field] = parseFloat(val) || 0;
+      const curr = appData.settings.currency || 'FCFA';
+      let totalQty = 0;
+      let totalCost = 0;
+      window.currentShipmentRows.forEach(r => {
+        totalQty += (r.quantity || 0);
+        totalCost += ((r.quantity || 0) * (r.costPrice || 0));
+      });
+      const qtyPreview = document.getElementById('shipTotalQtyPreview');
+      const costPreview = document.getElementById('shipTotalCostPreview');
+      if (qtyPreview) qtyPreview.textContent = `+${totalQty} pièces`;
+      if (costPreview) costPreview.textContent = `${totalCost.toLocaleString('fr-FR')} ${curr}`;
+    }
+
+    async function handleSaveShipment(e) {
+      e.preventDefault();
+      const payload = {
+        number: document.getElementById('ship_number').value.trim(),
+        supplier: document.getElementById('ship_supplier').value.trim(),
+        date: document.getElementById('ship_date').value,
+        notes: document.getElementById('ship_notes').value.trim(),
+        registeredBy: currentUser ? currentUser.name : 'Ange Ines',
+        items: window.currentShipmentRows
+      };
+
+      try {
+        const res = await fetch('/api/shipments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          closeModal();
+          showToast(`✅ Arrivage ${payload.number} enregistré ! Les stocks ont été augmentés.`);
+          await loadData();
+          if (currentView === 'SHIPMENTS') switchView('SHIPMENTS');
+          else if (currentView === 'PRODUCTS') switchView('PRODUCTS');
+        } else {
+          alert('Erreur: ' + (json.error || 'Impossible d\'enregistrer l\'arrivage.'));
+        }
+      } catch (err) {
+        alert('Erreur réseau lors de l\'enregistrement de l\'arrivage: ' + err.message);
+      }
+    }
+
+    function openShipmentDetailModal(shipmentId) {
+      const s = (appData.shipments || []).find(it => it.id === shipmentId);
+      if (!s) return;
+      const curr = appData.settings.currency || 'FCFA';
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:650px;">
+            <div class="modal-head">
+              <div>
+                <h3>📦 Bordereau d'Arrivage : ${s.number}</h3>
+                <div style="font-size:0.8rem; color:#64748b;">Réception du ${s.date} • Fournisseur : <strong>${s.supplier}</strong></div>
+              </div>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div style="display:flex; justify-content:space-between; background:#f8fafc; padding:0.85rem; border-radius:6px; border:1px solid #cbd5e1; margin-bottom:1rem; font-size:0.85rem;">
+                <div>
+                  <span style="color:#64748b;">Enregistré par :</span> <strong>${s.registeredBy || 'Ange Ines'}</strong>
+                </div>
+                <div>
+                  <span style="color:#64748b;">Total pièces :</span> <strong style="color:#2563eb;">+${s.totalQuantity} pcs</strong>
+                </div>
+                <div>
+                  <span style="color:#64748b;">Coût d'achat total :</span> <strong style="color:#10b981;">${(s.totalCost || 0).toLocaleString('fr-FR')} ${curr}</strong>
+                </div>
+              </div>
+
+              <div class="data-table-wrap" style="border:1px solid #e2e8f0; border-radius:6px;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Article</th>
+                      <th>Quantité</th>
+                      <th>Prix d'Achat</th>
+                      <th>Prix Vente Habituel</th>
+                      <th>Total Ligne</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${(s.items || []).map(it => `
+                      <tr>
+                        <td><strong>${it.productName}</strong></td>
+                        <td><span style="font-weight:700; color:#2563eb;">+${it.quantity} pcs</span></td>
+                        <td>${it.costPrice.toLocaleString('fr-FR')} ${curr}</td>
+                        <td>${it.salePrice ? it.salePrice.toLocaleString('fr-FR') + ' ' + curr : '-'}</td>
+                        <td><strong>${(it.totalCost || (it.quantity * it.costPrice)).toLocaleString('fr-FR')} ${curr}</strong></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+
+              ${s.notes ? `
+                <div style="margin-top:1rem; padding:0.75rem; background:#fffdf5; border:1px solid #fef3c7; border-radius:6px; font-size:0.85rem; color:#78350f;">
+                  📝 <strong>Notes :</strong> ${s.notes}
+                </div>
+              ` : ''}
+            </div>
+            <div class="modal-foot">
+              <button type="button" class="btn-primary-modal" onclick="closeModal()">Fermer</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
   </script>
 </body>
 </html>

@@ -111,5 +111,12 @@
         "team": false
       }
     }
+  ],
+  "shipments": [],
+  "suppliers": [
+    "Grossiste Assigamé (Lomé)",
+    "Fournisseur Cotonou / Nigéria",
+    "Importateur Chine / Dubaï",
+    "Autre Fournisseur"
   ]
 }
