@@ -11,7 +11,7 @@ Application commerciale complète comprenant une **vitrine e-commerce cliente av
 
 ### 🛍️ Vitrine Cliente (Front-End)
 - **Catalogue & Nouveautés** : Présentation haut de gamme des arrivages, filtres par catégories et recherche instantanée.
-- **Panier & Commande WhatsApp 1-Clic** : Calcul automatique des totaux et génération du message WhatsApp complet pour finalisation immédiate (+228 93 84 92 00).
+- **Panier & Commande WhatsApp 1-Clic** : Calcul automatique des totaux et génération du message WhatsApp complet pour finalisation immédiate .
 - **Livraisons calibrées pour Lomé** : Choix des quartiers (*Déckon, Tokoin, Assigamé, Agoè, Adidogomé, Hedzranawoé, Baguida*) et expéditions en province/gares (*Tsévié, Atakpamé, Kpalimé, Sokodé, Kara*).
 - **Mode Gérante Intégré** : Dès connexion, la gérante peut ajouter, modifier, mettre en promotion (🏷️), mettre en avant (⭐), ou masquer/publier (👁️) ses articles directement sur la boutique.
 
@@ -40,12 +40,12 @@ node server.js
 
 ## 🔒 Sécurité & Accès Gérante
 
-- **Identifiant** : `93849200`
-- **Mot de passe** : `password2026`
+- **Identifiant** : ``
+- **Mot de passe** : ``
 
 ---
 
 ## 🌐 Liens Officiels
 - **Page Facebook Officielle** : [Maison Angy sur Facebook](https://www.facebook.com/profile.php?id=61587838474305)
-- **WhatsApp Boutique** : [+228 93 84 92 00](https://wa.me/22893849200)
+- **WhatsApp Boutique** : [+228 93 84 92 00](https://wa.me/2280000000)
 - **Localisation** : Lomé, Togo
