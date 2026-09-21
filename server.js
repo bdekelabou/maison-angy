@@ -145,7 +145,7 @@ const server = http.createServer(async (req, res) => {
     // POST /api/login (Multi-User Authentication: Admin or Gérante)
     if (pathname === '/api/login' && req.method === 'POST') {
       const data = await parseBody(req);
-      const userPhone = (data.username || '').toString().trim().replace(/[^0-9]/g, '');
+      const userPhone = (data.username || data.phone || '').toString().trim().replace(/[^0-9]/g, '');
       const userPass = (data.password || '').toString().trim();
 
       const users = db.users || [
@@ -267,8 +267,8 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // GET /api/all
-    if (pathname === '/api/all' && req.method === 'GET') {
+    // GET /api/all or /api/data
+    if ((pathname === '/api/all' || pathname === '/api/data') && req.method === 'GET') {
       recalculateCash(db);
       res.writeHead(200);
       res.end(JSON.stringify({
