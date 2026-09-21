@@ -116,7 +116,7 @@
 
         <button class="nav-item" onclick="switchView('DELIVERY_PERSONS')" id="nav-DELIVERY_PERSONS">
           <span>🛵</span>
-          <span>Livreurs & Coursiers</span>
+          <span>Livreurs & Tarifs</span>
         </button>
 
         <button class="nav-item" onclick="switchView('PRODUCTS')" id="nav-PRODUCTS">
@@ -216,6 +216,12 @@
       stats: {}
     };
     let currentView = 'DASHBOARD';
+    window.deliverySubTab = window.deliverySubTab || 'ZONES';
+
+    function switchDeliverySubTab(tab) {
+      window.deliverySubTab = tab;
+      renderView();
+    }
     let orderFilter = 'ALL';
 
     function showToast(msg) {
@@ -447,13 +453,13 @@
 
       document.getElementById('modalContainer').innerHTML = `
         <div class="admin-modal-overlay active">
-          <div class="admin-modal-card" style="max-width:550px;">
-            <div class="modal-head">
+          <div class="admin-modal-card" style="max-width:550px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="modal-head" style="flex-shrink:0;">
               <h3>${u ? "Modifier l'Accès Employée" : "Créer un Compte Collaboratrice / Gérante"}</h3>
               <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
-            <form onsubmit="handleSaveUser(event, ${u ? u.id : 'null'})">
-              <div class="modal-body">
+            <form onsubmit="handleSaveUser(event, ${u ? u.id : 'null'})" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+              <div class="modal-body" style="overflow-y:auto; flex:1 1 auto; min-height:0; padding:1.25rem;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
                   <div>
                     <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Nom de l'employée *</label>
@@ -856,10 +862,105 @@
     // 3. DELIVERY PERSONS (ANNUAIRE LIVREURS)
     function renderDeliveryPersons() {
       const dps = appData.deliveryPersons || [];
+      const zones = appData.deliveryZones || [];
+      const curr = appData.settings.currency || 'FCFA';
+      const subTab = window.deliverySubTab || 'ZONES';
+
+      if (subTab === 'ZONES') {
+        return `
+          <div class="panel">
+            <!-- SOUS-ONGLETS LIVRAISON & LOGISTIQUE -->
+            <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc;">
+              <button onclick="switchDeliverySubTab('ZONES')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:#fff; color:#0f172a; border:1px solid #cbd5e1; border-bottom:3px solid #c59b27;">
+                📍 Tarifs par Quartier Lomé (${zones.length})
+              </button>
+              <button onclick="switchDeliverySubTab('COURIERS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:none;">
+                🛵 Livreurs & Coursiers (${dps.length})
+              </button>
+            </div>
+
+            <div class="panel-header" style="padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div>
+                <div class="panel-title">📍 Tarifs de Livraison par Quartier de Lomé</div>
+                <div style="font-size:0.82rem; color:#64748b; margin-top:2px;">
+                  Ces tarifs sont appliqués directement lors de la commande de la cliente selon son quartier (ex: <strong>Kégué = 500 F</strong>, Déckon = 1 000 F, Agoè = 1 500 F...).
+                </div>
+              </div>
+              <button class="btn-action-primary" onclick="openDeliveryZoneModal()">+ Nouveau Quartier</button>
+            </div>
+
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Quartier / Zone Lomé</th>
+                    <th>Prix Livraison (FCFA)</th>
+                    <th>Délai / Précision</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${zones.length === 0 ? `
+                    <tr>
+                      <td colspan="5" style="text-align:center; padding:3rem;">
+                        <div style="font-size:2rem; margin-bottom:0.5rem;">📍</div>
+                        <h4>Aucun tarif de quartier configuré</h4>
+                        <button class="btn-action-primary" onclick="openDeliveryZoneModal()" style="margin-top:1rem;">+ Ajouter un Quartier</button>
+                      </td>
+                    </tr>
+                  ` : zones.map(z => `
+                    <tr>
+                      <td>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                          <span style="font-size:1.15rem;">📍</span>
+                          <div>
+                            <strong style="font-size:0.95rem; color:#0f172a;">${z.name}</strong>
+                            ${z.name.toLowerCase().includes('kég') || z.name.toLowerCase().includes('keg') ? '<span style="background:#fef3c7; color:#b45309; font-size:0.72rem; font-weight:800; padding:2px 6px; border-radius:4px; margin-left:6px;">Exemple 500 F</span>' : ''}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style="display:flex; align-items:center; gap:0.4rem;">
+                          <input type="number" id="quick_zone_${z.id}" value="${z.price}" style="width:90px; padding:0.35rem 0.5rem; font-weight:700; font-size:0.95rem; border:1.5px solid #cbd5e1; border-radius:6px; color:#0f172a; text-align:right;" />
+                          <span style="font-weight:700; color:#c59b27; font-size:0.85rem;">${curr}</span>
+                          <button class="btn-sm-action" onclick="handleQuickUpdatePrice(${z.id})" title="Enregistrer ce prix" style="background:#0f172a; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;">💾</button>
+                        </div>
+                      </td>
+                      <td style="font-size:0.85rem; color:#64748b;">${z.delai || 'Livraison moto express'}</td>
+                      <td>
+                        <span class="badge-status ${z.active !== false ? 'status-livre' : 'status-annule'}">
+                          ${z.active !== false ? '🟢 Actif' : '⚪ Inactif'}
+                        </span>
+                      </td>
+                      <td>
+                        <div style="display:flex; gap:0.35rem;">
+                          <button class="btn-sm-action" onclick="openDeliveryZoneModal(${z.id})" title="Modifier">✏️ Modifier</button>
+                          <button class="btn-sm-action danger" onclick="deleteDeliveryZone(${z.id})" title="Supprimer">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
 
       return `
         <div class="panel">
-          <div class="panel-header">
+          <!-- SOUS-ONGLETS LIVRAISON & LOGISTIQUE -->
+          <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc;">
+            <button onclick="switchDeliverySubTab('ZONES')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:none;">
+              📍 Tarifs par Quartier Lomé (${zones.length})
+            </button>
+            <button onclick="switchDeliverySubTab('COURIERS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:#fff; color:#0f172a; border:1px solid #cbd5e1; border-bottom:3px solid #c59b27;">
+              🛵 Livreurs & Coursiers (${dps.length})
+            </button>
+          </div>
+
+          <div class="panel-header" style="padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0;">
             <div class="panel-title">🛵 Annuaire des Livreurs & Coursiers (${dps.length})</div>
             <button class="btn-action-primary" onclick="openDeliveryPersonModal()">+ Nouveau Livreur</button>
           </div>
@@ -1411,6 +1512,119 @@
       }
     }
 
+    // --- MODAL & HANDLERS TARIFS PAR QUARTIER ---
+    function openDeliveryZoneModal(id) {
+      const z = id ? (appData.deliveryZones || []).find(zone => zone.id === id) : null;
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:520px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="modal-head" style="flex-shrink:0;">
+              <h3>${z ? "Modifier le Tarif Quartier" : "Ajouter un Quartier de Lomé"}</h3>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveDeliveryZone(event, ${z ? z.id : 'null'})" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+              <div class="modal-body" style="overflow-y:auto; flex:1 1 auto; min-height:0; padding:1.25rem;">
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Nom du Quartier / Zone *</label>
+                  <input type="text" id="zone_name" required placeholder="Ex: Kégué, Agoè, Déckon, Bè..." value="${z ? z.name : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.95rem;" />
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Tarif de Livraison (FCFA) *</label>
+                    <input type="number" id="zone_price" required min="0" step="100" placeholder="Ex: 500" value="${z ? z.price : 500}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1; font-weight:700; color:#0f172a;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Statut</label>
+                    <select id="zone_status" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;">
+                      <option value="true" ${!z || z.active !== false ? 'selected' : ''}>🟢 Actif</option>
+                      <option value="false" ${z && z.active === false ? 'selected' : ''}>⚪ Inactif</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Délai / Précision (optionnel)</label>
+                  <input type="text" id="zone_delai" placeholder="Ex: Livraison moto express (2h - 4h)" value="${z ? (z.delai || '') : 'Livraison moto express'}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                </div>
+              </div>
+
+              <div class="modal-foot" style="flex-shrink:0; position:sticky; bottom:0; z-index:10; background:#f8fafc; border-top:1px solid #cbd5e1; box-shadow:0 -4px 12px rgba(0,0,0,0.05);">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal">💾 Enregistrer le Quartier</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleSaveDeliveryZone(e, id) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('zone_name').value.trim(),
+        price: parseFloat(document.getElementById('zone_price').value) || 0,
+        active: document.getElementById('zone_status').value === 'true',
+        delai: document.getElementById('zone_delai').value.trim()
+      };
+
+      const url = id ? `/api/delivery-zones/${id}` : '/api/delivery-zones';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const d = await res.json();
+        if (d.success) {
+          closeModal();
+          showToast('Quartier et tarif enregistrés avec succès !');
+          loadData();
+        } else {
+          alert('Erreur: ' + (d.error || 'Erreur lors de l\'enregistrement'));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+
+    async function handleQuickUpdatePrice(zoneId) {
+      const input = document.getElementById('quick_zone_' + zoneId);
+      if (!input) return;
+      const newPrice = parseFloat(input.value);
+      if (isNaN(newPrice) || newPrice < 0) {
+        alert('Veuillez entrer un montant valide');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/delivery-zones/${zoneId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ price: newPrice })
+        });
+        const d = await res.json();
+        if (d.success) {
+          showToast(`Tarif mis à jour à ${newPrice.toLocaleString('fr-FR')} FCFA !`);
+          loadData();
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+
+    async function deleteDeliveryZone(id) {
+      const z = (appData.deliveryZones || []).find(zone => zone.id === id);
+      const name = z ? z.name : 'ce quartier';
+      if (confirm(`Voulez-vous supprimer le tarif pour ${name} ?`)) {
+        await fetch(`/api/delivery-zones/${id}`, { method: 'DELETE' });
+        showToast('Quartier supprimé.');
+        loadData();
+      }
+    }
+
     // Modal: Product Multi-Images (2 à 5 images)
     window.productModalImages = [];
     window.productModalCoverIndex = 0;
@@ -1452,13 +1666,13 @@
 
       document.getElementById('modalContainer').innerHTML = `
         <div class="admin-modal-overlay active">
-          <div class="admin-modal-card" style="max-width:650px;">
-            <div class="modal-head">
+          <div class="admin-modal-card" style="max-width:650px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="modal-head" style="flex-shrink:0;">
               <h3>${p ? "Modifier l'Article & Photos" : "Ajouter un Article (Octobre)"}</h3>
               <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
-            <form onsubmit="handleSaveProduct(event, ${p ? p.id : 'null'})">
-              <div class="modal-body">
+            <form onsubmit="handleSaveProduct(event, ${p ? p.id : 'null'})" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+              <div class="modal-body" style="overflow-y:auto; flex:1 1 auto; min-height:0; padding:1.25rem;">
                 <div style="margin-bottom:1rem;">
                   <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Nom de l'article *</label>
                   <input type="text" id="p_name" required placeholder="Ex: Collant Gainant, Boubou Caviar, Robe..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
@@ -1541,15 +1755,15 @@
                     <div id="uploadProgressIndicator" style="display:none; font-weight:700; color:#2563eb; font-size:0.85rem; margin-top:0.5rem; background:#fff; padding:0.35rem 0.75rem; border-radius:6px; border:1px solid #bfdbfe;"></div>
                   </div>
 
-                  <div id="adminImageSlotsContainer" style="display:flex; flex-direction:column; gap:0.65rem;">
+                  <div id="adminImageSlotsContainer" style="display:flex; flex-direction:column; gap:0.65rem; max-height:250px; overflow-y:auto; padding-right:4px;">
                     <!-- Rendu dynamique des slots d'images -->
                   </div>
                 </div>
 
               </div>
-              <div class="modal-foot">
+              <div class="modal-foot" style="flex-shrink:0; position:sticky; bottom:0; z-index:10; background:#f8fafc; border-top:1px solid #cbd5e1; box-shadow:0 -4px 12px rgba(0,0,0,0.05);">
                 <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
-                <button type="submit" class="btn-primary-modal">Enregistrer l'article & photos</button>
+                <button type="submit" class="btn-primary-modal" style="font-size:0.95rem; font-weight:700;">💾 Enregistrer l'article & photos</button>
               </div>
             </form>
           </div>
@@ -2196,8 +2410,8 @@
 
       document.getElementById('modalContainer').innerHTML = `
         <div class="admin-modal-overlay active">
-          <div class="admin-modal-card" style="max-width:750px;">
-            <div class="modal-head">
+          <div class="admin-modal-card" style="max-width:750px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="modal-head" style="flex-shrink:0;">
               <div>
                 <h3>📦 Nouvel Arrivage Fournisseur (Type Hiboutik)</h3>
                 <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Le stock sera incrémenté automatiquement selon les quantités reçues</div>
@@ -2205,8 +2419,8 @@
               <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
 
-            <form onsubmit="handleSaveShipment(event)">
-              <div class="modal-body">
+            <form onsubmit="handleSaveShipment(event)" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+              <div class="modal-body" style="overflow-y:auto; flex:1 1 auto; min-height:0; padding:1.25rem;">
                 <!-- INFOS FOURNISSEUR & ARREST -->
                 <div style="display:grid; grid-template-columns:1fr 1.5fr 1fr; gap:0.75rem; margin-bottom:1rem; background:#f8fafc; padding:0.85rem; border-radius:8px; border:1px solid #cbd5e1;">
                   <div>

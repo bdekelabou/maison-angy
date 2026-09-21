@@ -244,6 +244,18 @@
     let activeCategory = 'TOUS';
     let searchQuery = '';
     let deliveryMode = 'LIVRAISON_DOMICILE';
+    let deliveryZones = [
+      { id: 1, name: "Kégué", price: 500, delai: "Livraison moto express", active: true },
+      { id: 2, name: "Hedzranawoé", price: 800, delai: "Livraison moto rapide", active: true },
+      { id: 3, name: "Déckon / Centre-ville / Assigamé", price: 1000, delai: "Centre des affaires Lomé", active: true },
+      { id: 4, name: "Tokoin (Wuiti, Hôpital, Ramco, Forever)", price: 1000, delai: "Zone centrale Lomé", active: true },
+      { id: 5, name: "Bè / Akodésséwa / Port", price: 1000, delai: "Zone Sud-Est Lomé", active: true },
+      { id: 6, name: "Agoè (Cacavéli, 2 Lions, Nyivé, Minamadou)", price: 1500, delai: "Zone Nord Lomé", active: true },
+      { id: 7, name: "Adidogomé / Totsi / Amadahomé", price: 1500, delai: "Zone Ouest Lomé", active: true },
+      { id: 8, name: "Baguida / Avépozo", price: 2000, delai: "Périphérie Est Lomé", active: true },
+      { id: 9, name: "Autre Quartier de Lomé", price: 1500, delai: "Selon localisation exacte", active: true }
+    ];
+    let selectedDeliveryZoneId = 1;
 
     let isAdminLoggedIn = false;
 
@@ -358,6 +370,9 @@
         const res = await fetch('/api/all');
         const data = await res.json();
         if (data.products) products = data.products.filter(p => p.available !== false);
+        if (data.deliveryZones && data.deliveryZones.length > 0) {
+          deliveryZones = data.deliveryZones;
+        }
         if (data.settings) {
           settings = data.settings;
           document.getElementById('storeName').textContent = settings.storeName || 'Maison Angy';
@@ -590,9 +605,37 @@
       document.getElementById('cartModal').classList.remove('active');
     }
 
+    function handleZoneChange(val) {
+      selectedDeliveryZoneId = parseInt(val);
+      const zone = deliveryZones.find(z => z.id === selectedDeliveryZoneId);
+      const fee = zone ? (zone.price || 0) : 1000;
+      const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+      const grandTotal = subtotal + fee;
+      const curr = settings.currency || 'FCFA';
+
+      const feeElem = document.getElementById('cartDeliveryFeeRow');
+      const totalElem = document.getElementById('cartGrandTotalRow');
+      if (feeElem) feeElem.innerHTML = `<strong>${fee.toLocaleString('fr-FR')} ${curr}</strong> <span style="font-size:0.78rem; color:#854d0e; font-weight:600;">(Quartier ${zone ? zone.name : ''})</span>`;
+      if (totalElem) totalElem.textContent = `${grandTotal.toLocaleString('fr-FR')} ${curr}`;
+    }
+
     function setDeliveryMode(mode) {
+      const nameInput = document.getElementById('cust_name');
+      const phoneInput = document.getElementById('cust_phone');
+      const addrInput = document.getElementById('cust_address');
+      const notesInput = document.getElementById('cust_notes');
+      if (nameInput) window._tempCustName = nameInput.value;
+      if (phoneInput) window._tempCustPhone = phoneInput.value;
+      if (addrInput) window._tempCustAddr = addrInput.value;
+      if (notesInput) window._tempCustNotes = notesInput.value;
+
       deliveryMode = mode;
       renderCartBody();
+
+      if (window._tempCustName && document.getElementById('cust_name')) document.getElementById('cust_name').value = window._tempCustName;
+      if (window._tempCustPhone && document.getElementById('cust_phone')) document.getElementById('cust_phone').value = window._tempCustPhone;
+      if (window._tempCustAddr && document.getElementById('cust_address')) document.getElementById('cust_address').value = window._tempCustAddr;
+      if (window._tempCustNotes && document.getElementById('cust_notes')) document.getElementById('cust_notes').value = window._tempCustNotes;
     }
 
     function renderCartBody() {
@@ -613,7 +656,16 @@
       }
 
       const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
-      const deliveryFee = deliveryMode === 'LIVRAISON_DOMICILE' ? 1500 : (deliveryMode === 'EXPEDITION' ? 2000 : 0);
+      let deliveryFee = 0;
+      let currentZone = null;
+      if (deliveryMode === 'LIVRAISON_DOMICILE') {
+        currentZone = deliveryZones.find(z => z.id === selectedDeliveryZoneId) || deliveryZones[0];
+        deliveryFee = currentZone ? (currentZone.price || 0) : 1000;
+      } else if (deliveryMode === 'EXPEDITION') {
+        deliveryFee = 2000;
+      } else {
+        deliveryFee = 0;
+      }
       const grandTotal = subtotal + deliveryFee;
 
       body.innerHTML = `
@@ -667,12 +719,35 @@
               </div>
             </div>
 
-            ${deliveryMode !== 'RETRAIT_BOUTIQUE' ? `
-              <div class="form-group">
-                <label class="form-label">Quartier / Ville & Point de repère *</label>
-                <input type="text" id="cust_address" required placeholder="Ex: Agoè 2 Lions, Tokoin Wuiti, Déckon, Adidogomé..." class="form-input" />
+            ${deliveryMode === 'LIVRAISON_DOMICILE' ? `
+              <div class="form-group" style="background:#fefce8; border:1.5px solid #fde047; padding:0.85rem; border-radius:10px; margin-bottom:0.85rem;">
+                <label class="form-label" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                  <span style="font-weight:700; color:#854d0e;">📍 Choisissez votre Quartier à Lomé *</span>
+                  <span style="font-size:0.75rem; background:#ca8a04; color:#fff; padding:2px 8px; border-radius:9999px; font-weight:700;">Tarif auto</span>
+                </label>
+                <select id="cust_zone_select" class="form-input" required onchange="handleZoneChange(this.value)" style="font-weight:700; font-size:0.92rem; background:#ffffff; border:1.5px solid #ca8a04; padding:0.6rem; cursor:pointer; color:#0f172a;">
+                  ${deliveryZones.filter(z => z.active !== false).map(z => `
+                    <option value="${z.id}" ${currentZone && currentZone.id === z.id ? 'selected' : ''}>
+                      📍 ${z.name} — ${z.price.toLocaleString('fr-FR')} ${curr}
+                    </option>
+                  `).join('')}
+                </select>
+                <div style="font-size:0.78rem; color:#854d0e; margin-top:0.4rem; display:flex; align-items:center; gap:0.35rem;">
+                  <span>🛵</span>
+                  <span>Tarif adapté : <strong>Kégué 500 F</strong>, Déckon 1 000 F, Agoè 1 500 F...</span>
+                </div>
               </div>
-            ` : ''}
+
+              <div class="form-group">
+                <label class="form-label">Précision rue / Point de repère *</label>
+                <input type="text" id="cust_address" required placeholder="Ex: Face pharmacie Kégué, maison verte à étage..." class="form-input" />
+              </div>
+            ` : (deliveryMode === 'EXPEDITION' ? `
+              <div class="form-group">
+                <label class="form-label">Ville de destination & Compagnie de transport *</label>
+                <input type="text" id="cust_address" required placeholder="Ex: Kara (Poste), Atakpamé, Kpalimé..." class="form-input" />
+              </div>
+            ` : '')}
 
             <div class="form-group">
               <label class="form-label">Notes particulières (optionnel)</label>
@@ -685,12 +760,18 @@
                 <span>${subtotal.toLocaleString('fr-FR')} ${curr}</span>
               </div>
               <div class="summary-row">
-                <span>Frais livraison estimés :</span>
-                <span>${deliveryFee > 0 ? deliveryFee.toLocaleString('fr-FR') + ' ' + curr : 'Gratuit (Retrait)'}</span>
+                <span>Frais de livraison :</span>
+                <span id="cartDeliveryFeeRow">
+                  ${deliveryMode === 'RETRAIT_BOUTIQUE' ? 'Gratuit (Retrait en boutique)' : (
+                    deliveryMode === 'EXPEDITION' ? (deliveryFee.toLocaleString('fr-FR') + ' ' + curr + ' (Expédition)') : (
+                      `<strong>${deliveryFee.toLocaleString('fr-FR')} ${curr}</strong> <span style="font-size:0.78rem; color:#854d0e; font-weight:600;">(Quartier ${currentZone ? currentZone.name : ''})</span>`
+                    )
+                  )}
+                </span>
               </div>
               <div class="summary-row summary-total">
                 <span>Total à régler :</span>
-                <span style="color: #9d7815;">${grandTotal.toLocaleString('fr-FR')} ${curr}</span>
+                <span id="cartGrandTotalRow" style="color: #9d7815; font-size:1.25rem; font-weight:800;">${grandTotal.toLocaleString('fr-FR')} ${curr}</span>
               </div>
 
               <button type="submit" class="btn-whatsapp-order">
@@ -709,7 +790,24 @@
       const address = document.getElementById('cust_address') ? document.getElementById('cust_address').value.trim() : 'Boutique Maison Angy';
       const notes = document.getElementById('cust_notes') ? document.getElementById('cust_notes').value.trim() : '';
 
-      const deliveryFee = deliveryMode === 'LIVRAISON_DOMICILE' ? 1500 : (deliveryMode === 'EXPEDITION' ? 2000 : 0);
+      let deliveryFee = 0;
+      let zoneName = '';
+      if (deliveryMode === 'LIVRAISON_DOMICILE') {
+        const zoneSelect = document.getElementById('cust_zone_select');
+        const zoneId = zoneSelect ? parseInt(zoneSelect.value) : selectedDeliveryZoneId;
+        const zone = (deliveryZones || []).find(z => z.id === zoneId) || deliveryZones[0];
+        if (zone) {
+          zoneName = zone.name;
+          deliveryFee = zone.price || 0;
+        } else {
+          deliveryFee = 1000;
+        }
+      } else if (deliveryMode === 'EXPEDITION') {
+        deliveryFee = 2000;
+      } else {
+        deliveryFee = 0;
+      }
+
       const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
       const grandTotal = subtotal + deliveryFee;
 
@@ -722,9 +820,10 @@
           body: JSON.stringify({
             customerName: name,
             customerPhone: phone,
-            customerAddress: address,
+            customerAddress: deliveryMode === 'LIVRAISON_DOMICILE' ? (`Quartier ${zoneName} - ${address}`) : address,
             deliveryMode: deliveryMode,
             deliveryFee: deliveryFee,
+            deliveryZoneName: zoneName,
             deliveryFeePayer: 'CLIENT',
             notes: notes,
             items: cart.map(it => ({
@@ -755,14 +854,21 @@
       msg += `------------------------\n`;
       msg += `💰 *Sous-total :* ${subtotal.toLocaleString('fr-FR')} ${settings.currency}\n`;
       if (deliveryFee > 0) {
-        msg += `🛵 *Livraison :* ${deliveryFee.toLocaleString('fr-FR')} ${settings.currency}\n`;
+        msg += `🛵 *Livraison :* ${deliveryFee.toLocaleString('fr-FR')} ${settings.currency} ${deliveryMode === 'LIVRAISON_DOMICILE' ? ('(Quartier ' + zoneName + ')') : '(Expédition)'}\n`;
+      } else {
+        msg += `🏪 *Livraison :* Gratuit (Retrait boutique)\n`;
       }
       msg += `⭐ *TOTAL À RÉGLER :* ${grandTotal.toLocaleString('fr-FR')} ${settings.currency}\n\n`;
       msg += `👤 *MES INFORMATIONS :*\n`;
       msg += `• Nom : ${name}\n`;
       msg += `• Téléphone : ${phone}\n`;
       msg += `• Mode : ${modeLabel}\n`;
-      if (address) msg += `• Adresse / Quartier : ${address}\n`;
+      if (deliveryMode === 'LIVRAISON_DOMICILE') {
+        msg += `• Quartier : ${zoneName} (${deliveryFee.toLocaleString('fr-FR')} ${settings.currency})\n`;
+        if (address) msg += `• Point de repère : ${address}\n`;
+      } else if (address) {
+        msg += `• Destination : ${address}\n`;
+      }
       if (notes) msg += `• Note : ${notes}\n`;
       msg += `\nMerci de me confirmer la disponibilité et le délai svp !`;
 

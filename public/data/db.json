@@ -118,5 +118,70 @@
     "Fournisseur Cotonou / Nigéria",
     "Importateur Chine / Dubaï",
     "Autre Fournisseur"
+  ],
+  "deliveryZones": [
+    {
+      "id": 1,
+      "name": "Kégué",
+      "price": 500,
+      "delai": "Livraison moto express",
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "Hedzranawoé",
+      "price": 800,
+      "delai": "Livraison moto rapide",
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "Déckon / Centre-ville / Assigamé",
+      "price": 1000,
+      "delai": "Centre des affaires Lomé",
+      "active": true
+    },
+    {
+      "id": 4,
+      "name": "Tokoin (Wuiti, Hôpital, Ramco, Forever)",
+      "price": 1000,
+      "delai": "Zone centrale Lomé",
+      "active": true
+    },
+    {
+      "id": 5,
+      "name": "Bè / Akodésséwa / Port",
+      "price": 1000,
+      "delai": "Zone Sud-Est Lomé",
+      "active": true
+    },
+    {
+      "id": 6,
+      "name": "Agoè (Cacavéli, 2 Lions, Nyivé, Minamadou)",
+      "price": 1500,
+      "delai": "Zone Nord Lomé",
+      "active": true
+    },
+    {
+      "id": 7,
+      "name": "Adidogomé / Totsi / Amadahomé",
+      "price": 1500,
+      "delai": "Zone Ouest Lomé",
+      "active": true
+    },
+    {
+      "id": 8,
+      "name": "Baguida / Avépozo",
+      "price": 2000,
+      "delai": "Périphérie Est Lomé",
+      "active": true
+    },
+    {
+      "id": 9,
+      "name": "Autre Quartier de Lomé",
+      "price": 1500,
+      "delai": "Selon localisation exacte",
+      "active": true
+    }
   ]
 }

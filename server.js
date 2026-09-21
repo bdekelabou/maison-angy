@@ -31,6 +31,7 @@ function readDb() {
     products: [],
     orders: [],
     deliveryPersons: [],
+    deliveryZones: [],
     trips: [],
     cashTransactions: []
   };
@@ -336,6 +337,7 @@ const server = http.createServer(async (req, res) => {
         users: db.users || [],
         shipments: db.shipments || [],
         suppliers: db.suppliers || ['Grossiste Assigamé (Lomé)', 'Fournisseur Cotonou / Nigéria', 'Importateur Chine / Dubaï', 'Autre Fournisseur'],
+        deliveryZones: db.deliveryZones || [],
         stats: computeStats(db)
       }));
       return;
@@ -674,6 +676,62 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/delivery-persons/') && req.method === 'DELETE') {
       const id = parseInt(pathname.split('/')[3]);
       db.deliveryPersons = db.deliveryPersons.filter(d => d.id !== id);
+      saveDb(db);
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true }));
+      return;
+    }
+
+    // --- DELIVERY ZONES (TARIFS PAR QUARTIER LOMÉ) ---
+    if (pathname === '/api/delivery-zones' && req.method === 'GET') {
+      res.writeHead(200);
+      res.end(JSON.stringify(db.deliveryZones || []));
+      return;
+    }
+
+    if (pathname === '/api/delivery-zones' && req.method === 'POST') {
+      const data = await parseBody(req);
+      if (!db.deliveryZones) db.deliveryZones = [];
+      const newZone = {
+        id: db.deliveryZones.length > 0 ? Math.max(...db.deliveryZones.map(z => z.id)) + 1 : 1,
+        name: data.name || 'Nouveau Quartier',
+        price: parseFloat(data.price) || 1000,
+        delai: data.delai || 'Livraison moto rapide',
+        active: data.active !== false
+      };
+      db.deliveryZones.push(newZone);
+      saveDb(db);
+      res.writeHead(201);
+      res.end(JSON.stringify({ success: true, zone: newZone }));
+      return;
+    }
+
+    if (pathname.startsWith('/api/delivery-zones/') && req.method === 'PUT') {
+      const id = parseInt(pathname.split('/')[3]);
+      const data = await parseBody(req);
+      if (!db.deliveryZones) db.deliveryZones = [];
+      const idx = db.deliveryZones.findIndex(z => z.id === id);
+      if (idx !== -1) {
+        db.deliveryZones[idx] = {
+          ...db.deliveryZones[idx],
+          ...data,
+          price: data.price !== undefined ? parseFloat(data.price) : db.deliveryZones[idx].price,
+          id
+        };
+        saveDb(db);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, zone: db.deliveryZones[idx] }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Zone not found' }));
+      }
+      return;
+    }
+
+    if (pathname.startsWith('/api/delivery-zones/') && req.method === 'DELETE') {
+      const id = parseInt(pathname.split('/')[3]);
+      if (!db.deliveryZones) db.deliveryZones = [];
+      db.deliveryZones = db.deliveryZones.filter(z => z.id !== id);
       saveDb(db);
       res.writeHead(200);
       res.end(JSON.stringify({ success: true }));
