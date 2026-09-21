@@ -926,13 +926,26 @@
 
       return `
         <div class="panel">
+          <!-- SOUS-ONGLETS DE GESTION DU STOCK (STYLE HIBOUTIK) -->
+          <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc;">
+            <button onclick="switchView('PRODUCTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:#fff; color:#0f172a; border:1px solid #cbd5e1; border-bottom:3px solid #c59b27;">
+              👗 Stock & Articles Actuels (${products.length})
+            </button>
+            <button onclick="switchView('SHIPMENTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              📦 Historique des Arrivages Fournisseurs (${(appData.shipments || []).length})
+            </button>
+          </div>
+
           <div class="panel-header">
-            <div class="panel-title">👗 Articles & Nouveautés Octobre (${products.length})</div>
+            <div>
+              <div class="panel-title">👗 Stock en Boutique (${products.length} articles)</div>
+              <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">Consultez vos articles en rayon, gérez les prix et lancez un réassort immédiat.</p>
+            </div>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
               <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="openNewShipmentModal()">
                 <span>📦 + Nouvel Arrivage Fournisseur</span>
               </button>
-              <button class="btn-action-primary" onclick="openProductModal()">+ Créer un Article</button>
+              <button class="btn-action-primary" onclick="openProductModal()">+ Créer un Nouvel Article</button>
             </div>
           </div>
           <div class="data-table-wrap">
@@ -1002,6 +1015,9 @@
                         </button>
                         <button class="btn-sm-action" onclick="toggleProductPublished(${p.id})" title="${p.published === false ? 'Publier sur la boutique' : 'Masquer de la boutique'}">
                           ${p.published === false ? '👁️ Publier' : '👁️ Masquer'}
+                        </button>
+                        <button class="btn-sm-action" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; font-weight:700;" onclick="openNewShipmentModal(${p.id})" title="Réceptionner un nouvel arrivage pour cet article">
+                          📦 Réassort
                         </button>
                         <button class="btn-sm-action" onclick="openProductModal(${p.id})" title="Modifier">✏️</button>
                         <button class="btn-sm-action danger" onclick="deleteProduct(${p.id})" title="Supprimer">🗑️</button>
@@ -2043,6 +2059,16 @@
 
       return `
         <div class="panel">
+          <!-- SOUS-ONGLETS DE GESTION DU STOCK (STYLE HIBOUTIK) -->
+          <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc;">
+            <button onclick="switchView('PRODUCTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              👗 Stock & Articles Actuels (${(appData.products || []).length})
+            </button>
+            <button onclick="switchView('SHIPMENTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:#fff; color:#0f172a; border:1px solid #cbd5e1; border-bottom:3px solid #c59b27;">
+              📦 Historique des Arrivages Fournisseurs (${shipments.length})
+            </button>
+          </div>
+
           <div class="panel-header">
             <div>
               <div class="panel-title">📦 Gestion des Arrivages & Réassort Fournisseurs</div>
@@ -2145,7 +2171,7 @@
     // Modal Nouvel Arrivage (Style Hiboutik)
     window.currentShipmentRows = [];
 
-    function openNewShipmentModal() {
+    function openNewShipmentModal(preselectProdId) {
       const products = appData.products || [];
       if (products.length === 0) {
         alert('Veuillez d\'abord créer au moins un article dans votre catalogue avant d\'enregistrer un arrivage.');
@@ -2153,17 +2179,18 @@
         return;
       }
 
+      const selectedProd = preselectProdId ? (products.find(p => p.id === preselectProdId) || products[0]) : products[0];
       const shipments = appData.shipments || [];
       const nextNum = 'ARR-' + new Date().getFullYear() + '-' + String(shipments.length + 1).padStart(3, '0');
       const today = new Date().toISOString().split('T')[0];
 
-      // Initialiser avec une première ligne
+      // Initialiser avec le produit sélectionné
       window.currentShipmentRows = [
         {
-          productId: products[0].id,
+          productId: selectedProd.id,
           quantity: 10,
-          costPrice: products[0].costPrice || 3000,
-          salePrice: products[0].salePrice || 6500
+          costPrice: selectedProd.costPrice || 3000,
+          salePrice: selectedProd.salePrice || 6500
         }
       ];
 
