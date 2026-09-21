@@ -118,9 +118,16 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon'
 };
+
+const UPLOADS_DIR = path.join(PUBLIC_DIR, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -140,6 +147,53 @@ const server = http.createServer(async (req, res) => {
   // --- API ROUTES ---
   if (pathname.startsWith('/api/')) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+    // POST /api/upload (Direct Image Upload from Phone or Desktop)
+    if (pathname === '/api/upload' && req.method === 'POST') {
+      try {
+        const data = await parseBody(req);
+        const imageStr = data.image || data.dataUrl || data.file;
+        if (!imageStr) {
+          res.writeHead(400);
+          res.end(JSON.stringify({ error: 'Aucune image reçue.' }));
+          return;
+        }
+
+        let mimeType = 'image/jpeg';
+        let base64Data = imageStr;
+        if (imageStr.includes(';base64,')) {
+          const parts = imageStr.split(';base64,');
+          mimeType = parts[0].replace('data:', '');
+          base64Data = parts[1];
+        }
+
+        const extMap = {
+          'image/jpeg': '.jpg',
+          'image/jpg': '.jpg',
+          'image/png': '.png',
+          'image/webp': '.webp',
+          'image/gif': '.gif'
+        };
+        const ext = extMap[mimeType] || '.jpg';
+        const filename = 'angy_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8) + ext;
+        const targetPath = path.join(UPLOADS_DIR, filename);
+
+        fs.writeFileSync(targetPath, Buffer.from(base64Data, 'base64'));
+
+        res.writeHead(200);
+        res.end(JSON.stringify({
+          success: true,
+          url: '/uploads/' + filename,
+          filename: filename
+        }));
+        return;
+      } catch (err) {
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Erreur upload: ' + err.message }));
+        return;
+      }
+    }
+
     const db = readDb();
 
     // POST /api/login (Multi-User Authentication: Admin or Gérante)

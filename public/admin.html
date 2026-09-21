@@ -1176,6 +1176,20 @@
               </div>
 
               <div style="margin-bottom:1.25rem; background:#f8fafc; padding:1.1rem; border-radius:8px; border:1px solid #cbd5e1;">
+                <label style="display:block; font-weight:700; font-size:0.9rem; margin-bottom:0.4rem; color:#0f172a;">🖼️ Logo Officiel de la Boutique</label>
+                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                  <img id="cfg_logo_preview" src="${s.logoUrl || '/images/logo.jpg'}" onerror="this.src='/images/logo.jpg'" style="width:52px; height:52px; border-radius:8px; object-fit:cover; border:1.5px solid #c59b27;" />
+                  <div style="flex:1; min-width:180px;">
+                    <input type="text" id="cfg_logoUrl" value="${s.logoUrl || '/images/logo.jpg'}" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;" />
+                  </div>
+                  <input type="file" id="cfg_logo_file" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)" />
+                  <button type="button" onclick="document.getElementById('cfg_logo_file').click()" class="btn-sm-action primary" style="white-space:nowrap; padding:0.55rem 0.9rem; font-size:0.82rem;">
+                    📁 Changer le Logo (Galerie)
+                  </button>
+                </div>
+              </div>
+
+              <div style="margin-bottom:1.25rem; background:#f8fafc; padding:1.1rem; border-radius:8px; border:1px solid #cbd5e1;">
                 <h4 style="font-size:0.92rem; margin-bottom:0.85rem; color:#0f172a; display:flex; align-items:center; gap:0.4rem;">
                   📱 Liens Réseaux Sociaux Officiels (Affichés en haut et en bas du site)
                 </h4>
@@ -1226,6 +1240,25 @@
           </div>
         </div>
       `;
+    }
+
+    async function handleLogoUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      showToast('⏳ Envoi du logo...');
+      try {
+        const compressed = await compressImage(file, 800, 0.9);
+        const url = await uploadImageToServer(compressed, file.name);
+        const input = document.getElementById('cfg_logoUrl');
+        const prev = document.getElementById('cfg_logo_preview');
+        if (input) input.value = url;
+        if (prev) prev.src = url;
+        showToast('✅ Logo sélectionné ! Cliquez sur Enregistrer pour valider.');
+      } catch (err) {
+        alert('Erreur upload logo: ' + err.message);
+      } finally {
+        event.target.value = '';
+      }
     }
 
     async function handleSaveSettings(e) {
@@ -1461,8 +1494,21 @@
                       </div>
                     </div>
                     <button type="button" id="btnAdminAddImg" onclick="adminAddImageSlot()" class="btn-sm-action primary" style="padding:0.4rem 0.8rem; font-size:0.8rem;">
-                      + Ajouter une photo (max 5)
+                      + Ajouter un slot (max 5)
                     </button>
+                  </div>
+
+                  <!-- BANNIÈRE D'UPLOAD DIRECT DEPUIS TÉLÉPHONE OU PC -->
+                  <div style="background: linear-gradient(135deg, #fffdf5 0%, #fef3c7 100%); border: 2px dashed #c59b27; border-radius: 10px; padding: 1.1rem 1rem; text-align: center; margin-bottom: 0.85rem; cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('productMultiFileInput').click()" onmouseover="this.style.borderColor='#92400e'" onmouseout="this.style.borderColor='#c59b27'">
+                    <input type="file" id="productMultiFileInput" accept="image/*" multiple style="display:none;" onchange="handleBulkImageUpload(event)" />
+                    <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 0.35rem;">📁 📸</div>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">
+                      Choisir des photos depuis ma Galerie ou Appareil Photo
+                    </div>
+                    <div style="font-size: 0.78rem; color: #78350f; margin-top: 0.25rem;">
+                      Sélectionnez 1 à 5 photos d'un coup • Upload direct sans Google Photos
+                    </div>
+                    <div id="uploadProgressIndicator" style="display:none; font-weight:700; color:#2563eb; font-size:0.85rem; margin-top:0.5rem; background:#fff; padding:0.35rem 0.75rem; border-radius:6px; border:1px solid #bfdbfe;"></div>
                   </div>
 
                   <div id="adminImageSlotsContainer" style="display:flex; flex-direction:column; gap:0.65rem;">
@@ -1483,6 +1529,118 @@
       renderAdminImageSlots();
     }
 
+    // IMAGE COMPRESSION & DIRECT UPLOAD UTILITIES
+    function compressImage(file, maxWidth = 1200, quality = 0.85) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth || h > maxWidth) {
+              if (w > h) {
+                h = Math.round((h * maxWidth) / w);
+                w = maxWidth;
+              } else {
+                w = Math.round((w * maxWidth) / h);
+                h = maxWidth;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => resolve(e.target.result);
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadImageToServer(dataUrl, originalName) {
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: dataUrl, name: originalName })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.success && json.url) return json.url;
+        }
+      } catch (err) {
+        console.warn('Upload API unreachable, using local dataUrl:', err);
+      }
+      return dataUrl;
+    }
+
+    async function handleBulkImageUpload(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+
+      const progress = document.getElementById('uploadProgressIndicator');
+      if (progress) {
+        progress.style.display = 'inline-block';
+        progress.textContent = '⏳ Optimisation et envoi de vos photos...';
+      }
+
+      try {
+        const uploadedUrls = [];
+        for (let i = 0; i < files.length && uploadedUrls.length < 5; i++) {
+          if (progress) {
+            progress.textContent = `⏳ Photo ${i + 1} sur ${Math.min(files.length, 5)} en cours d'envoi...`;
+          }
+          const compressed = await compressImage(files[i]);
+          const url = await uploadImageToServer(compressed, files[i].name);
+          uploadedUrls.push(url);
+        }
+
+        // Check if currently holding dummy unsplash photos
+        const isDefault = window.productModalImages.every(img => img.includes('unsplash.com'));
+        if (isDefault) {
+          window.productModalImages = uploadedUrls;
+        } else {
+          window.productModalImages = [...window.productModalImages, ...uploadedUrls].slice(0, 5);
+        }
+
+        while (window.productModalImages.length < 2) {
+          window.productModalImages.push(window.productModalImages[0] || '/images/logo.jpg');
+        }
+
+        window.productModalCoverIndex = 0;
+        renderAdminImageSlots();
+        showToast(`✅ ${uploadedUrls.length} photo(s) ajoutée(s) directement avec succès !`);
+      } catch (err) {
+        alert('Erreur lors de l\'envoi: ' + err.message);
+      } finally {
+        if (progress) progress.style.display = 'none';
+        event.target.value = '';
+      }
+    }
+
+    async function handleSingleSlotUpload(idx, event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      showToast('⏳ Envoi de la photo...');
+      try {
+        const compressed = await compressImage(file);
+        const url = await uploadImageToServer(compressed, file.name);
+        window.productModalImages[idx] = url;
+        renderAdminImageSlots();
+        showToast(`✅ Photo #${idx + 1} mise à jour avec succès !`);
+      } catch (err) {
+        alert('Erreur: ' + err.message);
+      } finally {
+        event.target.value = '';
+      }
+    }
+
     function renderAdminImageSlots() {
       const container = document.getElementById('adminImageSlotsContainer');
       if (!container) return;
@@ -1499,26 +1657,35 @@
       container.innerHTML = window.productModalImages.map((url, idx) => {
         const isCover = idx === window.productModalCoverIndex;
         return `
-          <div style="display:flex; align-items:center; gap:0.6rem; background:#fff; padding:0.6rem 0.8rem; border-radius:8px; border:${isCover ? '2px solid #c59b27' : '1px solid #cbd5e1'}; box-shadow:${isCover ? '0 2px 8px rgba(197,155,39,0.2)' : 'none'};">
-            <div style="width:48px; height:48px; border-radius:6px; overflow:hidden; background:#f1f5f9; border:1px solid #e2e8f0; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+          <div style="display:flex; align-items:center; gap:0.6rem; background:#fff; padding:0.6rem 0.8rem; border-radius:8px; border:${isCover ? '2px solid #c59b27' : '1px solid #cbd5e1'}; box-shadow:${isCover ? '0 2px 8px rgba(197,155,39,0.2)' : 'none'}; flex-wrap:wrap;">
+            <div style="width:52px; height:52px; border-radius:6px; overflow:hidden; background:#f1f5f9; border:1px solid #e2e8f0; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
               <img id="adminPreview_${idx}" src="${url || '/images/logo.jpg'}" onerror="this.src='/images/logo.jpg'" style="width:100%; height:100%; object-fit:cover;" />
             </div>
 
-            <div style="flex:1;">
-              <input type="url" value="${url}" placeholder="Lien image ${idx + 1} (ex: https://...)" oninput="adminUpdateSlotUrl(${idx}, this.value)" style="width:100%; padding:0.5rem 0.65rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+            <div style="flex:1; min-width:180px; display:flex; flex-direction:column; gap:0.25rem;">
+              <div style="display:flex; align-items:center; gap:0.4rem;">
+                <input type="file" id="slotFile_${idx}" accept="image/*" style="display:none;" onchange="handleSingleSlotUpload(${idx}, event)" />
+                <button type="button" onclick="document.getElementById('slotFile_${idx}').click()" class="btn-sm-action primary" style="font-size:0.75rem; padding:0.35rem 0.65rem;">
+                  📷 Remplacer cette photo
+                </button>
+                <span style="font-size:0.75rem; color:#64748b;">Photo #${idx + 1}</span>
+              </div>
+              <input type="text" value="${url}" placeholder="URL ou chemin de l'image" oninput="adminUpdateSlotUrl(${idx}, this.value)" style="width:100%; padding:0.35rem 0.5rem; border:1px solid #e2e8f0; border-radius:4px; font-size:0.75rem; color:#64748b;" />
             </div>
 
-            <button type="button" onclick="adminSetCoverImage(${idx})" style="padding:0.45rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; white-space:nowrap; ${isCover ? 'background:#c59b27; color:#fff;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'}">
-              ${isCover ? '⭐ En avant (Couverture)' : 'Mettre en avant'}
-            </button>
-
-            ${window.productModalImages.length > 2 ? `
-              <button type="button" onclick="adminRemoveImageSlot(${idx})" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:6px; width:32px; height:32px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;" title="Retirer cette photo">
-                🗑️
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              <button type="button" onclick="adminSetCoverImage(${idx})" style="padding:0.45rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; white-space:nowrap; ${isCover ? 'background:#c59b27; color:#fff;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'}">
+                ${isCover ? '⭐ En avant (Couverture)' : 'Mettre en avant'}
               </button>
-            ` : `
-              <div style="width:32px; height:32px; flex-shrink:0;" title="Minimum 2 images requises"></div>
-            `}
+
+              ${window.productModalImages.length > 2 ? `
+                <button type="button" onclick="adminRemoveImageSlot(${idx})" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:6px; width:32px; height:32px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;" title="Retirer cette photo">
+                  🗑️
+                </button>
+              ` : `
+                <div style="width:32px; height:32px; flex-shrink:0;" title="Minimum 2 images requises"></div>
+              `}
+            </div>
           </div>
         `;
       }).join('');
