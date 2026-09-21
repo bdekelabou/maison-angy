@@ -241,23 +241,36 @@
     function applyRolePermissions() {
       const u = getCurrentUser();
       const isAdmin = u.role === 'ADMIN';
+      const perms = u.permissions || (isAdmin 
+        ? { products: true, orders: true, delivery: true, trips: true, cash: true, profits: true, settings: true, team: true } 
+        : { products: true, orders: true, delivery: true, trips: false, cash: false, profits: false, settings: false, team: false });
 
-      // Hide Cash and Profits menus for Gerante
-      const cashNav = document.getElementById('nav-CASH');
-      const profitsNav = document.getElementById('nav-PROFITS');
-      const teamNav = document.getElementById('nav-TEAM');
+      const navProducts = document.getElementById('nav-PRODUCTS');
+      const navOrders = document.getElementById('nav-ORDERS');
+      const navDelivery = document.getElementById('nav-DELIVERY_PERSONS');
+      const navTrips = document.getElementById('nav-TRIPS');
+      const navCash = document.getElementById('nav-CASH');
+      const navProfits = document.getElementById('nav-PROFITS');
+      const navTeam = document.getElementById('nav-TEAM');
+      const navSettings = document.getElementById('nav-SETTINGS');
       const topCash = document.querySelector('.cash-pill');
 
-      if (cashNav) cashNav.style.display = isAdmin ? 'flex' : 'none';
-      if (profitsNav) profitsNav.style.display = isAdmin ? 'flex' : 'none';
-      if (teamNav) teamNav.style.display = isAdmin ? 'flex' : 'none';
-      if (topCash) topCash.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (navProducts) navProducts.style.display = (isAdmin || perms.products !== false) ? 'flex' : 'none';
+      if (navOrders) navOrders.style.display = (isAdmin || perms.orders !== false) ? 'flex' : 'none';
+      if (navDelivery) navDelivery.style.display = (isAdmin || perms.delivery !== false) ? 'flex' : 'none';
+      if (navTrips) navTrips.style.display = (isAdmin || perms.trips === true) ? 'flex' : 'none';
+      if (navCash) navCash.style.display = (isAdmin || perms.cash === true) ? 'flex' : 'none';
+      if (navProfits) navProfits.style.display = (isAdmin || perms.profits === true) ? 'flex' : 'none';
+      if (navTeam) navTeam.style.display = isAdmin ? 'flex' : 'none';
+      if (navSettings) navSettings.style.display = (isAdmin || perms.settings === true) ? 'flex' : 'none';
+
+      if (topCash) topCash.style.display = (isAdmin || perms.cash === true) ? 'inline-flex' : 'none';
 
       const userBadge = document.getElementById('topUserBadge');
       if (userBadge) {
         userBadge.innerHTML = isAdmin 
           ? '👑 <strong>' + (u.name || 'Ange Ines') + '</strong> (Propriétaire)'
-          : '💼 <strong>' + (u.name || 'Gérante') + '</strong> (Gérante)';
+          : '💼 <strong>' + (u.name || 'Collaboratrice') + '</strong> (' + (u.roleLabel || 'Gérante') + ')';
       }
     }
 
@@ -340,24 +353,25 @@
         <div class="panel">
           <div class="panel-header">
             <div>
-              <div class="panel-title">👥 Équipe & Comptes d'Accès</div>
+              <div class="panel-title">👥 Gestion de l'Équipe & Accès Collaboratrices</div>
               <p style="color:#64748b; font-size:0.85rem; margin-top:0.25rem;">
-                En tant que propriétaire, vous pouvez créer ici des comptes pour vos gérantes de boutique avec leur propre numéro et mot de passe.
+                Créez les identifiants pour vos employées et choisissez exactement les fonctionnalités auxquelles elles ont accès (ajouter les articles quand vous n'êtes pas là, voir les commandes, etc. tout en gardant la caisse privée).
               </p>
             </div>
             <button class="btn-action-primary" onclick="openUserModal()">
-              <span>+ Créer un Accès Gérante</span>
+              <span>+ Créer un Accès Employée</span>
             </button>
           </div>
 
-          <div style="overflow-x:auto;">
+          <div class="data-table-wrap">
             <table class="data-table">
               <thead>
                 <tr>
                   <th>Nom / Collaboratrice</th>
-                  <th>Numéro Téléphone (Identifiant)</th>
+                  <th>Numéro (Identifiant)</th>
                   <th>Mot de passe</th>
-                  <th>Rôle & Pouvoir</th>
+                  <th>Poste & Rôle</th>
+                  <th>Fonctionnalités Autorisées</th>
                   <th style="text-align:right;">Actions</th>
                 </tr>
               </thead>
@@ -380,14 +394,30 @@
                     </td>
                     <td>
                       <span style="font-size:0.85rem; font-weight:600; color:${u.role === 'ADMIN' ? '#c59b27' : '#2563eb'};">
-                        ${u.role === 'ADMIN' ? '👑 Accès Total (Caisse, Bénéfices, Direction)' : '💼 Ventes, Stocks & Commandes'}
+                        ${u.roleLabel || (u.role === 'ADMIN' ? 'Propriétaire' : 'Gérante')}
                       </span>
                     </td>
+                    <td>
+                      <div style="font-size:0.82rem; font-weight:600;">
+                        ${u.role === 'ADMIN' ? '<span style="color:#c59b27;">👑 Accès Total (Tous pouvoirs)</span>' : `
+                          <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                            ${u.permissions?.products !== false ? '<span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:0.75rem;">👗 Articles & Stock</span>' : ''}
+                            ${u.permissions?.orders !== false ? '<span style="background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-size:0.75rem;">🛍️ Commandes</span>' : ''}
+                            ${u.permissions?.delivery !== false ? '<span style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:0.75rem;">🛵 Livreurs</span>' : ''}
+                            ${u.permissions?.trips ? '<span style="background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; font-size:0.75rem;">⛽ Déplacements</span>' : ''}
+                            ${u.permissions?.cash ? '<span style="background:#d1fae5; color:#065f46; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold;">💰 Caisse</span>' : ''}
+                            ${u.permissions?.profits ? '<span style="background:#fef3c7; color:#78350f; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold;">📈 Bénéfices</span>' : ''}
+                          </div>
+                        `}
+                      </div>
+                    </td>
                     <td style="text-align:right;">
-                      <button class="btn-table-action" onclick="openUserModal(${u.id})" title="Modifier">✏️</button>
                       ${u.role !== 'ADMIN' ? `
-                        <button class="btn-table-action" onclick="deleteUser(${u.id})" title="Supprimer" style="color:#ef4444;">🗑️</button>
-                      ` : ''}
+                        <button class="btn-sm-action" onclick="openUserModal(${u.id})" title="Modifier permissions">✏️ Modifier</button>
+                        <button class="btn-sm-action danger" onclick="deleteUser(${u.id})" title="Supprimer">🗑️</button>
+                      ` : `
+                        <span style="font-size:0.75rem; color:#94a3b8; font-style:italic;">Compte Maître</span>
+                      `}
                     </td>
                   </tr>
                 `).join('')}
@@ -401,42 +431,102 @@
     function openUserModal(userId) {
       const users = appData.users || [];
       const u = userId ? users.find(item => item.id === userId) : null;
+      const perms = u ? (u.permissions || {}) : { products: true, orders: true, delivery: true, trips: false, cash: false, profits: false, settings: false };
 
       document.getElementById('modalContainer').innerHTML = `
         <div class="admin-modal-overlay active">
-          <div class="admin-modal-card" style="max-width:450px;">
-            <div class="modal-header">
-              <div class="modal-title">${u ? "Modifier le Compte" : "Créer un Nouvel Accès Gérante"}</div>
-              <button class="modal-close" onclick="closeModal()">&times;</button>
+          <div class="admin-modal-card" style="max-width:550px;">
+            <div class="modal-head">
+              <h3>${u ? "Modifier l'Accès Employée" : "Créer un Compte Collaboratrice / Gérante"}</h3>
+              <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             <form onsubmit="handleSaveUser(event, ${u ? u.id : 'null'})">
               <div class="modal-body">
-                <div class="form-group">
-                  <label class="form-label">Nom de la personne *</label>
-                  <input type="text" class="form-input" id="u_name" required value="${u ? u.name : ''}" placeholder="Ex: Akossiwa Gérante" />
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Nom de l'employée *</label>
+                    <input type="text" id="u_name" required value="${u ? u.name : ''}" placeholder="Ex: Akossiwa Gérante" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                  </div>
+
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Numéro Téléphone (Connexion) *</label>
+                    <input type="text" id="u_phone" required value="${u ? u.phone : ''}" placeholder="Ex: 90123456" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                  </div>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Numéro de Téléphone (Identifiant de connexion) *</label>
-                  <input type="text" class="form-input" id="u_phone" required value="${u ? u.phone : ''}" placeholder="Ex: 90123456" />
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Mot de passe de connexion *</label>
+                    <input type="text" id="u_password" required value="${u ? u.password : 'gerante2026'}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                  </div>
+
+                  <div>
+                    <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Titre du poste</label>
+                    <input type="text" id="u_roleLabel" value="${u ? (u.roleLabel || 'Gérante Boutique') : 'Gérante Boutique'}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                  </div>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Mot de passe de connexion *</label>
-                  <input type="text" class="form-input" id="u_password" required value="${u ? u.password : 'gerante2026'}" />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Rôle attribué</label>
-                  <select class="form-input" id="u_role" ${u && u.role === 'ADMIN' ? 'disabled' : ''}>
-                    <option value="GERANTE" ${!u || u.role === 'GERANTE' ? 'selected' : ''}>💼 Gérante (Ventes, Stocks, Commandes - Caisse masquée)</option>
-                    <option value="ADMIN" ${u && u.role === 'ADMIN' ? 'selected' : ''}>👑 Administratrice (Accès Complet Caisse & Trésorerie)</option>
+                <div style="margin-bottom:0.75rem;">
+                  <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Rôle principal</label>
+                  <select id="u_role" ${u && u.role === 'ADMIN' ? 'disabled' : ''} style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;">
+                    <option value="GERANTE" ${!u || u.role === 'GERANTE' ? 'selected' : ''}>💼 Collaboratrice / Gérante (Accès personnalisé ci-dessous)</option>
+                    <option value="ADMIN" ${u && u.role === 'ADMIN' ? 'selected' : ''}>👑 Administratrice (Accès Total Caisse & Bénéfices)</option>
                   </select>
                 </div>
+
+                <!-- SECTION CASES A COCHER DES FONCTIONNALITES -->
+                <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #cbd5e1; margin-top:0.75rem;">
+                  <label style="font-weight:700; color:#0f172a; margin-bottom:0.25rem; display:block; font-size:0.9rem;">
+                    🛡️ Choisissez les fonctionnalités autorisées pour elle :
+                  </label>
+                  <p style="font-size:0.78rem; color:#64748b; margin-bottom:0.75rem;">
+                    Cochez les sections que cette employée a le droit d'utiliser quand vous n'êtes pas là :
+                  </p>
+
+                  <div style="display:flex; flex-direction:column; gap:0.55rem;">
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                      <input type="checkbox" id="perm_products" ${(perms.products !== false) ? 'checked' : ''} />
+                      <span>👗 <strong>Stock & Articles</strong> (Ajouter, modifier le prix, mettre en promo/vedette)</span>
+                    </label>
+
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                      <input type="checkbox" id="perm_orders" ${(perms.orders !== false) ? 'checked' : ''} />
+                      <span>🛍️ <strong>Commandes & Livraisons</strong> (Voir et valider les commandes clients)</span>
+                    </label>
+
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                      <input type="checkbox" id="perm_delivery" ${(perms.delivery !== false) ? 'checked' : ''} />
+                      <span>🛵 <strong>Annuaire Livreurs Lomé</strong> (Assigner les colis aux livreurs)</span>
+                    </label>
+
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                      <input type="checkbox" id="perm_trips" ${(perms.trips === true) ? 'checked' : ''} />
+                      <span>⛽ <strong>Déplacements & Frais</strong> (Enregistrer les frais taxi / moto)</span>
+                    </label>
+                  </div>
+
+                  <div style="border-top:1px dashed #cbd5e1; margin-top:0.85rem; padding-top:0.65rem;">
+                    <div style="font-size:0.75rem; font-weight:700; color:#b91c1c; text-transform:uppercase; margin-bottom:0.4rem;">
+                      🔒 Données Financières Secrètes (Décochées par sécurité)
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                      <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; font-weight:600; cursor:pointer;">
+                        <input type="checkbox" id="perm_cash" ${(perms.cash === true) ? 'checked' : ''} />
+                        <span>💰 Caisse & Trésorerie (81 500 F)</span>
+                      </label>
+
+                      <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; font-weight:600; cursor:pointer;">
+                        <input type="checkbox" id="perm_profits" ${(perms.profits === true) ? 'checked' : ''} />
+                        <span>📈 Bénéfices & Marges Nettes</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-              <div class="modal-footer">
-                <button type="button" class="btn-action-primary" style="background:#64748b;" onclick="closeModal()">Annuler</button>
-                <button type="submit" class="btn-action-primary">Enregistrer le Compte</button>
+              <div class="modal-foot">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal">Enregistrer l'Accès</button>
               </div>
             </form>
           </div>
@@ -450,7 +540,17 @@
         name: document.getElementById('u_name').value.trim(),
         phone: document.getElementById('u_phone').value.trim().replace(/[^0-9]/g, ''),
         password: document.getElementById('u_password').value.trim(),
-        role: document.getElementById('u_role').value
+        role: document.getElementById('u_role').value,
+        roleLabel: document.getElementById('u_roleLabel').value.trim(),
+        permissions: {
+          products: document.getElementById('perm_products').checked,
+          orders: document.getElementById('perm_orders').checked,
+          delivery: document.getElementById('perm_delivery').checked,
+          trips: document.getElementById('perm_trips').checked,
+          cash: document.getElementById('perm_cash').checked,
+          profits: document.getElementById('perm_profits').checked,
+          settings: false
+        }
       };
 
       const url = id ? '/api/users/' + id : '/api/users';
@@ -462,7 +562,7 @@
         body: JSON.stringify(payload)
       });
       closeModal();
-      showToast('Compte enregistré avec succès !');
+      showToast('Compte employée et permissions enregistrés !');
       loadData();
     }
 

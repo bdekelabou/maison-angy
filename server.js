@@ -168,7 +168,12 @@ const server = http.createServer(async (req, res) => {
             name: found.name,
             phone: found.phone,
             role: found.role,
-            roleLabel: found.roleLabel || (found.role === 'ADMIN' ? 'Propriétaire' : 'Gérante')
+            roleLabel: found.roleLabel || (found.role === 'ADMIN' ? 'Propriétaire' : 'Gérante'),
+            permissions: found.permissions || (found.role === 'ADMIN' ? {
+              products: true, orders: true, delivery: true, trips: true, cash: true, profits: true, settings: true, team: true
+            } : {
+              products: true, orders: true, delivery: true, trips: false, cash: false, profits: false, settings: false, team: false
+            })
           }
         }));
       } else if (userPhone === (db.settings.adminUsername || '93849200').replace(/[^0-9]/g, '') && userPass === (db.settings.adminPassword || 'password2026')) {
@@ -210,7 +215,12 @@ const server = http.createServer(async (req, res) => {
         phone: (data.phone || '').toString().trim().replace(/[^0-9]/g, ''),
         password: data.password || 'gerante2026',
         role: data.role || 'GERANTE',
-        roleLabel: data.role === 'ADMIN' ? 'Propriétaire' : 'Gérante de Vente',
+        roleLabel: data.roleLabel || (data.role === 'ADMIN' ? 'Propriétaire' : 'Gérante Boutique'),
+        permissions: data.permissions || (data.role === 'ADMIN' ? {
+          products: true, orders: true, delivery: true, trips: true, cash: true, profits: true, settings: true, team: true
+        } : {
+          products: true, orders: true, delivery: true, trips: false, cash: false, profits: false, settings: false, team: false
+        }),
         createdAt: new Date().toISOString().split('T')[0]
       };
       db.users.push(newUser);
