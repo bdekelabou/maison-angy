@@ -850,7 +850,10 @@
                     <tr>
                       <td>
                         <div style="display:flex; align-items:center; gap:0.75rem;">
-                          <img src="${p.image}" alt="${p.name}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; background:#f1f5f9;" />
+                          <div style="position:relative; width:44px; height:44px; flex-shrink:0;">
+                            <img src="${p.image}" alt="${p.name}" style="width:100%; height:100%; border-radius:6px; object-fit:cover; background:#f1f5f9; border:1px solid #cbd5e1;" />
+                            ${p.images && p.images.length > 1 ? `<span style="position:absolute; bottom:-3px; right:-3px; background:#0f172a; color:#fff; font-size:0.6rem; padding:1px 4px; border-radius:4px; font-weight:700; border:1px solid #c59b27;" title="${p.images.length} photos enregistrées">📷 ${p.images.length}</span>` : ''}
+                          </div>
                           <div>
                             <strong>${p.name}</strong>
                             <div style="display:flex; gap:0.25rem; margin-top:0.2rem;">
@@ -1220,23 +1223,57 @@
       }
     }
 
-    // Modal: Product
+    // Modal: Product Multi-Images (2 à 5 images)
+    window.productModalImages = [];
+    window.productModalCoverIndex = 0;
+
     function openProductModal(prodId) {
       const p = prodId ? appData.products.find(pr => pr.id === prodId) : null;
       const curr = appData.settings.currency || 'FCFA';
 
+      // Initialize 2 to 5 images
+      let initialImgs = [];
+      if (p && Array.isArray(p.images) && p.images.length > 0) {
+        initialImgs = [...p.images];
+      } else if (p && p.image) {
+        initialImgs = [p.image];
+      } else {
+        initialImgs = [
+          'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80'
+        ];
+      }
+
+      // Ensure at least 2 image slots
+      while (initialImgs.length < 2) {
+        initialImgs.push('https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80');
+      }
+      // Ensure max 5 image slots
+      if (initialImgs.length > 5) {
+        initialImgs = initialImgs.slice(0, 5);
+      }
+
+      window.productModalImages = initialImgs;
+      let covIdx = 0;
+      if (p && p.coverIndex !== undefined && p.coverIndex >= 0 && p.coverIndex < initialImgs.length) {
+        covIdx = p.coverIndex;
+      } else if (p && p.image && initialImgs.indexOf(p.image) !== -1) {
+        covIdx = initialImgs.indexOf(p.image);
+      }
+      window.productModalCoverIndex = covIdx;
+
       document.getElementById('modalContainer').innerHTML = `
         <div class="admin-modal-overlay active">
-          <div class="admin-modal-card">
+          <div class="admin-modal-card" style="max-width:650px;">
             <div class="modal-head">
-              <h3>${p ? "Modifier l'Article" : "Ajouter un Article (Octobre)"}</h3>
+              <h3>${p ? "Modifier l'Article & Photos" : "Ajouter un Article (Octobre)"}</h3>
               <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             <form onsubmit="handleSaveProduct(event, ${p ? p.id : 'null'})">
               <div class="modal-body">
                 <div style="margin-bottom:1rem;">
                   <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Nom de l'article *</label>
-                  <input type="text" id="p_name" required placeholder="Ex: Collant Gainant, Boubou Caviar..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  <input type="text" id="p_name" required placeholder="Ex: Collant Gainant, Boubou Caviar, Robe..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
@@ -1273,7 +1310,7 @@
 
                   <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:600; font-size:0.85rem;">
                     <input type="checkbox" id="p_isFeatured" ${p && p.isFeatured ? 'checked' : ''} />
-                    <span>⭐ Mettre en Avant (Vedette)</span>
+                    <span>⭐ Mettre en Vedette</span>
                   </label>
 
                   <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:600; font-size:0.85rem; grid-column:1/-1;">
@@ -1282,43 +1319,139 @@
                   </label>
                 </div>
 
-                <div class="margin-preview-box" id="marginPreviewBox">
+                <div class="margin-preview-box" id="marginPreviewBox" style="margin-bottom:1rem;">
                   <span>Bénéfice estimé par vente :</span>
                   <strong id="marginValPreview">+3 000 FCFA (46% de marge)</strong>
                 </div>
 
-                <div style="margin-top:1rem;">
-                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Lien Image</label>
-                  <input type="url" id="p_image" value="${p ? p.image : 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80'}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                <!-- GESTION DE 2 A 5 IMAGES AVEC CHOIX DE L'IMAGE EN AVANT -->
+                <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1.1rem; margin-top:1rem;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                    <div>
+                      <div style="font-weight:700; font-size:0.92rem; color:#0f172a; display:flex; align-items:center; gap:0.4rem;">
+                        📸 Photos de l'article <span id="adminImgCountBadge" style="background:#0f172a; color:#fef3c7; font-size:0.75rem; padding:0.15rem 0.5rem; border-radius:9999px; border:1px solid #c59b27;">(2 à 5 photos)</span>
+                      </div>
+                      <div style="font-size:0.76rem; color:#64748b; margin-top:0.2rem;">
+                        Sélectionnez <strong>"⭐ En avant"</strong> sur la photo qui doit s'afficher en couverture sur la boutique.
+                      </div>
+                    </div>
+                    <button type="button" id="btnAdminAddImg" onclick="adminAddImageSlot()" class="btn-sm-action primary" style="padding:0.4rem 0.8rem; font-size:0.8rem;">
+                      + Ajouter une photo (max 5)
+                    </button>
+                  </div>
+
+                  <div id="adminImageSlotsContainer" style="display:flex; flex-direction:column; gap:0.65rem;">
+                    <!-- Rendu dynamique des slots d'images -->
+                  </div>
                 </div>
+
               </div>
               <div class="modal-foot">
                 <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
-                <button type="submit" class="btn-primary-modal">Enregistrer l'article</button>
+                <button type="submit" class="btn-primary-modal">Enregistrer l'article & photos</button>
               </div>
             </form>
           </div>
         </div>
       `;
       calcMarginPreview();
+      renderAdminImageSlots();
     }
 
-    function calcMarginPreview() {
-      const cost = parseFloat(document.getElementById('p_cost')?.value) || 0;
-      const isPromo = document.getElementById('p_isPromo')?.checked;
-      const sale = parseFloat(document.getElementById('p_sale')?.value) || 0;
-      const promo = parseFloat(document.getElementById('p_promo')?.value) || 0;
-      const activePrice = isPromo ? promo : sale;
-      const margin = activePrice - cost;
-      const pct = activePrice > 0 ? Math.round((margin / activePrice) * 100) : 0;
-      const el = document.getElementById('marginValPreview');
-      if (el) {
-        el.textContent = '+' + margin.toLocaleString('fr-FR') + ' FCFA (' + pct + '% de marge)';
+    function renderAdminImageSlots() {
+      const container = document.getElementById('adminImageSlotsContainer');
+      if (!container) return;
+      const countBadge = document.getElementById('adminImgCountBadge');
+      const addBtn = document.getElementById('btnAdminAddImg');
+
+      if (countBadge) {
+        countBadge.textContent = `(${window.productModalImages.length} / 5 photos)`;
+      }
+      if (addBtn) {
+        addBtn.style.display = window.productModalImages.length >= 5 ? 'none' : 'inline-flex';
+      }
+
+      container.innerHTML = window.productModalImages.map((url, idx) => {
+        const isCover = idx === window.productModalCoverIndex;
+        return `
+          <div style="display:flex; align-items:center; gap:0.6rem; background:#fff; padding:0.6rem 0.8rem; border-radius:8px; border:${isCover ? '2px solid #c59b27' : '1px solid #cbd5e1'}; box-shadow:${isCover ? '0 2px 8px rgba(197,155,39,0.2)' : 'none'};">
+            <div style="width:48px; height:48px; border-radius:6px; overflow:hidden; background:#f1f5f9; border:1px solid #e2e8f0; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+              <img id="adminPreview_${idx}" src="${url || '/images/logo.jpg'}" onerror="this.src='/images/logo.jpg'" style="width:100%; height:100%; object-fit:cover;" />
+            </div>
+
+            <div style="flex:1;">
+              <input type="url" value="${url}" placeholder="Lien image ${idx + 1} (ex: https://...)" oninput="adminUpdateSlotUrl(${idx}, this.value)" style="width:100%; padding:0.5rem 0.65rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+            </div>
+
+            <button type="button" onclick="adminSetCoverImage(${idx})" style="padding:0.45rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; white-space:nowrap; ${isCover ? 'background:#c59b27; color:#fff;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'}">
+              ${isCover ? '⭐ En avant (Couverture)' : 'Mettre en avant'}
+            </button>
+
+            ${window.productModalImages.length > 2 ? `
+              <button type="button" onclick="adminRemoveImageSlot(${idx})" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:6px; width:32px; height:32px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;" title="Retirer cette photo">
+                🗑️
+              </button>
+            ` : `
+              <div style="width:32px; height:32px; flex-shrink:0;" title="Minimum 2 images requises"></div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function adminAddImageSlot() {
+      if (window.productModalImages.length >= 5) {
+        showToast('Maximum 5 images autorisées par article.');
+        return;
+      }
+      window.productModalImages.push('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop&q=80');
+      renderAdminImageSlots();
+    }
+
+    function adminRemoveImageSlot(idx) {
+      if (window.productModalImages.length <= 2) {
+        showToast('Au moins 2 images sont nécessaires pour présenter l\'article sous plusieurs angles.');
+        return;
+      }
+      window.productModalImages.splice(idx, 1);
+      if (window.productModalCoverIndex >= window.productModalImages.length) {
+        window.productModalCoverIndex = 0;
+      } else if (window.productModalCoverIndex === idx) {
+        window.productModalCoverIndex = 0;
+      }
+      renderAdminImageSlots();
+    }
+
+    function adminSetCoverImage(idx) {
+      window.productModalCoverIndex = idx;
+      renderAdminImageSlots();
+      showToast('Photo #' + (idx + 1) + ' définie comme image principale en avant !');
+    }
+
+    function adminUpdateSlotUrl(idx, val) {
+      window.productModalImages[idx] = val.trim();
+      const prev = document.getElementById('adminPreview_' + idx);
+      if (prev) {
+        prev.src = val.trim() || '/images/logo.jpg';
       }
     }
 
     async function handleSaveProduct(e, id) {
       e.preventDefault();
+
+      // Validate images (2 to 5 images)
+      const cleanImages = window.productModalImages.map(img => (img || '').trim()).filter(Boolean);
+      if (cleanImages.length < 2) {
+        alert('Veuillez renseigner au moins 2 photos pour cet article (2 à 5 photos requises).');
+        return;
+      }
+
+      let covIdx = window.productModalCoverIndex;
+      if (covIdx < 0 || covIdx >= cleanImages.length) {
+        covIdx = 0;
+      }
+      const coverImage = cleanImages[covIdx] || cleanImages[0];
+
       const payload = {
         name: document.getElementById('p_name').value,
         category: document.getElementById('p_category').value,
@@ -1329,7 +1462,9 @@
         isPromo: document.getElementById('p_isPromo').checked,
         isFeatured: document.getElementById('p_isFeatured').checked,
         published: document.getElementById('p_published').checked,
-        image: document.getElementById('p_image').value
+        image: coverImage,
+        images: cleanImages,
+        coverIndex: covIdx
       };
 
       const url = id ? `/api/products/${id}` : '/api/products';
@@ -1341,7 +1476,7 @@
         body: JSON.stringify(payload)
       });
       closeModal();
-      showToast('Article ajouté au stock !');
+      showToast('Article et photos enregistrés avec succès !');
       loadData();
     }
 

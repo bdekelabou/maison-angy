@@ -79,9 +79,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         </a>
 
-        <a href="/admin" class="admin-link" title="Espace de Connexion Gestion" onclick="handleFrontAdminLink(event)" style="padding:0.35rem 0.65rem; font-size:0.8rem; border-radius:6px; background:#f8fafc; border:1px solid #e2e8f0;">
-          <span id="navAdminLabel">🔒 Gestion</span>
-        </a>
+
 
         <button class="btn-cart" onclick="openCart()" style="padding:0.4rem 0.85rem; font-size:0.85rem;">
           <span>🛍️ Panier</span>
@@ -197,8 +195,10 @@
     </div>
 
     <div style="max-width:1200px; margin:2.5rem auto 0; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; font-size:0.8rem; color:#64748b;">
-      <div>
-        © 2026 <strong>Maison Angy Collection</strong>. Tous droits réservés.
+      <div style="display:flex; align-items:center;">
+        <span>© 2026 <strong>Maison Angy Collection</strong>. Tous droits réservés.</span>
+        <!-- Bouton cercle discret : accès gérante/admin, indiscernable pour les visiteurs -->
+        <button type="button" onclick="handleFrontAdminLink(event)" class="secret-admin-circle" title="" aria-label="" style="width:14px; height:14px; border-radius:50%; background:transparent; border:1px solid rgba(255,255,255,0.18); margin-left:10px; cursor:pointer; padding:0; display:inline-block; vertical-align:middle; transition:all 0.3s; opacity:0.35;" onmouseover="this.style.opacity='0.95'; this.style.borderColor='#c59b27';" onmouseout="this.style.opacity='0.35'; this.style.borderColor='rgba(255,255,255,0.18)';"></button>
       </div>
       <div style="color:#64748b; font-size:0.75rem;">
         Maison Angy • Lomé, Togo
@@ -279,6 +279,71 @@
       t.innerHTML = '<span>✨ ' + msg + '</span>';
       c.appendChild(t);
       setTimeout(() => t.remove(), 3000);
+    }
+
+    
+    function renderSocialLinks() {
+      const s = settings || {};
+      const headerContainer = document.getElementById('headerSocialLinks');
+      const footerContainer = document.getElementById('footerSocialLinks');
+
+      let headerHtml = '';
+      let footerHtml = '';
+
+      // Facebook
+      if (s.facebookUrl) {
+        headerHtml += `
+          <a href="${s.facebookUrl}" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Page Facebook" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; color:#1877f2; background:#f0f7ff; border-radius:8px; text-decoration:none; border:1px solid #bfdbfe;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+        `;
+        footerHtml += `
+          <a href="${s.facebookUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.5rem; background:#1877f2; color:#fff; padding:0.55rem 0.9rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; width:fit-content;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <span>Page Facebook</span>
+          </a>
+        `;
+      }
+
+      // Instagram
+      if (s.instagramUrl) {
+        headerHtml += `
+          <a href="${s.instagramUrl}" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Compte Instagram" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; color:#e1306c; background:#fdf2f8; border-radius:8px; text-decoration:none; border:1px solid #fbcfe8;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#e1306c"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+        `;
+        footerHtml += `
+          <a href="${s.instagramUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.5rem; background:linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color:#fff; padding:0.55rem 0.9rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; width:fit-content;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span>Instagram</span>
+          </a>
+        `;
+      }
+
+      // TikTok
+      if (s.tiktokUrl) {
+        headerHtml += `
+          <a href="${s.tiktokUrl}" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Compte TikTok" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; color:#0f172a; background:#f8fafc; border-radius:8px; text-decoration:none; border:1px solid #cbd5e1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0f172a"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.81 4.47 6.27 6.27 0 0 0 1.87-4.47V8.62a8.19 8.19 0 0 0 4.91 1.64V6.81a4.87 4.87 0 0 1-1-.12z"/></svg>
+          </a>
+        `;
+        footerHtml += `
+          <a href="${s.tiktokUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.5rem; background:#0f172a; color:#fff; padding:0.55rem 0.9rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; width:fit-content; border:1px solid rgba(255,255,255,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.81 4.47 6.27 6.27 0 0 0 1.87-4.47V8.62a8.19 8.19 0 0 0 4.91 1.64V6.81a4.87 4.87 0 0 1-1-.12z"/></svg>
+            <span>TikTok</span>
+          </a>
+        `;
+      }
+
+      // WhatsApp
+      footerHtml += `
+        <a href="https://wa.me/${s.fullWhatsapp || '22893849200'}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.5rem; background:#25d366; color:#fff; padding:0.55rem 0.9rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; width:fit-content;">
+          <span>💬 Écrire sur WhatsApp (+228 ${s.whatsappNumber || '93 84 92 00'})</span>
+        </a>
+      `;
+
+      if (headerContainer) headerContainer.innerHTML = headerHtml;
+      if (footerContainer) footerContainer.innerHTML = footerHtml;
     }
 
     async function initStore() {
@@ -402,18 +467,19 @@
         const activePrice = p.isPromo ? p.promoPrice : p.salePrice;
         return `
           <div class="product-card" style="${p.published === false ? 'opacity: 0.6; border: 2px dashed #94a3b8;' : ''}">
-            <div class="product-image-wrap">
+            <div class="product-image-wrap" style="cursor:pointer;" onclick="openProductGallery(${p.id})">
               <img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy" />
               
               <div class="product-badges">
                 ${p.isFeatured ? '<span class="badge-featured">⭐ En Vedette</span>' : ''}
                 ${p.isPromo ? '<span class="badge-promo">🏷️ Promo</span>' : ''}
+                ${p.images && p.images.length > 1 ? `<span class="badge-stock" style="background:rgba(15,23,42,0.85); color:#fff; backdrop-filter:blur(4px); font-size:0.7rem; font-weight:600; border:1px solid rgba(197,155,39,0.5);" title="Cet article a ${p.images.length} photos">📷 ${p.images.length} photos</span>` : ''}
                 ${p.stock <= p.minStockAlert ? `<span class="badge-stock">Dernières pièces (${p.stock})</span>` : ''}
                 ${p.published === false ? '<span class="badge-stock" style="background:#64748b;">👁️ Masqué</span>' : ''}
               </div>
 
               ${isAdminLoggedIn ? `
-                <div class="product-admin-overlay">
+                <div class="product-admin-overlay" onclick="event.stopPropagation()">
                   <button class="btn-card-admin ${p.isFeatured ? 'active' : ''}" onclick="toggleFrontFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la une' : 'Mettre en avant'}">⭐</button>
                   <button class="btn-card-admin ${p.isPromo ? 'active' : ''}" onclick="toggleFrontPromo(${p.id})" title="${p.isPromo ? 'Désactiver promo' : 'Mettre en promo'}">🏷️</button>
                   <button class="btn-card-admin" onclick="toggleFrontPublish(${p.id})" title="${p.published === false ? 'Publier' : 'Masquer'}">${p.published === false ? '👁️' : '🕶️'}</button>
@@ -425,7 +491,10 @@
 
             <div class="product-info">
               <span class="product-category">${p.category}</span>
-              <h3 class="product-title">${p.name}</h3>
+              <h3 class="product-title" style="cursor:pointer;" onclick="openProductGallery(${p.id})">${p.name}</h3>
+              <button type="button" onclick="openProductGallery(${p.id})" style="background:none; border:none; color:#c59b27; font-size:0.75rem; font-weight:700; cursor:pointer; padding:0; margin-bottom:0.4rem; text-decoration:underline; display:inline-flex; align-items:center; gap:0.25rem; width:fit-content;">
+                <span>🔍 Voir photos ${p.images && p.images.length > 1 ? `(${p.images.length})` : ''} & détails</span>
+              </button>
               <p class="product-desc">${p.description || ''}</p>
 
               <div class="product-footer">
@@ -778,9 +847,11 @@
 
     
     function handleFrontAdminLink(e) {
+      if (e) e.preventDefault();
       if (!isAdminLoggedIn) {
-        e.preventDefault();
         openFrontLoginModal();
+      } else {
+        window.location.href = '/admin';
       }
     }
 
@@ -791,7 +862,7 @@
           <div class="admin-modal-card" style="max-width:400px; background:#fff; border-radius:12px; margin:auto; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
             <div style="background:#0f172a; color:#fff; padding:1.2rem; display:flex; justify-content:space-between; align-items:center;">
               <h3 style="color:#fff; font-size:1.1rem; display:flex; align-items:center; gap:0.5rem;">
-                👑 Connexion Gérante
+                🔒 Espace Privé Maison Angy
               </h3>
               <button class="close-btn" onclick="closeFrontModal()">&times;</button>
             </div>
@@ -809,7 +880,7 @@
               </div>
 
               <button type="submit" class="btn-action-primary" style="width:100%; padding:0.75rem; font-size:0.95rem; border-radius:6px;">
-                Se connecter en Mode Gérante
+                Se connecter à l'espace
               </button>
 
               <div style="text-align:center; margin-top:1rem;">
@@ -866,21 +937,185 @@
       }
     }
 
+    // PRODUCT GALLERY & DETAIL MODAL
+    window.galleryActiveImg = '';
+
+    function openProductGallery(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      const curr = settings.currency || 'FCFA';
+      const activePrice = p.isPromo ? p.promoPrice : p.salePrice;
+      const imgs = (p.images && p.images.length > 0) ? p.images : [p.image];
+      let covIdx = (p.coverIndex !== undefined && p.coverIndex >= 0 && p.coverIndex < imgs.length) ? p.coverIndex : 0;
+      window.galleryActiveImg = imgs[covIdx] || imgs[0];
+
+      const modalHtml = `
+        <div class="modal-overlay active" id="galleryModalOverlay" onclick="closeProductGallery(event)">
+          <div class="modal-content" style="max-width:740px; width:95%; border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid #cbd5e1;" onclick="event.stopPropagation()">
+            <div style="background:#0f172a; color:#fff; padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #c59b27;">
+              <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <span style="font-size:1.15rem; font-weight:700; font-family:'Playfair Display', serif;">${p.name}</span>
+                <span style="background:rgba(197,155,39,0.25); color:#fef3c7; border:1px solid #c59b27; padding:0.15rem 0.55rem; border-radius:9999px; font-size:0.75rem; font-weight:600;">${p.category}</span>
+              </div>
+              <button class="close-btn" onclick="closeProductGallery()">&times;</button>
+            </div>
+
+            <div class="gallery-grid-responsive" style="padding:1.5rem; max-height:82vh; overflow-y:auto;">
+              <!-- Left: Big Photo + Thumbnails -->
+              <div>
+                <div style="width:100%; height:330px; border-radius:12px; overflow:hidden; background:#f1f5f9; border:1px solid #e2e8f0; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                  <img id="galleryBigImage" src="${window.galleryActiveImg}" alt="${p.name}" style="width:100%; height:100%; object-fit:cover; transition:opacity 0.2s;" onerror="this.src='/images/logo.jpg'" />
+                  ${p.isPromo ? `<span style="position:absolute; top:12px; left:12px; background:#ef4444; color:#fff; font-size:0.75rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">🏷️ EN PROMO</span>` : ''}
+                  ${p.isFeatured ? `<span style="position:absolute; top:12px; right:12px; background:#c59b27; color:#fff; font-size:0.75rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">⭐ EN VEDETTE</span>` : ''}
+                </div>
+
+                <!-- Thumbnails strip (2 to 5 images) -->
+                ${imgs.length > 1 ? `
+                  <div style="display:flex; gap:0.5rem; margin-top:0.75rem; overflow-x:auto; padding-bottom:0.35rem;" id="galleryThumbsRow">
+                    ${imgs.map((url, i) => `
+                      <div onclick="switchGalleryImg('${url}', ${i})" class="gallery-thumb-item" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; flex-shrink:0; border:${url === window.galleryActiveImg ? '2.5px solid #c59b27' : '1px solid #cbd5e1'}; position:relative; opacity:${url === window.galleryActiveImg ? '1' : '0.75'}; box-shadow:${url === window.galleryActiveImg ? '0 2px 8px rgba(197,155,39,0.3)' : 'none'};">
+                        <img src="${url}" alt="photo ${i+1}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/images/logo.jpg'" />
+                        ${i === covIdx ? `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(197,155,39,0.92); color:#fff; font-size:0.55rem; text-align:center; font-weight:700; line-height:1.2; text-transform:uppercase;">Couverture</span>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                  <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem; text-align:center;">
+                    👆 Cliquez sur une miniature pour l'afficher en grand (${imgs.length} photos)
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Right: Details & Order buttons -->
+              <div style="display:flex; flex-direction:column; justify-content:space-between; gap:1rem;">
+                <div>
+                  <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span style="font-size:1.8rem; font-weight:800; color:#c59b27; font-family:'Playfair Display', serif;">
+                      ${activePrice.toLocaleString('fr-FR')} ${curr}
+                    </span>
+                    ${p.isPromo ? `
+                      <span style="font-size:1.15rem; color:#94a3b8; text-decoration:line-through;">
+                        ${p.salePrice.toLocaleString('fr-FR')} ${curr}
+                      </span>
+                    ` : ''}
+                  </div>
+
+                  <div style="margin-bottom:1rem;">
+                    <span style="padding:0.3rem 0.75rem; border-radius:9999px; font-weight:700; font-size:0.8rem; background:${p.stock > 0 ? '#ecfdf5' : '#fee2e2'}; color:${p.stock > 0 ? '#15803d' : '#b91c1c'}; border:1px solid ${p.stock > 0 ? '#a7f3d0' : '#fecaca'};">
+                      ${p.stock > 0 ? `✅ En Stock : ${p.stock} pièces disponibles` : '❌ Rupture temporaire'}
+                    </span>
+                  </div>
+
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
+                    <div style="font-size:0.85rem; font-weight:700; color:#334155; margin-bottom:0.35rem;">Détails de l'article :</div>
+                    <p style="font-size:0.9rem; color:#475569; line-height:1.55; margin:0;">
+                      ${p.description || "Article exclusif de la nouvelle collection Maison Angy. Confection soignée et tissu de haute qualité sélectionné pour sublimer votre élégance au quotidien."}
+                    </p>
+                  </div>
+
+                  <div style="font-size:0.8rem; color:#64748b; line-height:1.6; margin-bottom:1rem;">
+                    🛵 <strong>Livraison Lomé :</strong> Déckon, Tokoin, Agoè, Bè, Adidogomé & banlieue en moins de 24h.<br/>
+                    📦 <strong>Expédition Togo :</strong> Tsévié, Kpalimé, Atakpamé, Sokodé, Kara via agence.
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                  <button onclick="addToCart(${p.id}); closeProductGallery();" class="btn-action-primary" style="width:100%; padding:0.85rem; justify-content:center; font-size:1rem; border-radius:8px; cursor:pointer;" ${p.stock <= 0 ? 'disabled style="opacity:0.5;"' : ''}>
+                    🛍️ Ajouter au Panier
+                  </button>
+
+                  <a href="https://wa.me/${settings.fullWhatsapp || '22893849200'}?text=${encodeURIComponent("Bonjour Maison Angy, je souhaite commander l'article: " + p.name + " (" + activePrice.toLocaleString('fr-FR') + " " + curr + "). Photo: " + window.galleryActiveImg)}" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; justify-content:center; gap:0.5rem; background:#25d366; color:#fff; padding:0.8rem; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.95rem; box-shadow:0 4px 12px rgba(37,211,102,0.35); transition:transform 0.15s ease;">
+                    <span>💬 Commander sur WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('frontProductModalContainer').innerHTML = modalHtml;
+    }
+
+    function switchGalleryImg(url, idx) {
+      window.galleryActiveImg = url;
+      const big = document.getElementById('galleryBigImage');
+      if (big) {
+        big.style.opacity = '0.3';
+        setTimeout(() => {
+          big.src = url;
+          big.style.opacity = '1';
+        }, 150);
+      }
+      const row = document.getElementById('galleryThumbsRow');
+      if (row) {
+        const thumbs = row.querySelectorAll('.gallery-thumb-item');
+        thumbs.forEach((t, i) => {
+          if (i === idx) {
+            t.style.border = '2.5px solid #c59b27';
+            t.style.opacity = '1';
+            t.style.boxShadow = '0 2px 8px rgba(197,155,39,0.3)';
+          } else {
+            t.style.border = '1px solid #cbd5e1';
+            t.style.opacity = '0.75';
+            t.style.boxShadow = 'none';
+          }
+        });
+      }
+    }
+
+    function closeProductGallery(e) {
+      if (e && e.target && !e.target.classList.contains('modal-overlay') && !e.target.classList.contains('close-btn')) return;
+      document.getElementById('frontProductModalContainer').innerHTML = '';
+    }
+
+    // FRONT PRODUCT MODAL (AJOUT / MODIFICATION MULTI-IMAGES 2 A 5)
+    window.frontModalImages = [];
+    window.frontModalCoverIndex = 0;
+
     function openFrontProductModal(id) {
       const p = id ? products.find(item => item.id === id) : null;
       const curr = settings.currency || 'FCFA';
 
+      // Initialize 2 to 5 images
+      let initialImgs = [];
+      if (p && Array.isArray(p.images) && p.images.length > 0) {
+        initialImgs = [...p.images];
+      } else if (p && p.image) {
+        initialImgs = [p.image];
+      } else {
+        initialImgs = [
+          'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80'
+        ];
+      }
+
+      while (initialImgs.length < 2) {
+        initialImgs.push('https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80');
+      }
+      if (initialImgs.length > 5) {
+        initialImgs = initialImgs.slice(0, 5);
+      }
+
+      window.frontModalImages = initialImgs;
+      let covIdx = 0;
+      if (p && p.coverIndex !== undefined && p.coverIndex >= 0 && p.coverIndex < initialImgs.length) {
+        covIdx = p.coverIndex;
+      } else if (p && p.image && initialImgs.indexOf(p.image) !== -1) {
+        covIdx = initialImgs.indexOf(p.image);
+      }
+      window.frontModalCoverIndex = covIdx;
+
       document.getElementById('frontProductModalContainer').innerHTML = `
         <div class="modal-overlay active">
-          <div class="admin-modal-card" style="max-width:550px; background:#fff; border-radius:12px; margin:auto; overflow:hidden;">
-            <div class="modal-head" style="background:#0f172a; color:#fff; padding:1.2rem; display:flex; justify-content:space-between; align-items:center;">
-              <h3 style="color:#fff; font-size:1.15rem;">${p ? "Modifier l'Article" : "Ajouter un Article Directement"}</h3>
+          <div class="admin-modal-card" style="max-width:620px; background:#fff; border-radius:12px; margin:auto; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);">
+            <div class="modal-head" style="background:#0f172a; color:#fff; padding:1.2rem; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #c59b27;">
+              <h3 style="color:#fff; font-size:1.15rem;">${p ? "Modifier l'Article & Photos" : "Ajouter un Article Directement"}</h3>
               <button class="close-btn" onclick="closeFrontModal()">&times;</button>
             </div>
-            <form onsubmit="handleFrontSaveProduct(event, ${p ? p.id : 'null'})" style="padding:1.5rem;">
+            <form onsubmit="handleFrontSaveProduct(event, ${p ? p.id : 'null'})" style="padding:1.5rem; max-height:85vh; overflow-y:auto;">
               <div style="margin-bottom:0.85rem;">
                 <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Nom de l'article *</label>
-                <input type="text" id="fp_name" required placeholder="Ex: Collant Gainant, Boubou Caviar..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                <input type="text" id="fp_name" required placeholder="Ex: Collant Gainant, Boubou Caviar, Robe..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
               </div>
 
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
@@ -924,19 +1159,114 @@
                 </label>
               </div>
 
-              <div style="margin-bottom:1.2rem;">
-                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Lien Image</label>
-                <input type="url" id="fp_image" value="${p ? p.image : 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80'}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+              <!-- GESTION DE 2 A 5 IMAGES (AVEC SELECTION IMAGE EN AVANT) -->
+              <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <div style="font-weight:700; font-size:0.9rem; color:#0f172a; display:flex; align-items:center; gap:0.4rem;">
+                      📸 Photos de l'article <span id="frontImgCountBadge" style="background:#0f172a; color:#fef3c7; font-size:0.75rem; padding:0.15rem 0.5rem; border-radius:9999px; border:1px solid #c59b27;">(2 à 5 photos)</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:0.2rem;">
+                      Cliquez sur <strong>"⭐ En avant"</strong> pour définir la photo affichée en couverture.
+                    </div>
+                  </div>
+                  <button type="button" id="btnFrontAddImg" onclick="frontAddImageSlot()" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                    + Ajouter une photo
+                  </button>
+                </div>
+
+                <div id="frontImageSlotsContainer" style="display:flex; flex-direction:column; gap:0.6rem;">
+                  <!-- Dynamic slots -->
+                </div>
               </div>
 
               <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
                 <button type="button" class="btn-secondary" onclick="closeFrontModal()">Annuler</button>
-                <button type="submit" class="btn-action-primary">Enregistrer l'Article</button>
+                <button type="submit" class="btn-action-primary" style="padding:0.65rem 1.25rem;">Enregistrer l'Article & Photos</button>
               </div>
             </form>
           </div>
         </div>
       `;
+      renderFrontImageSlots();
+    }
+
+    function renderFrontImageSlots() {
+      const container = document.getElementById('frontImageSlotsContainer');
+      if (!container) return;
+      const countBadge = document.getElementById('frontImgCountBadge');
+      const addBtn = document.getElementById('btnFrontAddImg');
+
+      if (countBadge) {
+        countBadge.textContent = `(${window.frontModalImages.length} / 5 photos)`;
+      }
+      if (addBtn) {
+        addBtn.style.display = window.frontModalImages.length >= 5 ? 'none' : 'inline-flex';
+      }
+
+      container.innerHTML = window.frontModalImages.map((url, idx) => {
+        const isCover = idx === window.frontModalCoverIndex;
+        return `
+          <div style="display:flex; align-items:center; gap:0.6rem; background:#fff; padding:0.55rem 0.75rem; border-radius:8px; border:${isCover ? '2px solid #c59b27' : '1px solid #cbd5e1'}; box-shadow:${isCover ? '0 2px 8px rgba(197,155,39,0.2)' : 'none'};">
+            <div style="width:46px; height:46px; border-radius:6px; overflow:hidden; background:#f1f5f9; border:1px solid #e2e8f0; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+              <img id="frontPreview_${idx}" src="${url || '/images/logo.jpg'}" onerror="this.src='/images/logo.jpg'" style="width:100%; height:100%; object-fit:cover;" />
+            </div>
+
+            <div style="flex:1;">
+              <input type="url" value="${url}" placeholder="Lien image ${idx + 1} (ex: https://...)" oninput="frontUpdateSlotUrl(${idx}, this.value)" style="width:100%; padding:0.45rem 0.6rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+            </div>
+
+            <button type="button" onclick="frontSetCoverImage(${idx})" style="padding:0.4rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; white-space:nowrap; ${isCover ? 'background:#c59b27; color:#fff;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'}">
+              ${isCover ? '⭐ En avant (Couverture)' : 'Mettre en avant'}
+            </button>
+
+            ${window.frontModalImages.length > 2 ? `
+              <button type="button" onclick="frontRemoveImageSlot(${idx})" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:6px; width:30px; height:30px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;" title="Retirer cette photo">
+                🗑️
+              </button>
+            ` : `
+              <div style="width:30px; height:30px; flex-shrink:0;" title="Minimum 2 images"></div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function frontAddImageSlot() {
+      if (window.frontModalImages.length >= 5) {
+        showToast('Maximum 5 photos autorisées par article.');
+        return;
+      }
+      window.frontModalImages.push('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop&q=80');
+      renderFrontImageSlots();
+    }
+
+    function frontRemoveImageSlot(idx) {
+      if (window.frontModalImages.length <= 2) {
+        showToast('Au moins 2 photos requises pour cet article.');
+        return;
+      }
+      window.frontModalImages.splice(idx, 1);
+      if (window.frontModalCoverIndex >= window.frontModalImages.length) {
+        window.frontModalCoverIndex = 0;
+      } else if (window.frontModalCoverIndex === idx) {
+        window.frontModalCoverIndex = 0;
+      }
+      renderFrontImageSlots();
+    }
+
+    function frontSetCoverImage(idx) {
+      window.frontModalCoverIndex = idx;
+      renderFrontImageSlots();
+      showToast('Photo #' + (idx + 1) + ' sélectionnée comme image en avant !');
+    }
+
+    function frontUpdateSlotUrl(idx, val) {
+      window.frontModalImages[idx] = val.trim();
+      const prev = document.getElementById('frontPreview_' + idx);
+      if (prev) {
+        prev.src = val.trim() || '/images/logo.jpg';
+      }
     }
 
     function closeFrontModal() {
@@ -945,6 +1275,19 @@
 
     async function handleFrontSaveProduct(e, id) {
       e.preventDefault();
+
+      const cleanImages = window.frontModalImages.map(img => (img || '').trim()).filter(Boolean);
+      if (cleanImages.length < 2) {
+        alert('Veuillez renseigner au moins 2 photos pour cet article (2 à 5 photos requises).');
+        return;
+      }
+
+      let covIdx = window.frontModalCoverIndex;
+      if (covIdx < 0 || covIdx >= cleanImages.length) {
+        covIdx = 0;
+      }
+      const coverImage = cleanImages[covIdx] || cleanImages[0];
+
       const payload = {
         name: document.getElementById('fp_name').value,
         category: document.getElementById('fp_category').value,
@@ -955,7 +1298,9 @@
         isPromo: document.getElementById('fp_isPromo').checked,
         isFeatured: document.getElementById('fp_isFeatured').checked,
         published: document.getElementById('fp_published').checked,
-        image: document.getElementById('fp_image').value
+        image: coverImage,
+        images: cleanImages,
+        coverIndex: covIdx
       };
 
       const url = id ? '/api/products/' + id : '/api/products';
@@ -967,7 +1312,7 @@
         body: JSON.stringify(payload)
       });
       closeFrontModal();
-      showToast('Article enregistré avec succès !');
+      showToast('Article et photos enregistrés avec succès !');
       initStore();
     }
 

@@ -13,7 +13,9 @@
     "city": "Lomé, Togo",
     "address": "Lomé, Togo",
     "facebookUrl": "https://www.facebook.com/profile.php?id=61587838474305",
-    "logoUrl": "/images/logo.jpg"
+    "logoUrl": "/images/logo.jpg",
+    "instagramUrl": "",
+    "tiktokUrl": ""
   },
   "products": [],
   "orders": [],
@@ -78,7 +80,17 @@
       "password": "password2026",
       "role": "ADMIN",
       "roleLabel": "Propriétaire & Administratrice",
-      "createdAt": "2026-09-21"
+      "createdAt": "2026-09-21",
+      "permissions": {
+        "products": true,
+        "orders": true,
+        "delivery": true,
+        "trips": true,
+        "cash": true,
+        "profits": true,
+        "settings": true,
+        "team": true
+      }
     },
     {
       "id": 2,
@@ -87,7 +99,17 @@
       "password": "gerante2026",
       "role": "GERANTE",
       "roleLabel": "Gérante de Vente",
-      "createdAt": "2026-09-21"
+      "createdAt": "2026-09-21",
+      "permissions": {
+        "products": true,
+        "orders": true,
+        "delivery": true,
+        "trips": false,
+        "cash": false,
+        "profits": false,
+        "settings": false,
+        "team": false
+      }
     }
   ]
 }

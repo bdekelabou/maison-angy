@@ -291,6 +291,19 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/products' && req.method === 'POST') {
       const data = await parseBody(req);
+      const rawImages = Array.isArray(data.images) ? data.images.map(img => (img || '').trim()).filter(Boolean) : [];
+      if (rawImages.length === 0 && data.image) {
+        rawImages.push(data.image.trim());
+      }
+      if (rawImages.length === 0) {
+        rawImages.push('https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80');
+      }
+      let coverIndex = parseInt(data.coverIndex);
+      if (isNaN(coverIndex) || coverIndex < 0 || coverIndex >= rawImages.length) {
+        coverIndex = 0;
+      }
+      const coverImage = rawImages[coverIndex] || rawImages[0];
+
       const newProduct = {
         id: db.products.length > 0 ? Math.max(...db.products.map(p => p.id)) + 1 : 1,
         name: data.name || 'Nouvel Article',
@@ -304,7 +317,9 @@ const server = http.createServer(async (req, res) => {
         stock: parseInt(data.stock) || 0,
         minStockAlert: parseInt(data.minStockAlert) || 3,
         description: data.description || '',
-        image: data.image || 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80',
+        image: coverImage,
+        images: rawImages,
+        coverIndex: coverIndex,
         available: data.available !== false
       };
       db.products.push(newProduct);
@@ -319,7 +334,26 @@ const server = http.createServer(async (req, res) => {
       const data = await parseBody(req);
       const idx = db.products.findIndex(p => p.id === id);
       if (idx !== -1) {
-        db.products[idx] = { ...db.products[idx], ...data, id };
+        let updated = { ...db.products[idx], ...data, id };
+        if (Array.isArray(data.images)) {
+          const cleanImages = data.images.map(i => (i || '').trim()).filter(Boolean);
+          if (cleanImages.length > 0) {
+            updated.images = cleanImages;
+            let coverIndex = parseInt(data.coverIndex);
+            if (isNaN(coverIndex) || coverIndex < 0 || coverIndex >= cleanImages.length) {
+              coverIndex = 0;
+            }
+            updated.coverIndex = coverIndex;
+            updated.image = cleanImages[coverIndex];
+          }
+        } else if (data.image) {
+          updated.image = data.image.trim();
+          if (!updated.images || updated.images.length === 0) {
+            updated.images = [updated.image];
+            updated.coverIndex = 0;
+          }
+        }
+        db.products[idx] = updated;
         saveDb(db);
         res.writeHead(200);
         res.end(JSON.stringify({ success: true, product: db.products[idx] }));
