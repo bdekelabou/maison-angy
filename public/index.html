@@ -519,6 +519,30 @@
               </button>
               <p class="product-desc">${p.description || ''}</p>
 
+              ${(p.price3 || p.price6 || p.price12) ? `
+              <div style="background:#fefce8; border:1px solid #fde047; border-radius:8px; padding:0.55rem 0.75rem; margin-bottom:0.6rem;">
+                <div style="font-size:0.72rem; font-weight:800; color:#92400e; margin-bottom:0.35rem; letter-spacing:0.5px; text-transform:uppercase;">💰 Prix Gros & Détail</div>
+                <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                  <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>1 pièce</span>
+                    <strong>${activePrice.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>
+                  ${p.price3 ? `<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>Lot de 3</span>
+                    <strong style="color:#ca8a04;">${p.price3.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>` : ''}
+                  ${p.price6 ? `<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>Lot de 6</span>
+                    <strong style="color:#ca8a04;">${p.price6.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>` : ''}
+                  ${p.price12 ? `<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>Lot de 12</span>
+                    <strong style="color:#b45309;">${p.price12.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>` : ''}
+                </div>
+              </div>
+              ` : ''}
+
               <div class="product-footer">
                 <div class="price-box">
                   <span class="current-price">${activePrice.toLocaleString('fr-FR')} ${curr}</span>
