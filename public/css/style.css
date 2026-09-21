@@ -72,7 +72,7 @@ h1, h2, h3, .brand-font {
 .header-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0.85rem 1.5rem;
+  padding: 0.4rem 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -787,4 +787,114 @@ h1, h2, h3, .brand-font {
   .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; padding: 0 1rem; }
   .product-image-wrap { height: 210px; }
   .cart-drawer { max-width: 100%; }
+}
+
+
+/* Compact Frosted Glass Banner (Maison Angy) */
+.hero-banner-compact {
+  position: relative;
+  background: url('/images/banner.jpg') center center / cover no-repeat;
+  margin: 0.6rem auto 0.8rem;
+  max-width: 1240px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(27, 4, 14, 0.2);
+  border: 1px solid rgba(197, 155, 39, 0.35);
+}
+
+.hero-banner-compact::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(22, 3, 11, 0.62);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+
+.hero-glass-card {
+  position: relative;
+  z-index: 1;
+  padding: 0.85rem 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hero-glass-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 700px;
+}
+
+.hero-pill-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(197, 155, 39, 0.25);
+  border: 1px solid #c59b27;
+  color: #fef9e7;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
+}
+
+.hero-title-compact {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: #ffffff;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.hero-subtitle-compact {
+  font-size: 0.82rem;
+  color: #f1f5f9;
+  margin: 0;
+  font-weight: 500;
+  opacity: 0.95;
+}
+
+.hero-btn-wa-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #25d366;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  box-shadow: 0 3px 12px rgba(37, 211, 102, 0.35);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hero-btn-wa-compact:hover {
+  background: #1eb956;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .hero-glass-card {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hero-title-compact {
+    font-size: 1.1rem;
+  }
+  .hero-btn-wa-compact {
+    width: 100%;
+    justify-content: center;
+  }
 }

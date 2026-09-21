@@ -63,70 +63,74 @@
     </div>
   </div>
 
-  <!-- Header -->
+  <!-- Header (Compact & Sleek) -->
   <header class="header-client">
     <div class="header-container">
-      <a href="/" class="brand-logo" style="display:flex; align-items:center; gap:0.85rem; text-decoration:none;">
-        <img src="/images/logo.jpg" alt="Maison Angy" style="width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid #c59b27; box-shadow:0 4px 12px rgba(197,155,39,0.35); flex-shrink:0;" />
+      <a href="/" class="brand-logo" style="display:flex; align-items:center; gap:0.55rem; text-decoration:none;">
+        <img src="/images/logo.jpg" alt="Maison Angy" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #c59b27; box-shadow:0 2px 8px rgba(197,155,39,0.3); flex-shrink:0;" />
         <div class="brand-text">
-          <h1 id="storeName" style="font-family:'Playfair Display',serif; font-size:1.4rem; margin:0; color:#0f172a; line-height:1.2; font-weight:700;">Maison Angy</h1>
-          <span id="storeSlogan" style="font-size:0.72rem; color:#c59b27; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">Le style, pour tous. Sans compromis.</span>
+          <h1 id="storeName" style="font-family:'Playfair Display',serif; font-size:1.15rem; margin:0; color:#0f172a; line-height:1.1; font-weight:700;">Maison Angy</h1>
+          <span id="storeSlogan" style="font-size:0.62rem; color:#c59b27; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">Collection</span>
         </div>
       </a>
 
-      <div class="header-actions" style="display:flex; align-items:center; gap:0.6rem;">
-        <a href="https://www.facebook.com/profile.php?id=61587838474305" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Page Facebook Maison Angy" style="display:inline-flex; align-items:center; gap:0.35rem; color:#1877f2; background:#f0f7ff; padding:0.45rem 0.8rem; border-radius:8px; text-decoration:none; font-size:0.85rem; font-weight:600; border:1px solid #bfdbfe;">
+      <div class="header-actions" style="display:flex; align-items:center; gap:0.45rem;">
+        <a href="https://www.facebook.com/profile.php?id=61587838474305" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Page Facebook Maison Angy" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; color:#1877f2; background:#f0f7ff; border-radius:8px; text-decoration:none; border:1px solid #bfdbfe;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          <span style="font-size:0.8rem;">Facebook</span>
         </a>
 
-        <a href="/admin" class="admin-link" title="Espace de Gestion Caisse & Stock" onclick="handleFrontAdminLink(event)">
-          <span id="navAdminLabel">🔒 Espace Gestion</span>
+        <a href="/admin" class="admin-link" title="Espace de Connexion Gestion" onclick="handleFrontAdminLink(event)" style="padding:0.35rem 0.65rem; font-size:0.8rem; border-radius:6px; background:#f8fafc; border:1px solid #e2e8f0;">
+          <span id="navAdminLabel">🔒 Gestion</span>
         </a>
 
-        <button class="btn-cart" onclick="openCart()">
-          <span>🛍️ Mon Panier</span>
+        <button class="btn-cart" onclick="openCart()" style="padding:0.4rem 0.85rem; font-size:0.85rem;">
+          <span>🛍️ Panier</span>
           <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Hero Banner -->
-  <section class="hero-banner">
-    <div class="hero-content">
-      <div class="hero-pill">
-        ✨ Collection & Nouveautés Tendance
+  <!-- Compact Frosted Glass Banner with Background Poster -->
+  <section class="hero-banner-compact">
+    <div class="hero-glass-card">
+      <div class="hero-glass-left">
+        <div class="hero-pill-mini">
+          ✨ NOUVELLE COLLECTION • LOMÉ
+        </div>
+        <h2 class="hero-title-compact">
+          Ton style, de l'intérieur à l'extérieur.
+        </h2>
+        <p class="hero-subtitle-compact">
+          « Le style pour tous, sans compromis » — Lingerie fine, brassières, boubous & mode chic
+        </p>
       </div>
-      <h2 class="hero-title">Le Style, Pour Tous. Sans Compromis.</h2>
-      <p class="hero-subtitle">
-        Maison Angy Collection — Lingerie fine galbante, boubous chics, coffrets cadeaux, turbans & accessoires de charme.
-        Commandez en direct avec livraison rapide à Lomé et expéditions partout au Togo !
-      </p>
-      <div class="hero-perks">
-        <span>👙 Lingerie de Charme</span>
-        <span>🎁 Coffrets Cadeaux</span>
-        <span>👑 Turbans & Mode</span>
-        <span>🛵 Livraison Lomé & Togo</span>
+
+      <div class="hero-glass-right">
+        <a href="https://wa.me/22893849200" target="_blank" class="hero-btn-wa-compact">
+          <span>💬 WhatsApp (+228 93 84 92 00)</span>
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- Filters & Search -->
-  <section class="filter-section">
-    <div class="category-pills" id="categoryPills">
+  <!-- Filters & Quick Promotion Access -->
+  <section class="filter-section" style="padding: 0.35rem 1rem; max-width: 1240px; margin: 0 auto 0.6rem;">
+    <div class="category-pills" id="categoryPills" style="display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center;">
       <button class="cat-btn active" onclick="setCategory('TOUS')">✨ Tout afficher</button>
+      <button class="cat-btn" onclick="setSpecialFilter('PROMO')" id="btnSpecialPromo" style="color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; font-weight:700;">🏷️ En Promotion</button>
+      <button class="cat-btn" onclick="setSpecialFilter('FEATURED')" id="btnSpecialFeatured" style="color:#92400e; background:#fef3c7; border:1px solid #fde68a; font-weight:700;">⭐ En Vedette</button>
     </div>
 
-    <div class="search-box">
+    <div class="search-box" style="margin-top:0.4rem;">
       <span class="search-icon">🔍</span>
       <input
         type="text"
         id="searchInput"
-        placeholder="Rechercher un collant, boubou..."
+        placeholder="Rechercher lingerie, collant, boubou, brassière..."
         oninput="handleSearch(this.value)"
         className="search-input"
-        style="width: 100%; padding: 0.55rem 1rem 0.55rem 2.25rem; border: 1px solid #cbd5e1; border-radius: 9999px; font-size: 0.9rem;"
+        style="width: 100%; padding: 0.45rem 1rem 0.45rem 2.2rem; border: 1px solid #cbd5e1; border-radius: 9999px; font-size: 0.85rem;"
       />
     </div>
   </section>
@@ -295,21 +299,39 @@
       }
     }
 
-    function renderCategories() {
-      const set = new Set(products.map(p => p.category).filter(Boolean));
-      const cats = ['TOUS', ...Array.from(set)];
-      const container = document.getElementById('categoryPills');
-      container.innerHTML = cats.map(c => `
-        <button class="cat-btn ${activeCategory === c ? 'active' : ''}" onclick="setCategory('${c}')">
-          ${c === 'TOUS' ? '✨ Tout afficher' : c}
-        </button>
-      `).join('');
+    let specialFilter = 'ALL';
+
+    function setSpecialFilter(type) {
+      specialFilter = (specialFilter === type) ? 'ALL' : type;
+      activeCategory = 'TOUS';
+      renderCategories();
+      renderProducts();
     }
 
     function setCategory(cat) {
       activeCategory = cat;
+      specialFilter = 'ALL';
       renderCategories();
       renderProducts();
+    }
+
+    function renderCategories() {
+      const set = new Set(products.map(p => p.category).filter(Boolean));
+      const defaultCats = ['Lingerie', 'Brassières', 'Boubous', 'Slips Hommes', 'Tops & Jeans'];
+      const mergedCats = Array.from(new Set([...Array.from(set), ...(products.length === 0 ? defaultCats : [])]));
+      const container = document.getElementById('categoryPills');
+      if (!container) return;
+
+      container.innerHTML = `
+        <button class="cat-btn ${activeCategory === 'TOUS' && specialFilter === 'ALL' ? 'active' : ''}" onclick="setCategory('TOUS')">✨ Tout afficher</button>
+        <button class="cat-btn ${specialFilter === 'PROMO' ? 'active' : ''}" onclick="setSpecialFilter('PROMO')" style="color:#b91c1c; background:${specialFilter === 'PROMO' ? '#ef4444' : '#fef2f2'}; color:${specialFilter === 'PROMO' ? '#fff' : '#b91c1c'}; border:1px solid #fecaca; font-weight:700;">🏷️ En Promotion</button>
+        <button class="cat-btn ${specialFilter === 'FEATURED' ? 'active' : ''}" onclick="setSpecialFilter('FEATURED')" style="color:#92400e; background:${specialFilter === 'FEATURED' ? '#c59b27' : '#fef3c7'}; color:${specialFilter === 'FEATURED' ? '#fff' : '#92400e'}; border:1px solid #fde68a; font-weight:700;">⭐ En Vedette</button>
+        ${mergedCats.map(c => `
+          <button class="cat-btn ${activeCategory === c && specialFilter === 'ALL' ? 'active' : ''}" onclick="setCategory('${c}')">
+            ${c}
+          </button>
+        `).join('')}
+      `;
     }
 
     function handleSearch(val) {
@@ -325,7 +347,10 @@
         const matchCat = activeCategory === 'TOUS' || p.category === activeCategory;
         const matchQuery = !searchQuery || p.name.toLowerCase().includes(searchQuery) ||
                            (p.description && p.description.toLowerCase().includes(searchQuery));
-        return matchCat && matchQuery;
+        let matchSpecial = true;
+        if (specialFilter === 'PROMO') matchSpecial = Boolean(p.isPromo);
+        if (specialFilter === 'FEATURED') matchSpecial = Boolean(p.isFeatured);
+        return matchCat && matchQuery && matchSpecial;
       });
 
       if (filtered.length === 0) {
