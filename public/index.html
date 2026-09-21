@@ -94,13 +94,13 @@
   </header>
 
   <!-- Compact Frosted Glass Banner with Background Poster - Full as Center with Breathing Room -->
-  <section class="hero-banner-compact" style="max-width:1240px; margin:1.25rem auto 1.75rem; padding:0 1.5rem;">
-    <div class="hero-glass-card" style="border-radius:16px; padding:1.5rem 2.25rem; display:flex; justify-content:space-between; align-items:center; gap:2rem; flex-wrap:wrap;">
+  <section class="hero-banner-compact" style="max-width:1240px; margin:1.25rem auto 1.75rem; padding:0 1rem; overflow:hidden;">
+    <div class="hero-glass-card" style="border-radius:16px; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; gap:1.5rem; flex-wrap:wrap; overflow:hidden;">
       <div class="hero-glass-left" style="flex:1; min-width:280px;">
         <div class="hero-pill-mini" style="margin-bottom:0.5rem; letter-spacing:0.5px;">
           ✨ NOUVELLE COLLECTION • LOMÉ
         </div>
-        <h2 class="hero-title-compact" style="margin:0 0 0.4rem; font-size:1.4rem; line-height:1.35; letter-spacing:0.3px;">
+        <h2 class="hero-title-compact" style="margin:0 0 0.4rem; font-size:clamp(1.1rem, 4vw, 1.4rem); line-height:1.35; letter-spacing:0.3px; word-break:keep-all;">
           Ton style, de l'intérieur à l'extérieur.
         </h2>
         <p class="hero-subtitle-compact" style="margin:0; font-size:0.9rem; line-height:1.5; color:#f1f5f9; letter-spacing:0.2px;">
@@ -602,82 +602,112 @@
     }
 
     function openSizeColorPicker(prodId) {
-      const prod = products.find(p => p.id === prodId);
+      const prod = products.find(function(p) { return p.id === prodId; });
       if (!prod) return;
-      const curr = settings.currency || 'FCFA';
-      const activePrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
-      const sizes = prod.sizes ? prod.sizes.split(',').map(s => s.trim()).filter(Boolean) : [];
-      const colors = prod.colors ? prod.colors.split(',').map(c => c.trim()).filter(Boolean) : [];
+      var curr = settings.currency || 'FCFA';
+      var activePrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
+      var sizes = prod.sizes ? prod.sizes.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+      var colors = prod.colors ? prod.colors.split(',').map(function(c){ return c.trim(); }).filter(Boolean) : [];
 
-      const colorMap = {
-        'noir': '#0f172a', 'blanc': '#f0f0f0', 'rouge': '#ef4444', 'bleu': '#3b82f6',
-        'vert': '#22c55e', 'jaune': '#eab308', 'rose': '#ec4899', 'orange': '#f97316',
-        'violet': '#a855f7', 'gris': '#9ca3af', 'beige': '#d4a574', 'marron': '#92400e',
-        'caramel': '#c59b27', 'bordeaux': '#881337', 'marine': '#1e3a5f', 'kaki': '#65a30d',
-        'corail': '#fb7185', 'lavande': '#c084fc', 'turquoise': '#2dd4bf'
+      var colorMap = {
+        'noir':'#0f172a','blanc':'#f0f0f0','rouge':'#ef4444','bleu':'#3b82f6',
+        'vert':'#22c55e','jaune':'#eab308','rose':'#ec4899','orange':'#f97316',
+        'violet':'#a855f7','gris':'#9ca3af','beige':'#d4a574','marron':'#92400e',
+        'caramel':'#c59b27','bordeaux':'#881337','marine':'#1e3a5f','kaki':'#65a30d',
+        'corail':'#fb7185','lavande':'#c084fc','turquoise':'#2dd4bf'
       };
 
-      let selectedSize = sizes.length === 1 ? sizes[0] : '';
-      let selectedColor = colors.length === 1 ? colors[0] : '';
+      var selectedSize = sizes.length === 1 ? sizes[0] : '';
+      var selectedColor = colors.length === 1 ? colors[0] : '';
 
-      const modal = document.createElement('div');
+      // Remove any existing modal
+      var existing = document.getElementById('sizeColorModal');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
       modal.id = 'sizeColorModal';
-      modal.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.7); z-index:5000; display:flex; align-items:flex-end; justify-content:center; padding:0;';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.7);z-index:5000;display:flex;align-items:flex-end;justify-content:center;';
 
-      function renderPicker() {
-        modal.innerHTML = `
-          <div style="background:#fff; width:100%; max-width:500px; border-radius:16px 16px 0 0; padding:1.5rem; max-height:85vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-              <div>
-                <div style="font-weight:800; font-size:1rem; color:#0f172a;">${prod.name}</div>
-                <div style="color:#c59b27; font-weight:700; font-size:0.95rem; margin-top:2px;">${activePrice.toLocaleString('fr-FR')} ${curr}</div>
-              </div>
-              <button onclick="document.getElementById('sizeColorModal').remove()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b; line-height:1;">✕</button>
-            </div>
+      function buildHTML() {
+        var sizeBtns = '';
+        sizes.forEach(function(s) {
+          var active = selectedSize === s;
+          sizeBtns += '<button class="sz-btn" data-size="' + s + '" style="border:' + (active ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1') + ';background:' + (active ? '#0f172a' : '#fff') + ';color:' + (active ? '#fff' : '#0f172a') + ';border-radius:8px;padding:0.5rem 1rem;font-weight:700;font-size:0.9rem;cursor:pointer;">' + s + '</button>';
+        });
+        var colBtns = '';
+        colors.forEach(function(c) {
+          var bg = colorMap[c.toLowerCase()] || '#94a3b8';
+          var active = selectedColor === c;
+          colBtns += '<button class="cl-btn" data-color="' + c + '" style="display:inline-flex;align-items:center;gap:6px;border:' + (active ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1') + ';background:' + (active ? '#f8fafc' : '#fff') + ';border-radius:20px;padding:6px 12px;cursor:pointer;font-size:0.82rem;font-weight:600;color:#0f172a;"><span style="width:16px;height:16px;border-radius:50%;background:' + bg + ';border:1.5px solid rgba(0,0,0,0.12);flex-shrink:0;"></span>' + c + '</button>';
+        });
 
-            ${sizes.length > 0 ? `
-            <div style="margin-bottom:1.25rem;">
-              <div style="font-weight:700; font-size:0.85rem; color:#475569; margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.5px;">Choisissez votre Taille</div>
-              <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-                ${sizes.map(s => `
-                  <button onclick="selectedSize='${s}'; renderPicker();"
-                    style="border:${selectedSize === s ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1'}; background:${selectedSize === s ? '#0f172a' : '#fff'}; color:${selectedSize === s ? '#fff' : '#0f172a'}; border-radius:8px; padding:0.5rem 1rem; font-weight:700; font-size:0.9rem; cursor:pointer; transition:all 0.15s;">
-                    ${s}
-                  </button>
-                `).join('')}
-              </div>
-            </div>
-            ` : ''}
+        var sizeSection = sizes.length > 0 ? '<div style="margin-bottom:1.25rem;"><div style="font-weight:700;font-size:0.85rem;color:#475569;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.5px;">Choisissez votre Taille</div><div style="display:flex;flex-wrap:wrap;gap:0.5rem;">' + sizeBtns + '</div></div>' : '';
+        var colorSection = colors.length > 0 ? '<div style="margin-bottom:1.5rem;"><div style="font-weight:700;font-size:0.85rem;color:#475569;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.5px;">Choisissez la Couleur</div><div style="display:flex;flex-wrap:wrap;gap:0.5rem;">' + colBtns + '</div></div>' : '';
 
-            ${colors.length > 0 ? `
-            <div style="margin-bottom:1.5rem;">
-              <div style="font-weight:700; font-size:0.85rem; color:#475569; margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.5px;">Choisissez la Couleur</div>
-              <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-                ${colors.map(c => {
-                  const bg = colorMap[c.toLowerCase()] || '#94a3b8';
-                  return `
-                  <button onclick="selectedColor='${c}'; renderPicker();"
-                    title="${c}"
-                    style="display:inline-flex; align-items:center; gap:6px; border:${selectedColor === c ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1'}; background:${selectedColor === c ? '#f8fafc' : '#fff'}; border-radius:20px; padding:6px 12px; cursor:pointer; font-size:0.82rem; font-weight:600; color:#0f172a;">
-                    <span style="width:16px; height:16px; border-radius:50%; background:${bg}; border:1.5px solid rgba(0,0,0,0.12); flex-shrink:0;"></span>
-                    ${c}
-                  </button>`;
-                }).join('')}
-              </div>
-            </div>
-            ` : ''}
-
-            <button
-              onclick="${(sizes.length > 0 && !selectedSize) || (colors.length > 0 && !selectedColor) ? `alert('Veuillez choisir ${sizes.length > 0 && !selectedSize ? 'une taille' : ''}${sizes.length > 0 && !selectedSize && colors.length > 0 && !selectedColor ? ' et ' : ''}${colors.length > 0 && !selectedColor ? 'une couleur' : ''} avant de continuer.');' : `addToCart(${prodId}, selectedSize, selectedColor); document.getElementById('sizeColorModal').remove();`}"
-              style="width:100%; background:#0f172a; color:#fff; border:none; padding:0.9rem; border-radius:10px; font-weight:800; font-size:1rem; cursor:pointer; margin-top:0.5rem;">
-              🛍️ Ajouter au Panier
-            </button>
-          </div>
-        `;
+        return '<div style="background:#fff;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:1.5rem;max-height:85vh;overflow-y:auto;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">' +
+            '<div><div style="font-weight:800;font-size:1rem;color:#0f172a;">' + prod.name + '</div>' +
+            '<div style="color:#c59b27;font-weight:700;font-size:0.95rem;margin-top:2px;">' + activePrice.toLocaleString('fr-FR') + ' ' + curr + '</div></div>' +
+            '<button id="closeSizePicker" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b;line-height:1;">&#x2715;</button>' +
+          '</div>' +
+          sizeSection +
+          colorSection +
+          '<button id="confirmSizePicker" style="width:100%;background:#0f172a;color:#fff;border:none;padding:0.9rem;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;margin-top:0.5rem;">&#128717; Ajouter au Panier</button>' +
+        '</div>';
       }
-      renderPicker();
+
+      function attachEvents() {
+        // Close btn
+        var closeBtn = document.getElementById('closeSizePicker');
+        if (closeBtn) closeBtn.onclick = function() { modal.remove(); };
+
+        // Size buttons
+        var szBtns = modal.querySelectorAll('.sz-btn');
+        szBtns.forEach(function(btn) {
+          btn.onclick = function() {
+            selectedSize = btn.getAttribute('data-size');
+            modal.querySelector('div > div:last-child').outerHTML = buildHTML().match(/<div style="background:#fff[^]*$/)[0];
+            modal.innerHTML = buildHTML();
+            attachEvents();
+          };
+        });
+
+        // Color buttons
+        var clBtns = modal.querySelectorAll('.cl-btn');
+        clBtns.forEach(function(btn) {
+          btn.onclick = function() {
+            selectedColor = btn.getAttribute('data-color');
+            modal.innerHTML = buildHTML();
+            attachEvents();
+          };
+        });
+
+        // Confirm btn
+        var confirmBtn = document.getElementById('confirmSizePicker');
+        if (confirmBtn) {
+          confirmBtn.onclick = function() {
+            if (sizes.length > 0 && !selectedSize) {
+              alert('Veuillez choisir une taille avant de continuer.');
+              return;
+            }
+            if (colors.length > 0 && !selectedColor) {
+              alert('Veuillez choisir une couleur avant de continuer.');
+              return;
+            }
+            modal.remove();
+            addToCart(prodId, selectedSize, selectedColor);
+          };
+        }
+      }
+
+      modal.innerHTML = buildHTML();
       document.body.appendChild(modal);
-      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      attachEvents();
+
+      // Close on backdrop click
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+      });
     }
 
     function addToCart(prodId, preselectedSize, preselectedColor) {
