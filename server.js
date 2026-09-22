@@ -179,7 +179,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname.startsWith('/api/')) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-    // POST /api/upload (Direct Image Upload from Phone or Desktop)
+    // POST /api/upload (Direct Image Upload to ImgBB)
     if (pathname === '/api/upload' && req.method === 'POST') {
       try {
         const data = await parseBody(req);
@@ -190,35 +190,37 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        let mimeType = 'image/jpeg';
         let base64Data = imageStr;
         if (imageStr.includes(';base64,')) {
-          const parts = imageStr.split(';base64,');
-          mimeType = parts[0].replace('data:', '');
-          base64Data = parts[1];
+          base64Data = imageStr.split(';base64,')[1];
         }
 
-        const extMap = {
-          'image/jpeg': '.jpg',
-          'image/jpg': '.jpg',
-          'image/png': '.png',
-          'image/webp': '.webp',
-          'image/gif': '.gif'
-        };
-        const ext = extMap[mimeType] || '.jpg';
-        const filename = 'angy_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8) + ext;
-        const targetPath = path.join(UPLOADS_DIR, filename);
+        // Upload to ImgBB
+        const IMGBB_KEY = 'c842f1590d50012043c629d2268de3b3';
+        const formData = new URLSearchParams();
+        formData.append('key', IMGBB_KEY);
+        formData.append('image', base64Data);
 
-        fs.writeFileSync(targetPath, Buffer.from(base64Data, 'base64'));
-
-        res.writeHead(200);
-        res.end(JSON.stringify({
-          success: true,
-          url: '/uploads/' + filename,
-          filename: filename
-        }));
+        const imgbbRes = await fetch('https://api.imgbb.com/1/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const imgbbData = await imgbbRes.json();
+        
+        if (imgbbRes.ok && imgbbData.success) {
+          res.writeHead(200);
+          res.end(JSON.stringify({
+            success: true,
+            url: imgbbData.data.url, // Directly gives a fast global CDN url
+            filename: imgbbData.data.title || 'image'
+          }));
+        } else {
+          throw new Error((imgbbData.error && imgbbData.error.message) || 'ImgBB upload failed');
+        }
         return;
       } catch (err) {
+        console.error('Erreur upload ImgBB:', err);
         res.writeHead(500);
         res.end(JSON.stringify({ error: 'Erreur upload: ' + err.message }));
         return;
