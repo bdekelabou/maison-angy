@@ -19,7 +19,29 @@ async function readDb() {
       if (res.ok) {
         const data = await res.json();
         if (data && Object.keys(data).length > 0) {
-          memoryDb = data;
+          memoryDb = {
+            settings: data.settings || { storeName: 'Maison Angy', currency: 'FCFA', currentCash: 81500 },
+            products: data.products || [],
+            orders: data.orders || [],
+            deliveryPersons: data.deliveryPersons || [],
+            deliveryZones: data.deliveryZones || [],
+            trips: data.trips || [],
+            cashTransactions: data.cashTransactions || [],
+            users: data.users || [],
+            shipments: data.shipments || [],
+            suppliers: data.suppliers || []
+          };
+          // Firebase might convert arrays with missing elements into objects with integer keys
+          // ensure they are arrays
+          ['products', 'orders', 'deliveryPersons', 'deliveryZones', 'trips', 'cashTransactions', 'users', 'shipments', 'suppliers'].forEach(k => {
+            if (!Array.isArray(memoryDb[k])) {
+              if (typeof memoryDb[k] === 'object') {
+                memoryDb[k] = Object.values(memoryDb[k]).filter(Boolean);
+              } else {
+                memoryDb[k] = [];
+              }
+            }
+          });
           console.log('Firebase DB loaded successfully.');
         }
       } else {
@@ -161,6 +183,7 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 }
 
 const server = http.createServer(async (req, res) => {
+  try {
   const parsedUrl = url.parse(req.url, true);
   let pathname = parsedUrl.pathname;
 
@@ -898,6 +921,13 @@ const server = http.createServer(async (req, res) => {
       res.end(content);
     }
   });
+  } catch (globalErr) {
+    console.error('CRITICAL ERROR IN REQUEST:', globalErr);
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Internal Server Error' }));
+    }
+  }
 });
 
 server.listen(PORT, '0.0.0.0', () => {
