@@ -7,43 +7,73 @@ const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
+let memoryDb = null;
+const FIREBASE_URL = 'https://maison-angy-default-rtdb.firebaseio.com/db.json';
+
 // Helper to read DB
-function readDb() {
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      const data = fs.readFileSync(DATA_FILE, 'utf-8');
-      return JSON.parse(data);
+async function readDb() {
+  if (!memoryDb) {
+    try {
+      console.log('Fetching DB from Firebase...');
+      const res = await fetch(FIREBASE_URL);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Object.keys(data).length > 0) {
+          memoryDb = data;
+          console.log('Firebase DB loaded successfully.');
+        }
+      } else {
+        console.warn('Firebase response not ok:', res.status);
+      }
+    } catch (err) {
+      console.error('Error reading db from Firebase:', err);
     }
-  } catch (err) {
-    console.error('Error reading db:', err);
+    
+    // Fallback if empty or failed
+    if (!memoryDb || !memoryDb.settings) {
+      console.log('Using default empty DB structure.');
+      memoryDb = {
+        settings: {
+          storeName: 'Maison Angy',
+          slogan: 'Mode & Élégance au Féminin',
+          currency: 'FCFA',
+          whatsappCountryCode: '228',
+          whatsappNumber: '93849200',
+          fullWhatsapp: '22893849200',
+          initialCash: 81500,
+          currentCash: 81500
+        },
+        products: [],
+        orders: [],
+        deliveryPersons: [],
+        deliveryZones: [],
+        trips: [],
+        cashTransactions: [],
+        users: [],
+        shipments: [],
+        suppliers: []
+      };
+    }
   }
-  return {
-    settings: {
-      storeName: 'Maison Angy',
-      slogan: 'Mode & Élégance au Féminin',
-      currency: 'FCFA',
-      whatsappCountryCode: '228',
-      whatsappNumber: '93849200',
-      fullWhatsapp: '22893849200',
-      initialCash: 81500,
-      currentCash: 81500
-    },
-    products: [],
-    orders: [],
-    deliveryPersons: [],
-    deliveryZones: [],
-    trips: [],
-    cashTransactions: []
-  };
+  return memoryDb;
 }
 
 // Helper to write DB
-function saveDb(db) {
+async function saveDb(db) {
+  memoryDb = db;
   try {
+    // Also save locally for backup
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf-8');
+    
+    // Push to Firebase
+    await fetch(FIREBASE_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(db)
+    });
     return true;
   } catch (err) {
-    console.error('Error writing db:', err);
+    console.error('Error writing db to Firebase:', err);
     return false;
   }
 }
@@ -195,7 +225,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    const db = readDb();
+    const db = await readDb();
 
     // POST /api/login (Multi-User Authentication: Admin or Gérante)
     if (pathname === '/api/login' && req.method === 'POST') {
@@ -279,7 +309,7 @@ const server = http.createServer(async (req, res) => {
         createdAt: new Date().toISOString().split('T')[0]
       };
       db.users.push(newUser);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(201);
       res.end(JSON.stringify({ success: true, user: newUser }));
       return;
@@ -296,7 +326,7 @@ const server = http.createServer(async (req, res) => {
           delete data.role;
         }
         db.users[idx] = { ...db.users[idx], ...data, id };
-        saveDb(db);
+        await saveDb(db);
         res.writeHead(200);
         res.end(JSON.stringify({ success: true, user: db.users[idx] }));
       } else {
@@ -316,7 +346,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       db.users = db.users.filter(u => u.id !== id);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(200);
       res.end(JSON.stringify({ success: true }));
       return;
@@ -412,7 +442,7 @@ const server = http.createServer(async (req, res) => {
       };
 
       db.shipments.unshift(newShipment);
-      saveDb(db);
+      await saveDb(db);
 
       res.writeHead(201);
       res.end(JSON.stringify({
@@ -464,7 +494,7 @@ const server = http.createServer(async (req, res) => {
         available: data.available !== false
       };
       db.products.push(newProduct);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(201);
       res.end(JSON.stringify({ success: true, product: newProduct }));
       return;
@@ -495,7 +525,7 @@ const server = http.createServer(async (req, res) => {
           }
         }
         db.products[idx] = updated;
-        saveDb(db);
+        await saveDb(db);
         res.writeHead(200);
         res.end(JSON.stringify({ success: true, product: db.products[idx] }));
       } else {
@@ -508,7 +538,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/products/') && req.method === 'DELETE') {
       const id = parseInt(pathname.split('/')[3]);
       db.products = db.products.filter(p => p.id !== id);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(200);
       res.end(JSON.stringify({ success: true }));
       return;
@@ -580,7 +610,7 @@ const server = http.createServer(async (req, res) => {
       });
 
       db.orders.unshift(newOrder); // newest first
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(201);
       res.end(JSON.stringify({ success: true, order: newOrder }));
       return;
@@ -624,7 +654,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         db.orders[idx] = updated;
-        saveDb(db);
+        await saveDb(db);
         res.writeHead(200);
         res.end(JSON.stringify({ success: true, order: updated }));
       } else {
@@ -651,7 +681,7 @@ const server = http.createServer(async (req, res) => {
         status: data.status || 'Actif'
       };
       db.deliveryPersons.push(newDP);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(201);
       res.end(JSON.stringify({ success: true, deliveryPerson: newDP }));
       return;
@@ -663,7 +693,7 @@ const server = http.createServer(async (req, res) => {
       const idx = db.deliveryPersons.findIndex(d => d.id === id);
       if (idx !== -1) {
         db.deliveryPersons[idx] = { ...db.deliveryPersons[idx], ...data, id };
-        saveDb(db);
+        await saveDb(db);
         res.writeHead(200);
         res.end(JSON.stringify({ success: true, deliveryPerson: db.deliveryPersons[idx] }));
       } else {
@@ -676,7 +706,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/delivery-persons/') && req.method === 'DELETE') {
       const id = parseInt(pathname.split('/')[3]);
       db.deliveryPersons = db.deliveryPersons.filter(d => d.id !== id);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(200);
       res.end(JSON.stringify({ success: true }));
       return;
@@ -700,7 +730,7 @@ const server = http.createServer(async (req, res) => {
         active: data.active !== false
       };
       db.deliveryZones.push(newZone);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(201);
       res.end(JSON.stringify({ success: true, zone: newZone }));
       return;
@@ -718,7 +748,7 @@ const server = http.createServer(async (req, res) => {
           price: data.price !== undefined ? parseFloat(data.price) : db.deliveryZones[idx].price,
           id
         };
-        saveDb(db);
+        await saveDb(db);
         res.writeHead(200);
         res.end(JSON.stringify({ success: true, zone: db.deliveryZones[idx] }));
       } else {
@@ -732,7 +762,7 @@ const server = http.createServer(async (req, res) => {
       const id = parseInt(pathname.split('/')[3]);
       if (!db.deliveryZones) db.deliveryZones = [];
       db.deliveryZones = db.deliveryZones.filter(z => z.id !== id);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(200);
       res.end(JSON.stringify({ success: true }));
       return;
@@ -774,7 +804,7 @@ const server = http.createServer(async (req, res) => {
         commentaires: 'Déplacement: ' + newTrip.description
       });
       recalculateCash(db);
-      saveDb(db);
+      await saveDb(db);
 
       res.writeHead(201);
       res.end(JSON.stringify({ success: true, trip: newTrip }));
@@ -808,7 +838,7 @@ const server = http.createServer(async (req, res) => {
       };
       db.cashTransactions.push(newTx);
       recalculateCash(db);
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(201);
       res.end(JSON.stringify({ success: true, transaction: newTx, currentCash: db.settings.currentCash }));
       return;
@@ -829,7 +859,7 @@ const server = http.createServer(async (req, res) => {
         const code = (data.whatsappCountryCode || db.settings.whatsappCountryCode || '228').replace(/[^0-9]/g, '');
         db.settings.fullWhatsapp = code + clean;
       }
-      saveDb(db);
+      await saveDb(db);
       res.writeHead(200);
       res.end(JSON.stringify({ success: true, settings: db.settings }));
       return;
