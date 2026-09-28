@@ -798,7 +798,26 @@
       selectedDeliveryZoneId = parseInt(val);
       const zone = deliveryZones.find(z => z.id === selectedDeliveryZoneId);
       const fee = zone ? (zone.price || 0) : 1000;
-      const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+      
+      // Recalculate subtotal with lots
+      const prodQty = {};
+      cart.forEach(it => { prodQty[it.productId] = (prodQty[it.productId] || 0) + it.quantity; });
+      let subtotal = 0;
+      cart.forEach(it => {
+        const p = products.find(prod => prod.id === it.productId);
+        let lineTotal = it.price * it.quantity;
+        if (p) {
+          const totalQ = prodQty[it.productId];
+          let remaining = totalQ;
+          let cost = 0;
+          if (p.price12 > 0) { cost += Math.floor(remaining/12)*p.price12; remaining %= 12; }
+          if (p.price6 > 0) { cost += Math.floor(remaining/6)*p.price6; remaining %= 6; }
+          if (p.price3 > 0) { cost += Math.floor(remaining/3)*p.price3; remaining %= 3; }
+          cost += remaining * p.price;
+          lineTotal = Math.round((cost / totalQ) * it.quantity);
+        }
+        subtotal += lineTotal;
+      });
       const grandTotal = subtotal + fee;
       const curr = settings.currency || 'FCFA';
 
@@ -844,7 +863,56 @@
         return;
       }
 
-      const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+      // Calculate dynamic prices based on product total quantities (lots)
+      const cartTotals = {};
+      let subtotal = 0;
+      
+      // Group by productId to get total quantities
+      const prodQty = {};
+      cart.forEach(it => {
+        prodQty[it.productId] = (prodQty[it.productId] || 0) + it.quantity;
+      });
+
+      // Calculate total cost per product and distribute to cart items
+      cart.forEach(it => {
+        const p = products.find(prod => prod.id === it.productId);
+        let lineTotal = it.price * it.quantity;
+        let oldLineTotal = lineTotal;
+        let discountBadge = '';
+        
+        if (p) {
+          const totalQ = prodQty[it.productId];
+          let remaining = totalQ;
+          let productTotalCost = 0;
+          
+          if (p.price12 && p.price12 > 0) {
+            const lots12 = Math.floor(remaining / 12);
+            productTotalCost += lots12 * p.price12;
+            remaining %= 12;
+          }
+          if (p.price6 && p.price6 > 0) {
+            const lots6 = Math.floor(remaining / 6);
+            productTotalCost += lots6 * p.price6;
+            remaining %= 6;
+          }
+          if (p.price3 && p.price3 > 0) {
+            const lots3 = Math.floor(remaining / 3);
+            productTotalCost += lots3 * p.price3;
+            remaining %= 3;
+          }
+          productTotalCost += remaining * p.price;
+          
+          // Distribute the cost proportionally to this cart item based on its quantity
+          lineTotal = Math.round((productTotalCost / totalQ) * it.quantity);
+          
+          if (lineTotal < oldLineTotal) {
+             discountBadge = `<div style="font-size: 0.65rem; color: white; background: #e11d48; padding: 2px 6px; border-radius: 12px; display: inline-block; margin-top: 4px;">Prix de gros appliqué 🎉</div>`;
+          }
+        }
+        
+        cartTotals[it.cartKey || it.productId] = { lineTotal, discountBadge, oldLineTotal };
+        subtotal += lineTotal;
+      });
       let deliveryFee = 0;
       let currentZone = null;
       if (deliveryMode === 'LIVRAISON_DOMICILE') {
@@ -859,12 +927,20 @@
 
       body.innerHTML = `
         <div>
-          ${cart.map(it => `
+          ${cart.map(it => {
+            const cInfo = cartTotals[it.cartKey || it.productId];
+            return `
             <div class="cart-item">
               <img src="${it.image}" alt="${it.productName}" class="cart-item-img" />
               <div class="cart-item-details">
                 <div class="cart-item-title">${it.productName}</div>
-                <div class="cart-item-price">${(it.price * it.quantity).toLocaleString('fr-FR')} ${curr}</div>
+                <div class="cart-item-price" style="display:flex; flex-direction:column; gap:2px;">
+                  ${cInfo.lineTotal < cInfo.oldLineTotal 
+                      ? `<span style="text-decoration: line-through; font-size: 0.8rem; color: #94a3b8;">${cInfo.oldLineTotal.toLocaleString('fr-FR')} ${curr}</span>`
+                      : ''}
+                  <span style="font-weight:700; color:#b91c1c;">${cInfo.lineTotal.toLocaleString('fr-FR')} ${curr}</span>
+                  ${cInfo.discountBadge}
+                </div>
                 <div class="cart-qty-ctrls">
                   <button class="qty-btn" onclick="updateQty('${it.cartKey || it.productId}', -1)">-</button>
                   <span class="qty-num">${it.quantity}</span>
@@ -1001,7 +1077,25 @@
         deliveryFee = 0;
       }
 
-      const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+      const prodQty = {};
+      cart.forEach(it => { prodQty[it.productId] = (prodQty[it.productId] || 0) + it.quantity; });
+      let subtotal = 0;
+      cart.forEach(it => {
+        const p = products.find(prod => prod.id === it.productId);
+        let lineTotal = it.price * it.quantity;
+        if (p) {
+          const totalQ = prodQty[it.productId];
+          let remaining = totalQ;
+          let cost = 0;
+          if (p.price12 > 0) { cost += Math.floor(remaining/12)*p.price12; remaining %= 12; }
+          if (p.price6 > 0) { cost += Math.floor(remaining/6)*p.price6; remaining %= 6; }
+          if (p.price3 > 0) { cost += Math.floor(remaining/3)*p.price3; remaining %= 3; }
+          cost += remaining * p.price;
+          lineTotal = Math.round((cost / totalQ) * it.quantity);
+        }
+        it.finalLineTotal = lineTotal; // save for message
+        subtotal += lineTotal;
+      });
       const grandTotal = subtotal + deliveryFee;
 
       // 1. Post order to back-office
