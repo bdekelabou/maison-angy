@@ -1225,7 +1225,7 @@
                 </tr>
               </thead>
               <tbody>
-                ${txs.slice().reverse().map(t => `
+                ${txs.slice().reverse().map((t, idx) => `
                   <tr>
                     <td style="font-size:0.8rem; color:#64748b;">${t.dateTime}</td>
                     <td><strong>${t.commentaires || 'Opération'}</strong></td>
@@ -1235,6 +1235,9 @@
                       ${t.encaissement === 0 && t.depot === 0 ? '-' : ''}
                     </td>
                     <td>${t.retrait > 0 ? `<span style="color:#ef4444; font-weight:700;">-${t.retrait.toLocaleString('fr-FR')} F</span>` : '-'}</td>
+                    <td style="text-align:right;">
+                      ${idx === 0 ? `<button class="btn-sm-action primary" onclick="deleteCash(${t.id})" style="background:#ef4444; color:#fff; border:none; padding:6px; border-radius:4px; cursor:pointer;" title="Supprimer">🗑️</button>` : ''}
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
