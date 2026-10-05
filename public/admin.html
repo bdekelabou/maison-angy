@@ -1043,7 +1043,7 @@
               <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">Consultez vos articles en rayon, gérez les prix et lancez un réassort immédiat.</p>
             </div>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-              <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="openNewShipmentModal()">
+              <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="window.editingShipmentId=null; openNewShipmentModal()">
                 <span>📦 + Nouvel Arrivage Fournisseur</span>
               </button>
               <button class="btn-action-primary" onclick="openProductModal()">+ Créer un Nouvel Article</button>
@@ -1175,6 +1175,23 @@
     }
 
     // 6. CASH VIEW (81 500 F)
+    async function deleteCash(id) {
+      if (!confirm('Supprimer cette transaction de caisse ? Seule la plus récente peut être supprimée.')) return;
+      try {
+        const res = await fetch('/api/cash/' + id, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast('✅ Transaction supprimée.');
+          await loadData();
+          switchView('CASH');
+        } else {
+          alert('Erreur: ' + json.error);
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+    
     function renderCash() {
       const curr = appData.settings.currency || 'FCFA';
       const cash = appData.settings?.currentCash !== undefined ? appData.settings.currentCash : 81500;
@@ -2318,6 +2335,7 @@
     // 10. ARRIVAGES & FOURNISSEURS (HIBOUTIK STYLE)
     // ==========================================
     function renderShipmentsView() {
+      if (!event || (event && event.type === 'click' && event.target.innerText.includes('Enregistrer'))) window.editingShipmentId = null;
       const shipments = appData.shipments || [];
       const curr = appData.settings.currency || 'FCFA';
 
@@ -2426,9 +2444,9 @@
                       <span style="font-size:0.82rem; color:#64748b;">${s.registeredBy || 'Ange Ines'}</span>
                     </td>
                     <td style="text-align:right;">
-                      <button class="btn-sm-action primary" onclick="openShipmentDetailModal(${s.id})" title="Voir le bordereau complet">
-                        👁️ Bordereau
-                      </button>
+                      <button class="btn-sm-action primary" onclick="openShipmentDetailModal(${s.id})" style="padding:0.4rem; font-size:0.8rem;" title="Bordereau">👁️</button>
+                      <button class="btn-sm-action primary" onclick="editShipment(${s.id})" style="background:#3b82f6; padding:0.4rem; font-size:0.8rem; margin-left:2px;" title="Modifier cet arrivage">✏️</button>
+                      <button class="btn-sm-action primary" onclick="deleteShipment(${s.id})" style="background:#ef4444; padding:0.4rem; font-size:0.8rem; margin-left:2px;" title="Supprimer cet arrivage">🗑️</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -2440,7 +2458,48 @@
     }
 
     // Modal Nouvel Arrivage (Style Hiboutik)
+    window.editingShipmentId = null;
     window.currentShipmentRows = [];
+
+    async function deleteShipment(id) {
+      if (!confirm('Supprimer cet arrivage et déduire ses quantités du stock ?')) return;
+      try {
+        const res = await fetch('/api/shipments/' + id, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast('✅ Arrivage supprimé.');
+          await loadData();
+          switchView('SHIPMENTS');
+        } else {
+          alert('Erreur: ' + json.error);
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+
+    function editShipment(id) {
+      const s = (appData.shipments || []).find(it => it.id === id);
+      if (!s) return;
+      window.editingShipmentId = id;
+      window.currentShipmentRows = s.items.map(it => ({...it}));
+      openNewShipmentModal(null);
+      // after it opens, fill values
+      setTimeout(() => {
+        document.getElementById('ship_number').value = s.number || '';
+        document.getElementById('ship_supplier').value = s.supplier || '';
+        document.getElementById('ship_date').value = s.date || '';
+        document.getElementById('ship_notes').value = s.notes || '';
+        const btn = document.querySelector('button[onclick="handleSaveShipment(event)"]');
+        if(!btn) {
+           // wait the form uses onsubmit
+           const modalTitle = document.querySelector('.modal-content h3');
+           if(modalTitle) modalTitle.innerHTML = '✏️ Modifier Arrivage ' + s.number;
+           const submitBtn = document.querySelector('form[onsubmit="handleSaveShipment(event)"] button[type="submit"]');
+           if(submitBtn) submitBtn.innerHTML = '💾 Enregistrer les Modifications';
+        }
+      }, 50);
+    }
 
     function openNewShipmentModal(preselectProdId) {
       const products = appData.products || [];

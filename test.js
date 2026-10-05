@@ -1,0 +1,1546 @@
+
+    let products = [];
+    let cart = [];
+    let settings = {
+      storeName: 'Maison Angy',
+      slogan: 'Mode & Élégance au Féminin',
+      currency: 'FCFA',
+      fullWhatsapp: '22893849200',
+      whatsappNumber: '93849200'
+    };
+    let activeCategory = 'TOUS';
+    let searchQuery = '';
+    let deliveryMode = 'LIVRAISON_DOMICILE';
+    let deliveryZones = [
+      { id: 1, name: "Kégué", price: 500, delai: "Livraison moto express", active: true },
+      { id: 2, name: "Hedzranawoé", price: 800, delai: "Livraison moto rapide", active: true },
+      { id: 3, name: "Déckon / Centre-ville / Assigamé", price: 1000, delai: "Centre des affaires Lomé", active: true },
+      { id: 4, name: "Tokoin (Wuiti, Hôpital, Ramco, Forever)", price: 1000, delai: "Zone centrale Lomé", active: true },
+      { id: 5, name: "Bè / Akodésséwa / Port", price: 1000, delai: "Zone Sud-Est Lomé", active: true },
+      { id: 6, name: "Agoè (Cacavéli, 2 Lions, Nyivé, Minamadou)", price: 1500, delai: "Zone Nord Lomé", active: true },
+      { id: 7, name: "Adidogomé / Totsi / Amadahomé", price: 1500, delai: "Zone Ouest Lomé", active: true },
+      { id: 8, name: "Baguida / Avépozo", price: 2000, delai: "Périphérie Est Lomé", active: true },
+      { id: 9, name: "Autre Quartier de Lomé", price: 1500, delai: "Selon localisation exacte", active: true }
+    ];
+    let selectedDeliveryZoneId = 1;
+
+    let isAdminLoggedIn = false;
+
+    function checkFrontAuth() {
+      isAdminLoggedIn = Boolean(sessionStorage.getItem('angy_auth') || localStorage.getItem('angy_auth'));
+      const bar = document.getElementById('adminBarFront');
+      const user = JSON.parse(sessionStorage.getItem('angy_user') || localStorage.getItem('angy_user') || '{}');
+      
+      if (bar) {
+        bar.style.display = isAdminLoggedIn ? 'flex' : 'none';
+        const titleEl = document.getElementById('frontManagerTitle');
+        if (titleEl && isAdminLoggedIn) {
+          if (user.role === 'ADMIN') {
+            titleEl.innerHTML = '👑 <strong>Propriétaire</strong> (' + (user.name || 'Ange Ines') + ')';
+          } else {
+            titleEl.innerHTML = '💼 <strong>Gérante</strong> (' + (user.name || 'Équipe') + ')';
+          }
+        }
+      }
+      renderProducts();
+    }
+
+    function logoutFrontAdmin() {
+      sessionStorage.removeItem('angy_auth');
+      localStorage.removeItem('angy_auth');
+      checkFrontAuth();
+      showToast('Mode gérante désactivé.');
+    }
+
+
+    function showToast(msg) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = '<span>✨ ' + msg + '</span>';
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    
+    function renderSocialLinks() {
+      const s = settings || {};
+      const headerContainer = document.getElementById('headerSocialLinks');
+      const footerContainer = document.getElementById('footerSocialLinks');
+      const heroWaBtn = document.getElementById('heroWaBtn');
+
+      let headerHtml = '';
+      let footerHtml = '';
+
+      const waNum = s.fullWhatsapp || '22893849200';
+      const waDisplay = s.whatsappNumber || '93 84 92 00';
+      if (heroWaBtn) {
+        heroWaBtn.href = 'https://wa.me/' + waNum;
+        heroWaBtn.innerHTML = '<span>💬 WhatsApp (+228 ' + waDisplay + ')</span>';
+      }
+
+      // Facebook
+      if (s.facebookUrl) {
+        headerHtml += `
+          <a href="${s.facebookUrl}" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Page Facebook Maison Angy" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; color:#1877f2; background:#f0f7ff; border-radius:8px; text-decoration:none; border:1px solid #bfdbfe;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+        `;
+        footerHtml += `
+          <a href="${s.facebookUrl}" target="_blank" rel="noopener noreferrer" class="social-icon-btn facebook" title="Facebook Maison Angy" style="display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; background:#1877f2; color:#fff; border-radius:10px; text-decoration:none; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+        `;
+      }
+
+      // Instagram
+      if (s.instagramUrl) {
+        headerHtml += `
+          <a href="${s.instagramUrl}" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Compte Instagram" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; color:#e1306c; background:#fdf2f8; border-radius:8px; text-decoration:none; border:1px solid #fbcfe8;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#e1306c"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+        `;
+        footerHtml += `
+          <a href="${s.instagramUrl}" target="_blank" rel="noopener noreferrer" class="social-icon-btn instagram" title="Instagram" style="display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; background:linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color:#fff; border-radius:10px; text-decoration:none; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+        `;
+      }
+
+      // TikTok
+      if (s.tiktokUrl) {
+        headerHtml += `
+          <a href="${s.tiktokUrl}" target="_blank" rel="noopener noreferrer" class="social-header-btn" title="Compte TikTok" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; color:#0f172a; background:#f8fafc; border-radius:8px; text-decoration:none; border:1px solid #cbd5e1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0f172a"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.81 4.47 6.27 6.27 0 0 0 1.87-4.47V8.62a8.19 8.19 0 0 0 4.91 1.64V6.81a4.87 4.87 0 0 1-1-.12z"/></svg>
+          </a>
+        `;
+        footerHtml += `
+          <a href="${s.tiktokUrl}" target="_blank" rel="noopener noreferrer" class="social-icon-btn tiktok" title="TikTok @ange2647" style="display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; background:#000; color:#fff; border-radius:10px; text-decoration:none; border:1px solid rgba(255,255,255,0.25); transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.81 4.47 6.27 6.27 0 0 0 1.87-4.47V8.62a8.19 8.19 0 0 0 4.91 1.64V6.81a4.87 4.87 0 0 1-1-.12z"/></svg>
+          </a>
+        `;
+      }
+
+      // WhatsApp in footer
+      footerHtml += `
+        <a href="https://wa.me/${waNum}" target="_blank" rel="noopener noreferrer" class="social-icon-btn whatsapp" title="WhatsApp (+228 ${waDisplay})" style="display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; background:#25d366; color:#fff; border-radius:10px; text-decoration:none; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+        </a>
+      `;
+
+      if (headerContainer) headerContainer.innerHTML = headerHtml;
+      if (footerContainer) footerContainer.innerHTML = footerHtml;
+    }
+
+    async function initStore() {
+      try {
+        const res = await fetch('/api/all');
+        const data = await res.json();
+        if (data.products) products = data.products.filter(p => p.available !== false);
+        if (data.deliveryZones && data.deliveryZones.length > 0) {
+          deliveryZones = data.deliveryZones;
+        }
+        if (data.settings) {
+          settings = data.settings;
+          document.getElementById('storeName').textContent = settings.storeName || 'Maison Angy';
+          document.getElementById('storeSlogan').textContent = settings.slogan || 'Mode & Élégance au Féminin';
+        }
+        renderCategories();
+        renderProducts();
+      } catch (e) {
+        console.error('Erreur chargement boutique:', e);
+        document.getElementById('productsGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:red;">Erreur de connexion au serveur.</div>';
+      }
+    }
+
+    let specialFilter = 'ALL';
+
+    function setSpecialFilter(type) {
+      specialFilter = (specialFilter === type) ? 'ALL' : type;
+      activeCategory = 'TOUS';
+      renderCategories();
+      renderProducts();
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      specialFilter = 'ALL';
+      renderCategories();
+      renderProducts();
+    }
+
+    function renderCategories() {
+      const set = new Set(products.map(p => p.category).filter(Boolean));
+      const defaultCats = ['Lingerie', 'Brassières', 'Boubous', 'Slips Hommes', 'Tops & Jeans'];
+      const mergedCats = Array.from(new Set([...Array.from(set), ...(products.length === 0 ? defaultCats : [])]));
+      const container = document.getElementById('categoryPills');
+      if (!container) return;
+
+      container.innerHTML = `
+        <button class="cat-btn ${activeCategory === 'TOUS' && specialFilter === 'ALL' ? 'active' : ''}" onclick="setCategory('TOUS')">✨ Tout afficher</button>
+        <button class="cat-btn ${specialFilter === 'PROMO' ? 'active' : ''}" onclick="setSpecialFilter('PROMO')" style="color:#b91c1c; background:${specialFilter === 'PROMO' ? '#ef4444' : '#fef2f2'}; color:${specialFilter === 'PROMO' ? '#fff' : '#b91c1c'}; border:1px solid #fecaca; font-weight:700;">🏷️ En Promotion</button>
+        <button class="cat-btn ${specialFilter === 'FEATURED' ? 'active' : ''}" onclick="setSpecialFilter('FEATURED')" style="color:#92400e; background:${specialFilter === 'FEATURED' ? '#c59b27' : '#fef3c7'}; color:${specialFilter === 'FEATURED' ? '#fff' : '#92400e'}; border:1px solid #fde68a; font-weight:700;">⭐ En Vedette</button>
+        ${mergedCats.map(c => `
+          <button class="cat-btn ${activeCategory === c && specialFilter === 'ALL' ? 'active' : ''}" onclick="setCategory('${c}')">
+            ${c}
+          </button>
+        `).join('')}
+      `;
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.toLowerCase().trim();
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productsGrid');
+      const curr = settings.currency || 'FCFA';
+
+      const filtered = products.filter(p => {
+        const matchCat = activeCategory === 'TOUS' || p.category === activeCategory;
+        const matchQuery = !searchQuery || p.name.toLowerCase().includes(searchQuery) ||
+                           (p.description && p.description.toLowerCase().includes(searchQuery));
+        let matchSpecial = true;
+        if (specialFilter === 'PROMO') matchSpecial = Boolean(p.isPromo);
+        if (specialFilter === 'FEATURED') matchSpecial = Boolean(p.isFeatured);
+        return matchCat && matchQuery && matchSpecial;
+      });
+
+      if (filtered.length === 0) {
+        if (products.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4.5rem 1.5rem; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 700px; margin: 2rem auto;">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>
+              <h3 style="font-size: 1.6rem; color: #0f172a; margin-bottom: 0.5rem; font-family: 'Playfair Display', serif;">
+                Arrivage de la Nouvelle Collection d'Octobre !
+              </h3>
+              <p style="color: #64748b; font-size: 1rem; margin-bottom: 1.5rem; line-height: 1.6;">
+                Maison Angy prépare actuellement ses nouveaux arrivages exclusifs (collants, boubous, ensembles et accessoires). Les articles seront mis en ligne au fur et à mesure !
+              </p>
+              ${isAdminLoggedIn ? `
+                <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem;">
+                  <button onclick="openFrontProductModal()" class="btn-action-primary" style="padding:0.75rem 1.5rem; font-size:0.95rem; cursor:pointer; border-radius:8px;">
+                    ➕ Ajouter le 1er Article de la Collection
+                  </button>
+                  <a href="/admin" class="btn-secondary" style="padding:0.75rem 1.5rem; font-size:0.95rem; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center;">
+                    📊 Accéder à la Caisse & Back-Office
+                  </a>
+                </div>
+              ` : `
+                <a href="https://wa.me/${settings.fullWhatsapp || '22893849200'}" target="_blank" class="btn-whatsapp-order" style="display: inline-flex; width: auto; padding: 0.75rem 1.75rem; text-decoration: none; margin: 0 auto;">
+                  💬 CONTACTER LA BOUTIQUE SUR WHATSAPP
+                </a>
+                
+              `}
+            </div>
+          `;
+        } else {
+          grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #fff; border-radius: 12px;">
+              <h3>Aucun article trouvé</h3>
+              <p style="color: #64748b;">Essayez une autre recherche ou cliquez sur "Tout afficher".</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      // Sort featured products first
+      filtered.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+
+      grid.innerHTML = filtered.map(p => {
+        // If not admin, do not show unpublished products
+        if (!isAdminLoggedIn && p.published === false) return '';
+
+        const activePrice = p.isPromo ? p.promoPrice : p.salePrice;
+        return `
+          <div class="product-card" style="${p.published === false ? 'opacity: 0.6; border: 2px dashed #94a3b8;' : ''}">
+            <div class="product-image-wrap" style="cursor:pointer;" onclick="openProductGallery(${p.id})">
+              <img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy" />
+              
+              <div class="product-badges">
+                ${p.isFeatured ? '<span class="badge-featured">⭐ En Vedette</span>' : ''}
+                ${p.isPromo ? '<span class="badge-promo">🏷️ Promo</span>' : ''}
+                ${p.images && p.images.length > 1 ? `<span class="badge-stock" style="background:rgba(15,23,42,0.85); color:#fff; backdrop-filter:blur(4px); font-size:0.7rem; font-weight:600; border:1px solid rgba(197,155,39,0.5);" title="Cet article a ${p.images.length} photos">📷 ${p.images.length} photos</span>` : ''}
+                ${p.stock <= p.minStockAlert ? `<span class="badge-stock">Dernières pièces (${p.stock})</span>` : ''}
+                ${p.published === false ? '<span class="badge-stock" style="background:#64748b;">👁️ Masqué</span>' : ''}
+              </div>
+
+              ${isAdminLoggedIn ? `
+                <div class="product-admin-overlay" onclick="event.stopPropagation()">
+                  <button class="btn-card-admin ${p.isFeatured ? 'active' : ''}" onclick="toggleFrontFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la une' : 'Mettre en avant'}">⭐</button>
+                  <button class="btn-card-admin ${p.isPromo ? 'active' : ''}" onclick="toggleFrontPromo(${p.id})" title="${p.isPromo ? 'Désactiver promo' : 'Mettre en promo'}">🏷️</button>
+                  <button class="btn-card-admin" onclick="toggleFrontPublish(${p.id})" title="${p.published === false ? 'Publier' : 'Masquer'}">${p.published === false ? '👁️' : '🕶️'}</button>
+                  <button class="btn-card-admin" onclick="openFrontProductModal(${p.id})" title="Modifier">✏️</button>
+                  <button class="btn-card-admin" onclick="deleteFrontProduct(${p.id})" title="Supprimer" style="color:#ef4444;">🗑️</button>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="product-info">
+              <span class="product-category">${p.category}</span>
+              <h3 class="product-title" style="cursor:pointer;" onclick="openProductGallery(${p.id})">${p.name}</h3>
+              <button type="button" onclick="openProductGallery(${p.id})" style="background:none; border:none; color:#c59b27; font-size:0.75rem; font-weight:700; cursor:pointer; padding:0; margin-bottom:0.4rem; text-decoration:underline; display:inline-flex; align-items:center; gap:0.25rem; width:fit-content;">
+                <span>🔍 Voir photos ${p.images && p.images.length > 1 ? `(${p.images.length})` : ''} & détails</span>
+              </button>
+              <p class="product-desc">${p.description || ''}</p>
+
+              ${(p.sizes || p.colors) ? `
+              <div style="margin-bottom:0.6rem; display:flex; flex-direction:column; gap:0.4rem;">
+                ${p.sizes ? `
+                <div>
+                  <span style="font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase;">Tailles</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.3rem;">
+                    ${p.sizes.split(',').map(s => s.trim()).filter(Boolean).map(s => `
+                      <span style="border:1.5px solid #cbd5e1; border-radius:5px; padding:2px 8px; font-size:0.75rem; font-weight:600; color:#0f172a; background:#f8fafc; cursor:default;">${s}</span>
+                    `).join('')}
+                  </div>
+                </div>` : ''}
+                ${p.colors ? `
+                <div>
+                  <span style="font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase;">Couleurs</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.3rem;">
+                    ${p.colors.split(',').map(c => c.trim()).filter(Boolean).map(c => {
+                      const colorMap = {
+                        'noir': '#0f172a', 'blanc': '#f8fafc', 'rouge': '#ef4444', 'bleu': '#3b82f6',
+                        'vert': '#22c55e', 'jaune': '#eab308', 'rose': '#ec4899', 'orange': '#f97316',
+                        'violet': '#a855f7', 'gris': '#9ca3af', 'beige': '#d4a574', 'marron': '#92400e',
+                        'caramel': '#c59b27', 'bordeaux': '#881337', 'marine': '#1e3a5f', 'kaki': '#65a30d',
+                        'corail': '#fb7185', 'lavande': '#c084fc', 'turquoise': '#2dd4bf'
+                      };
+                      const bg = colorMap[c.toLowerCase()] || '#94a3b8';
+                      const isDark = ['noir','bleu','rouge','bordeaux','marine','violet','marron'].some(d => c.toLowerCase().includes(d));
+                      return `<span title="${c}" style="display:inline-flex; align-items:center; gap:4px; border:1.5px solid #e2e8f0; border-radius:20px; padding:2px 8px; font-size:0.72rem; font-weight:600; background:#fff; color:#0f172a; cursor:default;">
+                        <span style="width:12px; height:12px; border-radius:50%; background:${bg}; border:1.5px solid rgba(0,0,0,0.15); display:inline-block; flex-shrink:0;"></span>
+                        ${c}
+                      </span>`;
+                    }).join('')}
+                  </div>
+                </div>` : ''}
+              </div>
+              ` : ''}
+
+              ${(p.price3 || p.price6 || p.price12) ? `
+              <div style="background:#fefce8; border:1px solid #fde047; border-radius:8px; padding:0.55rem 0.75rem; margin-bottom:0.6rem;">
+                <div style="font-size:0.72rem; font-weight:800; color:#92400e; margin-bottom:0.35rem; letter-spacing:0.5px; text-transform:uppercase;">💰 Prix Gros & Détail</div>
+                <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                  <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>1 pièce</span>
+                    <strong>${activePrice.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>
+                  ${p.price3 ? `<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>Lot de 3</span>
+                    <strong style="color:#ca8a04;">${p.price3.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>` : ''}
+                  ${p.price6 ? `<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>Lot de 6</span>
+                    <strong style="color:#ca8a04;">${p.price6.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>` : ''}
+                  ${p.price12 ? `<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#0f172a;">
+                    <span>Lot de 12</span>
+                    <strong style="color:#b45309;">${p.price12.toLocaleString('fr-FR')} ${curr}</strong>
+                  </div>` : ''}
+                </div>
+              </div>
+              ` : ''}
+
+              <div class="product-footer">
+                <div class="price-box">
+                  <span class="current-price">${activePrice.toLocaleString('fr-FR')} ${curr}</span>
+                  ${p.isPromo ? `<span class="old-price">${p.salePrice.toLocaleString('fr-FR')} ${curr}</span>` : ''}
+                </div>
+
+                <button class="btn-add" onclick="addToCart(${p.id})" ${p.stock <= 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                  <span>${p.stock > 0 ? '+ Ajouter' : 'Épuisé'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openSizeColorPicker(prodId) {
+      const prod = products.find(function(p) { return p.id === prodId; });
+      if (!prod) return;
+      var curr = settings.currency || 'FCFA';
+      var activePrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
+      var sizes = prod.sizes ? prod.sizes.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+      var colors = prod.colors ? prod.colors.split(',').map(function(c){ return c.trim(); }).filter(Boolean) : [];
+
+      var colorMap = {
+        'noir':'#0f172a','blanc':'#f0f0f0','rouge':'#ef4444','bleu':'#3b82f6',
+        'vert':'#22c55e','jaune':'#eab308','rose':'#ec4899','orange':'#f97316',
+        'violet':'#a855f7','gris':'#9ca3af','beige':'#d4a574','marron':'#92400e',
+        'caramel':'#c59b27','bordeaux':'#881337','marine':'#1e3a5f','kaki':'#65a30d',
+        'corail':'#fb7185','lavande':'#c084fc','turquoise':'#2dd4bf'
+      };
+
+      var selectedSize = sizes.length === 1 ? sizes[0] : '';
+      var selectedColor = colors.length === 1 ? colors[0] : '';
+
+      // Remove any existing modal
+      var existing = document.getElementById('sizeColorModal');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'sizeColorModal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.7);z-index:5000;display:flex;align-items:flex-end;justify-content:center;';
+
+      function buildHTML() {
+        var sizeBtns = '';
+        sizes.forEach(function(s) {
+          var active = selectedSize === s;
+          sizeBtns += '<button class="sz-btn" data-size="' + s + '" style="border:' + (active ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1') + ';background:' + (active ? '#0f172a' : '#fff') + ';color:' + (active ? '#fff' : '#0f172a') + ';border-radius:8px;padding:0.5rem 1rem;font-weight:700;font-size:0.9rem;cursor:pointer;">' + s + '</button>';
+        });
+        var colBtns = '';
+        colors.forEach(function(c) {
+          var bg = colorMap[c.toLowerCase()] || '#94a3b8';
+          var active = selectedColor === c;
+          colBtns += '<button class="cl-btn" data-color="' + c + '" style="display:inline-flex;align-items:center;gap:6px;border:' + (active ? '2.5px solid #0f172a' : '1.5px solid #cbd5e1') + ';background:' + (active ? '#f8fafc' : '#fff') + ';border-radius:20px;padding:6px 12px;cursor:pointer;font-size:0.82rem;font-weight:600;color:#0f172a;"><span style="width:16px;height:16px;border-radius:50%;background:' + bg + ';border:1.5px solid rgba(0,0,0,0.12);flex-shrink:0;"></span>' + c + '</button>';
+        });
+
+        var sizeSection = sizes.length > 0 ? '<div style="margin-bottom:1.25rem;"><div style="font-weight:700;font-size:0.85rem;color:#475569;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.5px;">Choisissez votre Taille</div><div style="display:flex;flex-wrap:wrap;gap:0.5rem;">' + sizeBtns + '</div></div>' : '';
+        var colorSection = colors.length > 0 ? '<div style="margin-bottom:1.5rem;"><div style="font-weight:700;font-size:0.85rem;color:#475569;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.5px;">Choisissez la Couleur</div><div style="display:flex;flex-wrap:wrap;gap:0.5rem;">' + colBtns + '</div></div>' : '';
+
+        return '<div style="background:#fff;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:1.5rem;max-height:85vh;overflow-y:auto;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">' +
+            '<div><div style="font-weight:800;font-size:1rem;color:#0f172a;">' + prod.name + '</div>' +
+            '<div style="color:#c59b27;font-weight:700;font-size:0.95rem;margin-top:2px;">' + activePrice.toLocaleString('fr-FR') + ' ' + curr + '</div></div>' +
+            '<button id="closeSizePicker" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b;line-height:1;">&#x2715;</button>' +
+          '</div>' +
+          sizeSection +
+          colorSection +
+          '<button id="confirmSizePicker" style="width:100%;background:#0f172a;color:#fff;border:none;padding:0.9rem;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;margin-top:0.5rem;">&#128717; Ajouter au Panier</button>' +
+        '</div>';
+      }
+
+      function attachEvents() {
+        // Close btn
+        var closeBtn = document.getElementById('closeSizePicker');
+        if (closeBtn) closeBtn.onclick = function() { modal.remove(); };
+
+        // Size buttons
+        var szBtns = modal.querySelectorAll('.sz-btn');
+        szBtns.forEach(function(btn) {
+          btn.onclick = function() {
+            selectedSize = btn.getAttribute('data-size');
+            modal.querySelector('div > div:last-child').outerHTML = buildHTML().match(/<div style="background:#fff[^]*$/)[0];
+            modal.innerHTML = buildHTML();
+            attachEvents();
+          };
+        });
+
+        // Color buttons
+        var clBtns = modal.querySelectorAll('.cl-btn');
+        clBtns.forEach(function(btn) {
+          btn.onclick = function() {
+            selectedColor = btn.getAttribute('data-color');
+            modal.innerHTML = buildHTML();
+            attachEvents();
+          };
+        });
+
+        // Confirm btn
+        var confirmBtn = document.getElementById('confirmSizePicker');
+        if (confirmBtn) {
+          confirmBtn.onclick = function() {
+            if (sizes.length > 0 && !selectedSize) {
+              alert('Veuillez choisir une taille avant de continuer.');
+              return;
+            }
+            if (colors.length > 0 && !selectedColor) {
+              alert('Veuillez choisir une couleur avant de continuer.');
+              return;
+            }
+            modal.remove();
+            addToCart(prodId, selectedSize, selectedColor);
+          };
+        }
+      }
+
+      modal.innerHTML = buildHTML();
+      document.body.appendChild(modal);
+      attachEvents();
+
+      // Close on backdrop click
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+      });
+    }
+
+    function addToCart(prodId, preselectedSize, preselectedColor) {
+      const prod = products.find(p => p.id === prodId);
+      if (!prod) return;
+
+      // If product has sizes or colors and no preselection yet, show picker modal
+      const hasSizes = prod.sizes && prod.sizes.trim();
+      const hasColors = prod.colors && prod.colors.trim();
+      if ((hasSizes || hasColors) && preselectedSize === undefined) {
+        openSizeColorPicker(prodId);
+        return;
+      }
+
+      const activePrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
+      const sizeLabel = preselectedSize || '';
+      const colorLabel = preselectedColor || '';
+      const cartKey = prodId + '|' + sizeLabel + '|' + colorLabel;
+      const existing = cart.find(i => i.cartKey === cartKey);
+
+      if (existing) {
+        if (existing.quantity >= prod.stock) {
+          showToast('Stock maximal atteint pour cet article !');
+          return;
+        }
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          cartKey,
+          selectedSize: sizeLabel,
+          selectedColor: colorLabel,
+          productId: prod.id,
+          productName: prod.name,
+          price: activePrice,
+          image: prod.image,
+          quantity: 1,
+          maxStock: prod.stock
+        });
+      }
+
+      updateCartUI();
+      showToast('Ajouté au panier !');
+    }
+
+    function updateQty(prodId, delta) {
+      const item = cart.find(i => (i.cartKey || i.productId) === (prodId));
+      if (!item) return;
+
+      item.quantity += delta;
+      if (item.quantity <= 0) {
+        cart = cart.filter(i => (i.cartKey || i.productId) !== prodId);
+      } else if (item.quantity > item.maxStock) {
+        item.quantity = item.maxStock;
+        showToast('Stock maximal atteint.');
+      }
+      updateCartUI();
+    }
+
+    function removeFromCart(key) {
+      cart = cart.filter(i => (i.cartKey || i.productId) !== key);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const badge = document.getElementById('cartBadge');
+      const totalCount = cart.reduce((sum, it) => sum + it.quantity, 0);
+      if (totalCount > 0) {
+        badge.style.display = 'inline-block';
+        badge.textContent = totalCount;
+      } else {
+        badge.style.display = 'none';
+      }
+      document.getElementById('cartHeaderTitle').textContent = `🛍️ Mon Panier (${totalCount})`;
+      renderCartBody();
+    }
+
+    function openCart() {
+      document.getElementById('cartModal').classList.add('active');
+      renderCartBody();
+    }
+
+    function closeCart(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('close-btn')) return;
+      document.getElementById('cartModal').classList.remove('active');
+    }
+
+    function handleZoneChange(val) {
+      selectedDeliveryZoneId = parseInt(val);
+      const zone = deliveryZones.find(z => z.id === selectedDeliveryZoneId);
+      const fee = zone ? (zone.price || 0) : 1000;
+      
+      // Recalculate subtotal with lots
+      const prodQty = {};
+      cart.forEach(it => { prodQty[it.productId] = (prodQty[it.productId] || 0) + it.quantity; });
+      let subtotal = 0;
+      cart.forEach(it => {
+        const p = products.find(prod => prod.id === it.productId);
+        let lineTotal = it.price * it.quantity;
+        if (p) {
+          const totalQ = prodQty[it.productId];
+          let remaining = totalQ;
+          let cost = 0;
+          if (p.price12 > 0) { cost += Math.floor(remaining/12)*p.price12; remaining %= 12; }
+          if (p.price6 > 0) { cost += Math.floor(remaining/6)*p.price6; remaining %= 6; }
+          if (p.price3 > 0) { cost += Math.floor(remaining/3)*p.price3; remaining %= 3; }
+          cost += remaining * p.price;
+          lineTotal = Math.round((cost / totalQ) * it.quantity);
+        }
+        subtotal += lineTotal;
+      });
+      const grandTotal = subtotal + fee;
+      const curr = settings.currency || 'FCFA';
+
+      const feeElem = document.getElementById('cartDeliveryFeeRow');
+      const totalElem = document.getElementById('cartGrandTotalRow');
+      if (feeElem) feeElem.innerHTML = `<strong>${fee.toLocaleString('fr-FR')} ${curr}</strong> <span style="font-size:0.78rem; color:#854d0e; font-weight:600;">(Quartier ${zone ? zone.name : ''})</span>`;
+      if (totalElem) totalElem.textContent = `${grandTotal.toLocaleString('fr-FR')} ${curr}`;
+    }
+
+    function setDeliveryMode(mode) {
+      const nameInput = document.getElementById('cust_name');
+      const phoneInput = document.getElementById('cust_phone');
+      const addrInput = document.getElementById('cust_address');
+      const notesInput = document.getElementById('cust_notes');
+      if (nameInput) window._tempCustName = nameInput.value;
+      if (phoneInput) window._tempCustPhone = phoneInput.value;
+      if (addrInput) window._tempCustAddr = addrInput.value;
+      if (notesInput) window._tempCustNotes = notesInput.value;
+
+      deliveryMode = mode;
+      renderCartBody();
+
+      if (window._tempCustName && document.getElementById('cust_name')) document.getElementById('cust_name').value = window._tempCustName;
+      if (window._tempCustPhone && document.getElementById('cust_phone')) document.getElementById('cust_phone').value = window._tempCustPhone;
+      if (window._tempCustAddr && document.getElementById('cust_address')) document.getElementById('cust_address').value = window._tempCustAddr;
+      if (window._tempCustNotes && document.getElementById('cust_notes')) document.getElementById('cust_notes').value = window._tempCustNotes;
+    }
+
+    function renderCartBody() {
+      const body = document.getElementById('cartBody');
+      const curr = settings.currency || 'FCFA';
+
+      if (cart.length === 0) {
+        body.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🛒</div>
+            <h4>Votre panier est vide</h4>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.5rem;">
+              Ajoutez des collants, boubous ou robes pour passer commande.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      // Calculate dynamic prices based on product total quantities (lots)
+      const cartTotals = {};
+      let subtotal = 0;
+      
+      // Group by productId to get total quantities
+      const prodQty = {};
+      cart.forEach(it => {
+        prodQty[it.productId] = (prodQty[it.productId] || 0) + it.quantity;
+      });
+
+      // Calculate total cost per product and distribute to cart items
+      cart.forEach(it => {
+        const p = products.find(prod => prod.id === it.productId);
+        let lineTotal = it.price * it.quantity;
+        let oldLineTotal = lineTotal;
+        let discountBadge = '';
+        
+        if (p) {
+          const totalQ = prodQty[it.productId];
+          let remaining = totalQ;
+          let productTotalCost = 0;
+          
+          if (p.price12 && p.price12 > 0) {
+            const lots12 = Math.floor(remaining / 12);
+            productTotalCost += lots12 * p.price12;
+            remaining %= 12;
+          }
+          if (p.price6 && p.price6 > 0) {
+            const lots6 = Math.floor(remaining / 6);
+            productTotalCost += lots6 * p.price6;
+            remaining %= 6;
+          }
+          if (p.price3 && p.price3 > 0) {
+            const lots3 = Math.floor(remaining / 3);
+            productTotalCost += lots3 * p.price3;
+            remaining %= 3;
+          }
+          productTotalCost += remaining * p.price;
+          
+          // Distribute the cost proportionally to this cart item based on its quantity
+          lineTotal = Math.round((productTotalCost / totalQ) * it.quantity);
+          
+          if (lineTotal < oldLineTotal) {
+             discountBadge = `<div style="font-size: 0.65rem; color: white; background: #e11d48; padding: 2px 6px; border-radius: 12px; display: inline-block; margin-top: 4px;">Prix de gros appliqué 🎉</div>`;
+          }
+        }
+        
+        cartTotals[it.cartKey || it.productId] = { lineTotal, discountBadge, oldLineTotal };
+        subtotal += lineTotal;
+      });
+      let deliveryFee = 0;
+      let currentZone = null;
+      if (deliveryMode === 'LIVRAISON_DOMICILE') {
+        currentZone = deliveryZones.find(z => z.id === selectedDeliveryZoneId) || deliveryZones[0];
+        deliveryFee = currentZone ? (currentZone.price || 0) : 1000;
+      } else if (deliveryMode === 'EXPEDITION') {
+        deliveryFee = 2000;
+      } else {
+        deliveryFee = 0;
+      }
+      const grandTotal = subtotal + deliveryFee;
+
+      body.innerHTML = `
+        <div>
+          ${cart.map(it => {
+            const cInfo = cartTotals[it.cartKey || it.productId];
+            return `
+            <div class="cart-item">
+              <img src="${it.image}" alt="${it.productName}" class="cart-item-img" />
+              <div class="cart-item-details">
+                <div class="cart-item-title">${it.productName}</div>
+                <div class="cart-item-price" style="display:flex; flex-direction:column; gap:2px;">
+                  ${cInfo.lineTotal < cInfo.oldLineTotal 
+                      ? `<span style="text-decoration: line-through; font-size: 0.8rem; color: #94a3b8;">${cInfo.oldLineTotal.toLocaleString('fr-FR')} ${curr}</span>`
+                      : ''}
+                  <span style="font-weight:700; color:#b91c1c;">${cInfo.lineTotal.toLocaleString('fr-FR')} ${curr}</span>
+                  ${cInfo.discountBadge}
+                </div>
+                <div class="cart-qty-ctrls">
+                  <button class="qty-btn" onclick="updateQty('${it.cartKey || it.productId}', -1)">-</button>
+                  <span class="qty-num">${it.quantity}</span>
+                  <button class="qty-btn" onclick="updateQty('${it.cartKey || it.productId}', 1)">+</button>
+                </div>
+              </div>
+              <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                ${it.selectedSize ? '<span style="background:#f1f5f9; border-radius:4px; padding:1px 6px; font-weight:600;">'+it.selectedSize+'</span> ' : ''}
+                ${it.selectedColor ? '<span style="background:#fef9c3; border-radius:4px; padding:1px 6px; font-weight:600;">'+it.selectedColor+'</span>' : ''}
+              </div>
+              <button class="cart-item-remove" onclick="removeFromCart('${it.cartKey || it.productId}')">🗑️</button>
+            </div>
+          `}).join('')}
+
+          <form onsubmit="handleCheckout(event)" class="order-form-section">
+            <div class="form-title">
+              <span>📍 Coordonnées & Livraison</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Votre Nom & Prénom *</label>
+              <input type="text" id="cust_name" required placeholder="Ex: Madame Afiwa..." class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Numéro Téléphone / WhatsApp *</label>
+              <input type="tel" id="cust_phone" required placeholder="Ex: 90 00 00 00" class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Mode de Réception *</label>
+              <div class="delivery-options-grid">
+                <div class="delivery-card-radio ${deliveryMode === 'LIVRAISON_DOMICILE' ? 'active' : ''}" onclick="setDeliveryMode('LIVRAISON_DOMICILE')">
+                  <span class="icon">🛵</span>
+                  <span>Lomé Domicile</span>
+                </div>
+                <div class="delivery-card-radio ${deliveryMode === 'RETRAIT_BOUTIQUE' ? 'active' : ''}" onclick="setDeliveryMode('RETRAIT_BOUTIQUE')">
+                  <span class="icon">🏪</span>
+                  <span>Boutique Lomé</span>
+                </div>
+                <div class="delivery-card-radio ${deliveryMode === 'EXPEDITION' ? 'active' : ''}" onclick="setDeliveryMode('EXPEDITION')">
+                  <span class="icon">📦</span>
+                  <span>Expédition Togo</span>
+                </div>
+              </div>
+            </div>
+
+            ${deliveryMode === 'LIVRAISON_DOMICILE' ? `
+              <div class="form-group" style="background:#fefce8; border:1.5px solid #fde047; padding:0.85rem; border-radius:10px; margin-bottom:0.85rem;">
+                <label class="form-label" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                  <span style="font-weight:700; color:#854d0e;">📍 Choisissez votre Quartier à Lomé *</span>
+                  <span style="font-size:0.75rem; background:#ca8a04; color:#fff; padding:2px 8px; border-radius:9999px; font-weight:700;">Tarif auto</span>
+                </label>
+                <select id="cust_zone_select" class="form-input" required onchange="handleZoneChange(this.value)" style="font-weight:700; font-size:0.92rem; background:#ffffff; border:1.5px solid #ca8a04; padding:0.6rem; cursor:pointer; color:#0f172a;">
+                  ${deliveryZones.filter(z => z.active !== false).map(z => `
+                    <option value="${z.id}" ${currentZone && currentZone.id === z.id ? 'selected' : ''}>
+                      📍 ${z.name} — ${z.price.toLocaleString('fr-FR')} ${curr}
+                    </option>
+                  `).join('')}
+                </select>
+                <div style="font-size:0.78rem; color:#854d0e; margin-top:0.4rem; display:flex; align-items:center; gap:0.35rem;">
+                  <span>🛵</span>
+                  <span>Tarif adapté : <strong>Kégué 500 F</strong>, Déckon 1 000 F, Agoè 1 500 F...</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Précision rue / Point de repère *</label>
+                <input type="text" id="cust_address" required placeholder="Ex: Face pharmacie Kégué, maison verte à étage..." class="form-input" />
+              </div>
+            ` : (deliveryMode === 'EXPEDITION' ? `
+              <div class="form-group">
+                <label class="form-label">Ville de destination & Compagnie de transport *</label>
+                <input type="text" id="cust_address" required placeholder="Ex: Kara (Poste), Atakpamé, Kpalimé..." class="form-input" />
+              </div>
+            ` : '')}
+
+            <div class="form-group">
+              <label class="form-label">Notes particulières (optionnel)</label>
+              <input type="text" id="cust_notes" placeholder="Ex: Appeler avant d'arriver..." class="form-input" />
+            </div>
+
+            <div class="cart-footer" style="padding:0; margin-top:1rem; border:none;">
+              <div class="summary-row">
+                <span>Sous-total articles :</span>
+                <span>${subtotal.toLocaleString('fr-FR')} ${curr}</span>
+              </div>
+              <div class="summary-row">
+                <span>Frais de livraison :</span>
+                <span id="cartDeliveryFeeRow">
+                  ${deliveryMode === 'RETRAIT_BOUTIQUE' ? 'Gratuit (Retrait en boutique)' : (
+                    deliveryMode === 'EXPEDITION' ? (deliveryFee.toLocaleString('fr-FR') + ' ' + curr + ' (Expédition)') : (
+                      `<strong>${deliveryFee.toLocaleString('fr-FR')} ${curr}</strong> <span style="font-size:0.78rem; color:#854d0e; font-weight:600;">(Quartier ${currentZone ? currentZone.name : ''})</span>`
+                    )
+                  )}
+                </span>
+              </div>
+              <div class="summary-row summary-total">
+                <span>Total à régler :</span>
+                <span id="cartGrandTotalRow" style="color: #9d7815; font-size:1.25rem; font-weight:800;">${grandTotal.toLocaleString('fr-FR')} ${curr}</span>
+              </div>
+
+              <button type="submit" class="btn-whatsapp-order">
+                <span>💬 COMMANDER SUR WHATSAPP</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    async function handleCheckout(e) {
+      e.preventDefault();
+      const name = document.getElementById('cust_name').value.trim();
+      const phone = document.getElementById('cust_phone').value.trim();
+      const address = document.getElementById('cust_address') ? document.getElementById('cust_address').value.trim() : 'Boutique Maison Angy';
+      const notes = document.getElementById('cust_notes') ? document.getElementById('cust_notes').value.trim() : '';
+
+      let deliveryFee = 0;
+      let zoneName = '';
+      if (deliveryMode === 'LIVRAISON_DOMICILE') {
+        const zoneSelect = document.getElementById('cust_zone_select');
+        const zoneId = zoneSelect ? parseInt(zoneSelect.value) : selectedDeliveryZoneId;
+        const zone = (deliveryZones || []).find(z => z.id === zoneId) || deliveryZones[0];
+        if (zone) {
+          zoneName = zone.name;
+          deliveryFee = zone.price || 0;
+        } else {
+          deliveryFee = 1000;
+        }
+      } else if (deliveryMode === 'EXPEDITION') {
+        deliveryFee = 2000;
+      } else {
+        deliveryFee = 0;
+      }
+
+      const prodQty = {};
+      cart.forEach(it => { prodQty[it.productId] = (prodQty[it.productId] || 0) + it.quantity; });
+      let subtotal = 0;
+      cart.forEach(it => {
+        const p = products.find(prod => prod.id === it.productId);
+        let lineTotal = it.price * it.quantity;
+        if (p) {
+          const totalQ = prodQty[it.productId];
+          let remaining = totalQ;
+          let cost = 0;
+          if (p.price12 > 0) { cost += Math.floor(remaining/12)*p.price12; remaining %= 12; }
+          if (p.price6 > 0) { cost += Math.floor(remaining/6)*p.price6; remaining %= 6; }
+          if (p.price3 > 0) { cost += Math.floor(remaining/3)*p.price3; remaining %= 3; }
+          cost += remaining * p.price;
+          lineTotal = Math.round((cost / totalQ) * it.quantity);
+        }
+        it.finalLineTotal = lineTotal; // save for message
+        subtotal += lineTotal;
+      });
+      const grandTotal = subtotal + deliveryFee;
+
+      // 1. Post order to back-office
+      let orderCode = 'CMD-' + Math.floor(1000 + Math.random() * 9000);
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: name,
+            customerPhone: phone,
+            customerAddress: deliveryMode === 'LIVRAISON_DOMICILE' ? (`Quartier ${zoneName} - ${address}`) : address,
+            deliveryMode: deliveryMode,
+            deliveryFee: deliveryFee,
+            deliveryZoneName: zoneName,
+            deliveryFeePayer: 'CLIENT',
+            notes: notes,
+            items: cart.map(it => ({
+              productId: it.productId,
+              productName: it.productName,
+              quantity: it.quantity,
+              unitPrice: it.price
+            }))
+          })
+        });
+        const d = await res.json();
+        if (d.success && d.order) orderCode = d.order.id;
+      } catch (err) {
+        console.warn('Sync offline:', err);
+      }
+
+      // 2. Format WhatsApp Message
+      let modeLabel = '🛵 Livraison à domicile (Lomé)';
+      if (deliveryMode === 'RETRAIT_BOUTIQUE') modeLabel = '🏪 Retrait en boutique Maison Angy (Lomé)';
+      if (deliveryMode === 'EXPEDITION') modeLabel = '📦 Expédition province (Gare / Compagnie Togo)';
+
+      let msg = `Bonjour Maison Angy ! ✨\nJe souhaite passer commande :\n\n`;
+      msg += `📋 *COMMANDE : ${orderCode}*\n`;
+      msg += `------------------------\n`;
+      cart.forEach(item => {
+        let itemDetail = `• ${item.quantity}x ${item.productName}`;
+        if (item.selectedSize || item.selectedColor) {
+          itemDetail += ` (${[item.selectedSize, item.selectedColor].filter(Boolean).join(', ')})`;
+        }
+        itemDetail += ` : ${(item.price * item.quantity).toLocaleString('fr-FR')} ${settings.currency}\n`;
+        msg += itemDetail;
+      });
+      msg += `------------------------\n`;
+      msg += `💰 *Sous-total :* ${subtotal.toLocaleString('fr-FR')} ${settings.currency}\n`;
+      if (deliveryFee > 0) {
+        msg += `🛵 *Livraison :* ${deliveryFee.toLocaleString('fr-FR')} ${settings.currency} ${deliveryMode === 'LIVRAISON_DOMICILE' ? ('(Quartier ' + zoneName + ')') : '(Expédition)'}\n`;
+      } else {
+        msg += `🏪 *Livraison :* Gratuit (Retrait boutique)\n`;
+      }
+      msg += `⭐ *TOTAL À RÉGLER :* ${grandTotal.toLocaleString('fr-FR')} ${settings.currency}\n\n`;
+      msg += `👤 *MES INFORMATIONS :*\n`;
+      msg += `• Nom : ${name}\n`;
+      msg += `• Téléphone : ${phone}\n`;
+      msg += `• Mode : ${modeLabel}\n`;
+      if (deliveryMode === 'LIVRAISON_DOMICILE') {
+        msg += `• Quartier : ${zoneName} (${deliveryFee.toLocaleString('fr-FR')} ${settings.currency})\n`;
+        if (address) msg += `• Point de repère : ${address}\n`;
+      } else if (address) {
+        msg += `• Destination : ${address}\n`;
+      }
+      if (notes) msg += `• Note : ${notes}\n`;
+      msg += `\nMerci de me confirmer la disponibilité et le délai svp !`;
+
+      const targetPhone = settings.fullWhatsapp || '22893849200';
+      const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`;
+
+      // Show success modal
+      document.getElementById('successModalContainer').innerHTML = `
+        <div class="modal-overlay active">
+          <div class="admin-modal-card" style="max-width:480px; text-align:center; padding:2rem; background:#fff; border-radius:12px; margin:auto;">
+            <div style="font-size:3rem; margin-bottom:1rem;">✅</div>
+            <h3 style="font-size:1.3rem; margin-bottom:0.5rem; color:#0f172a;">
+              Commande ${orderCode} Enregistrée !
+            </h3>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:1.5rem;">
+              Votre commande a été transmise au Back-Office de Maison Angy. Cliquez sur le bouton vert ci-dessous pour finaliser sur WhatsApp :
+            </p>
+            <div style="background:#f8fafc; padding:0.85rem; border-radius:8px; margin-bottom:1.5rem; font-weight:bold; font-size:1.1rem; color:#c59b27;">
+              Total : ${grandTotal.toLocaleString('fr-FR')} ${settings.currency}
+            </div>
+            <a href="${waUrl}" target="_blank" class="btn-whatsapp-order" style="text-decoration:none; margin-bottom:1rem;">
+              💬 OUVRIR WHATSAPP POUR CONFIRMER
+            </a>
+            <button class="btn-secondary" style="width:100%; padding:0.6rem;" onclick="closeSuccessModal()">
+              Fermer
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Reset cart
+      cart = [];
+      updateCartUI();
+      document.getElementById('cartModal').classList.remove('active');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModalContainer').innerHTML = '';
+    }
+
+    // Launch store
+    
+    async function toggleFrontFeatured(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFeatured: !p.isFeatured })
+      });
+      showToast(p.isFeatured ? 'Retiré de la une.' : '⭐ Mis en avant sur la boutique !');
+      initStore();
+    }
+
+    async function toggleFrontPromo(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      const willBePromo = !p.isPromo;
+      const promoPrice = willBePromo ? (p.promoPrice || Math.round(p.salePrice * 0.85)) : p.promoPrice;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPromo: willBePromo, promoPrice })
+      });
+      showToast(willBePromo ? '🏷️ Article mis en promotion !' : 'Promotion désactivée.');
+      initStore();
+    }
+
+    async function toggleFrontPublish(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      const willPublish = p.published === false;
+      await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published: willPublish })
+      });
+      showToast(willPublish ? '👁️ Article publié !' : 'Article masqué de la boutique.');
+      initStore();
+    }
+
+    async function deleteFrontProduct(id) {
+      if (confirm('Voulez-vous supprimer cet article ?')) {
+        await fetch('/api/products/' + id, { method: 'DELETE' });
+        showToast('Article supprimé.');
+        initStore();
+      }
+    }
+
+    
+    function handleFrontAdminLink(e) {
+      if (e) e.preventDefault();
+      if (!isAdminLoggedIn) {
+        openFrontLoginModal();
+      } else {
+        window.location.href = '/admin';
+      }
+    }
+
+    function openFrontLoginModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('frontProductModalContainer').innerHTML = `
+        <div class="modal-overlay active">
+          <div class="admin-modal-card" style="max-width:400px; background:#fff; border-radius:12px; margin:auto; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <div style="background:#0f172a; color:#fff; padding:1.2rem; display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="color:#fff; font-size:1.1rem; display:flex; align-items:center; gap:0.5rem;">
+                🔒 Espace Privé Maison Angy
+              </h3>
+              <button class="close-btn" onclick="closeFrontModal()">&times;</button>
+            </div>
+            <form onsubmit="handleFrontLoginSubmit(event)" style="padding:1.5rem;">
+              <div id="frontLoginError" style="display:none; background:#fef2f2; color:#b91c1c; padding:0.6rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem; border:1px solid #fecaca;"></div>
+              
+              <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Numéro de téléphone</label>
+                <input type="text" id="fl_phone" value="93849200" required style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem;" />
+              </div>
+
+              <div style="margin-bottom:1.5rem;">
+                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Mot de passe</label>
+                <input type="password" id="fl_password" required placeholder="Mot de passe" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.9rem;" />
+              </div>
+
+              <button type="submit" class="btn-action-primary" style="width:100%; padding:0.75rem; font-size:0.95rem; border-radius:6px;">
+                Se connecter à l'espace
+              </button>
+
+              <div style="text-align:center; margin-top:1rem;">
+                <a href="/admin" style="font-size:0.8rem; color:#64748b; text-decoration:underline;">
+                  Aller directement au Back-Office Caisse &rarr;
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      setTimeout(() => {
+        const p = document.getElementById('fl_password');
+        if (p) p.focus();
+      }, 100);
+    }
+
+    async function handleFrontLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('fl_phone').value.trim();
+      const p = document.getElementById('fl_password').value.trim();
+      const errBox = document.getElementById('frontLoginError');
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const d = await res.json();
+        if (d.success) {
+          sessionStorage.setItem('angy_auth', d.token);
+          localStorage.setItem('angy_auth', d.token);
+          sessionStorage.setItem('angy_user', JSON.stringify(d.user));
+          localStorage.setItem('angy_user', JSON.stringify(d.user));
+          closeFrontModal();
+          checkFrontAuth();
+          showToast('Bienvenue ' + (d.user.name || '') + ' ! Accès ' + (d.user.roleLabel || 'Gestion') + ' activé.');
+        } else {
+          errBox.style.display = 'block';
+          errBox.textContent = '⚠️ ' + (d.error || 'Numéro ou mot de passe incorrect.');
+        }
+      } catch (err) {
+        if (u === '93849200' && p === 'password2026') {
+          sessionStorage.setItem('angy_auth', 'local_token');
+          localStorage.setItem('angy_auth', 'local_token');
+          closeFrontModal();
+          checkFrontAuth();
+          showToast('Bienvenue Ange Ines ! Mode Gérante activé.');
+        } else {
+          errBox.style.display = 'block';
+          errBox.textContent = 'Erreur de connexion.';
+        }
+      }
+    }
+
+    // PRODUCT GALLERY & DETAIL MODAL
+    window.galleryActiveImg = '';
+
+    function openProductGallery(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      const curr = settings.currency || 'FCFA';
+      const activePrice = p.isPromo ? p.promoPrice : p.salePrice;
+      const imgs = (p.images && p.images.length > 0) ? p.images : [p.image];
+      let covIdx = (p.coverIndex !== undefined && p.coverIndex >= 0 && p.coverIndex < imgs.length) ? p.coverIndex : 0;
+      window.galleryActiveImg = imgs[covIdx] || imgs[0];
+
+      const modalHtml = `
+        <div class="modal-overlay active" id="galleryModalOverlay" onclick="closeProductGallery(event)">
+          <div class="modal-content" style="max-width:740px; width:95%; border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid #cbd5e1;" onclick="event.stopPropagation()">
+            <div style="background:#0f172a; color:#fff; padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #c59b27;">
+              <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <span style="font-size:1.15rem; font-weight:700; font-family:'Playfair Display', serif;">${p.name}</span>
+                <span style="background:rgba(197,155,39,0.25); color:#fef3c7; border:1px solid #c59b27; padding:0.15rem 0.55rem; border-radius:9999px; font-size:0.75rem; font-weight:600;">${p.category}</span>
+              </div>
+              <button class="close-btn" onclick="closeProductGallery()">&times;</button>
+            </div>
+
+            <div class="gallery-grid-responsive" style="padding:1.5rem; max-height:82vh; overflow-y:auto;">
+              <!-- Left: Big Photo + Thumbnails -->
+              <div>
+                <div style="width:100%; height:330px; border-radius:12px; overflow:hidden; background:#f1f5f9; border:1px solid #e2e8f0; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                  <img id="galleryBigImage" src="${window.galleryActiveImg}" alt="${p.name}" style="width:100%; height:100%; object-fit:cover; transition:opacity 0.2s;" onerror="this.src='/images/logo.jpg'" />
+                  ${p.isPromo ? `<span style="position:absolute; top:12px; left:12px; background:#ef4444; color:#fff; font-size:0.75rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">🏷️ EN PROMO</span>` : ''}
+                  ${p.isFeatured ? `<span style="position:absolute; top:12px; right:12px; background:#c59b27; color:#fff; font-size:0.75rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">⭐ EN VEDETTE</span>` : ''}
+                </div>
+
+                <!-- Thumbnails strip (2 to 5 images) -->
+                ${imgs.length > 1 ? `
+                  <div style="display:flex; gap:0.5rem; margin-top:0.75rem; overflow-x:auto; padding-bottom:0.35rem;" id="galleryThumbsRow">
+                    ${imgs.map((url, i) => `
+                      <div onclick="switchGalleryImg('${url}', ${i})" class="gallery-thumb-item" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; flex-shrink:0; border:${url === window.galleryActiveImg ? '2.5px solid #c59b27' : '1px solid #cbd5e1'}; position:relative; opacity:${url === window.galleryActiveImg ? '1' : '0.75'}; box-shadow:${url === window.galleryActiveImg ? '0 2px 8px rgba(197,155,39,0.3)' : 'none'};">
+                        <img src="${url}" alt="photo ${i+1}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/images/logo.jpg'" />
+                        ${i === covIdx ? `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(197,155,39,0.92); color:#fff; font-size:0.55rem; text-align:center; font-weight:700; line-height:1.2; text-transform:uppercase;">Couverture</span>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                  <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem; text-align:center;">
+                    👆 Cliquez sur une miniature pour l'afficher en grand (${imgs.length} photos)
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Right: Details & Order buttons -->
+              <div style="display:flex; flex-direction:column; justify-content:space-between; gap:1rem;">
+                <div>
+                  <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span style="font-size:1.8rem; font-weight:800; color:#c59b27; font-family:'Playfair Display', serif;">
+                      ${activePrice.toLocaleString('fr-FR')} ${curr}
+                    </span>
+                    ${p.isPromo ? `
+                      <span style="font-size:1.15rem; color:#94a3b8; text-decoration:line-through;">
+                        ${p.salePrice.toLocaleString('fr-FR')} ${curr}
+                      </span>
+                    ` : ''}
+                  </div>
+
+                  <div style="margin-bottom:1rem;">
+                    <span style="padding:0.3rem 0.75rem; border-radius:9999px; font-weight:700; font-size:0.8rem; background:${p.stock > 0 ? '#ecfdf5' : '#fee2e2'}; color:${p.stock > 0 ? '#15803d' : '#b91c1c'}; border:1px solid ${p.stock > 0 ? '#a7f3d0' : '#fecaca'};">
+                      ${p.stock > 0 ? `✅ En Stock : ${p.stock} pièces disponibles` : '❌ Rupture temporaire'}
+                    </span>
+                  </div>
+
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
+                    <div style="font-size:0.85rem; font-weight:700; color:#334155; margin-bottom:0.35rem;">Détails de l'article :</div>
+                    <p style="font-size:0.9rem; color:#475569; line-height:1.55; margin:0;">
+                      ${p.description || "Article exclusif de la nouvelle collection Maison Angy. Confection soignée et tissu de haute qualité sélectionné pour sublimer votre élégance au quotidien."}
+                    </p>
+                  </div>
+
+                  <div style="font-size:0.8rem; color:#64748b; line-height:1.6; margin-bottom:1rem;">
+                    🛵 <strong>Livraison Lomé :</strong> Déckon, Tokoin, Agoè, Bè, Adidogomé & banlieue en moins de 24h.<br/>
+                    📦 <strong>Expédition Togo :</strong> Tsévié, Kpalimé, Atakpamé, Sokodé, Kara via agence.
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                  <button onclick="addToCart(${p.id}); closeProductGallery();" class="btn-action-primary" style="width:100%; padding:0.85rem; justify-content:center; font-size:1rem; border-radius:8px; cursor:pointer;" ${p.stock <= 0 ? 'disabled style="opacity:0.5;"' : ''}>
+                    🛍️ Ajouter au Panier
+                  </button>
+
+                  <a href="https://wa.me/${settings.fullWhatsapp || '22893849200'}?text=${encodeURIComponent("Bonjour Maison Angy, je souhaite commander l'article: " + p.name + " (" + activePrice.toLocaleString('fr-FR') + " " + curr + "). Photo: " + window.galleryActiveImg)}" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; justify-content:center; gap:0.5rem; background:#25d366; color:#fff; padding:0.8rem; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.95rem; box-shadow:0 4px 12px rgba(37,211,102,0.35); transition:transform 0.15s ease;">
+                    <span>💬 Commander sur WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('frontProductModalContainer').innerHTML = modalHtml;
+    }
+
+    function switchGalleryImg(url, idx) {
+      window.galleryActiveImg = url;
+      const big = document.getElementById('galleryBigImage');
+      if (big) {
+        big.style.opacity = '0.3';
+        setTimeout(() => {
+          big.src = url;
+          big.style.opacity = '1';
+        }, 150);
+      }
+      const row = document.getElementById('galleryThumbsRow');
+      if (row) {
+        const thumbs = row.querySelectorAll('.gallery-thumb-item');
+        thumbs.forEach((t, i) => {
+          if (i === idx) {
+            t.style.border = '2.5px solid #c59b27';
+            t.style.opacity = '1';
+            t.style.boxShadow = '0 2px 8px rgba(197,155,39,0.3)';
+          } else {
+            t.style.border = '1px solid #cbd5e1';
+            t.style.opacity = '0.75';
+            t.style.boxShadow = 'none';
+          }
+        });
+      }
+    }
+
+    function closeProductGallery(e) {
+      if (e && e.target && !e.target.classList.contains('modal-overlay') && !e.target.classList.contains('close-btn')) return;
+      document.getElementById('frontProductModalContainer').innerHTML = '';
+    }
+
+    // FRONT PRODUCT MODAL (AJOUT / MODIFICATION MULTI-IMAGES 2 A 5)
+    window.frontModalImages = [];
+    window.frontModalCoverIndex = 0;
+
+    function openFrontProductModal(id) {
+      const p = id ? products.find(item => item.id === id) : null;
+      const curr = settings.currency || 'FCFA';
+
+      // Initialize 2 to 5 images
+      let initialImgs = [];
+      if (p && Array.isArray(p.images) && p.images.length > 0) {
+        initialImgs = [...p.images];
+      } else if (p && p.image) {
+        initialImgs = [p.image];
+      } else {
+        initialImgs = [
+          'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80'
+        ];
+      }
+
+      while (initialImgs.length < 2) {
+        initialImgs.push('https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80');
+      }
+      if (initialImgs.length > 5) {
+        initialImgs = initialImgs.slice(0, 5);
+      }
+
+      window.frontModalImages = initialImgs;
+      let covIdx = 0;
+      if (p && p.coverIndex !== undefined && p.coverIndex >= 0 && p.coverIndex < initialImgs.length) {
+        covIdx = p.coverIndex;
+      } else if (p && p.image && initialImgs.indexOf(p.image) !== -1) {
+        covIdx = initialImgs.indexOf(p.image);
+      }
+      window.frontModalCoverIndex = covIdx;
+
+      document.getElementById('frontProductModalContainer').innerHTML = `
+        <div class="modal-overlay active">
+          <div class="admin-modal-card" style="max-width:620px; background:#fff; border-radius:12px; margin:auto; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);">
+            <div class="modal-head" style="background:#0f172a; color:#fff; padding:1.2rem; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #c59b27;">
+              <h3 style="color:#fff; font-size:1.15rem;">${p ? "Modifier l'Article & Photos" : "Ajouter un Article Directement"}</h3>
+              <button class="close-btn" onclick="closeFrontModal()">&times;</button>
+            </div>
+            <form onsubmit="handleFrontSaveProduct(event, ${p ? p.id : 'null'})" style="padding:1.5rem; max-height:85vh; overflow-y:auto;">
+              <div style="margin-bottom:0.85rem;">
+                <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Nom de l'article *</label>
+                <input type="text" id="fp_name" required placeholder="Ex: Collant Gainant, Boubou Caviar, Robe..." value="${p ? p.name : ''}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Catégorie</label>
+                  <input type="text" id="fp_category" value="${p ? p.category : 'Collants & Lingerie'}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.85rem; margin-bottom:0.3rem;">Quantité en Stock</label>
+                  <input type="number" id="fp_stock" required value="${p ? p.stock : 10}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; margin-bottom:0.85rem;">
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.8rem; margin-bottom:0.3rem;">Coût Achat</label>
+                  <input type="number" id="fp_cost" required value="${p ? p.costPrice : 3500}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.8rem; margin-bottom:0.3rem;">Prix Normal</label>
+                  <input type="number" id="fp_sale" required value="${p ? p.salePrice : 6500}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+                <div>
+                  <label style="display:block; font-weight:600; font-size:0.8rem; margin-bottom:0.3rem;">Prix Promo</label>
+                  <input type="number" id="fp_promo" value="${p ? p.promoPrice : 5500}" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px;" />
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem; background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0;">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                  <input type="checkbox" id="fp_isPromo" ${p && p.isPromo ? 'checked' : ''} />
+                  <span>🏷️ En Promotion</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                  <input type="checkbox" id="fp_isFeatured" ${p && p.isFeatured ? 'checked' : ''} />
+                  <span>⭐ En Vedette</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer; grid-column:1/-1;">
+                  <input type="checkbox" id="fp_published" ${!p || p.published !== false ? 'checked' : ''} />
+                  <span>👁️ Publié sur la boutique</span>
+                </label>
+              </div>
+
+              <!-- GESTION DE 2 A 5 IMAGES (AVEC SELECTION IMAGE EN AVANT) -->
+              <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <div style="font-weight:700; font-size:0.9rem; color:#0f172a; display:flex; align-items:center; gap:0.4rem;">
+                      📸 Photos de l'article <span id="frontImgCountBadge" style="background:#0f172a; color:#fef3c7; font-size:0.75rem; padding:0.15rem 0.5rem; border-radius:9999px; border:1px solid #c59b27;">(2 à 5 photos)</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:0.2rem;">
+                      Cliquez sur <strong>"⭐ En avant"</strong> pour définir la photo affichée en couverture.
+                    </div>
+                  </div>
+                  <button type="button" id="btnFrontAddImg" onclick="frontAddImageSlot()" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                    + Ajouter une photo
+                  </button>
+                </div>
+
+                <div id="frontImageSlotsContainer" style="display:flex; flex-direction:column; gap:0.6rem;">
+                  <!-- Dynamic slots -->
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                <button type="button" class="btn-secondary" onclick="closeFrontModal()">Annuler</button>
+                <button type="submit" class="btn-action-primary" style="padding:0.65rem 1.25rem;">Enregistrer l'Article & Photos</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      renderFrontImageSlots();
+    }
+
+    function renderFrontImageSlots() {
+      const container = document.getElementById('frontImageSlotsContainer');
+      if (!container) return;
+      const countBadge = document.getElementById('frontImgCountBadge');
+      const addBtn = document.getElementById('btnFrontAddImg');
+
+      if (countBadge) {
+        countBadge.textContent = `(${window.frontModalImages.length} / 5 photos)`;
+      }
+      if (addBtn) {
+        addBtn.style.display = window.frontModalImages.length >= 5 ? 'none' : 'inline-flex';
+      }
+
+      container.innerHTML = window.frontModalImages.map((url, idx) => {
+        const isCover = idx === window.frontModalCoverIndex;
+        return `
+          <div style="display:flex; align-items:center; gap:0.6rem; background:#fff; padding:0.55rem 0.75rem; border-radius:8px; border:${isCover ? '2px solid #c59b27' : '1px solid #cbd5e1'}; box-shadow:${isCover ? '0 2px 8px rgba(197,155,39,0.2)' : 'none'};">
+            <div style="width:46px; height:46px; border-radius:6px; overflow:hidden; background:#f1f5f9; border:1px solid #e2e8f0; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+              <img id="frontPreview_${idx}" src="${url || '/images/logo.jpg'}" onerror="this.src='/images/logo.jpg'" style="width:100%; height:100%; object-fit:cover;" />
+            </div>
+
+            <div style="flex:1;">
+              <input type="url" value="${url}" placeholder="Lien image ${idx + 1} (ex: https://...)" oninput="frontUpdateSlotUrl(${idx}, this.value)" style="width:100%; padding:0.45rem 0.6rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+            </div>
+
+            <button type="button" onclick="frontSetCoverImage(${idx})" style="padding:0.4rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; white-space:nowrap; ${isCover ? 'background:#c59b27; color:#fff;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'}">
+              ${isCover ? '⭐ En avant (Couverture)' : 'Mettre en avant'}
+            </button>
+
+            ${window.frontModalImages.length > 2 ? `
+              <button type="button" onclick="frontRemoveImageSlot(${idx})" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:6px; width:30px; height:30px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;" title="Retirer cette photo">
+                🗑️
+              </button>
+            ` : `
+              <div style="width:30px; height:30px; flex-shrink:0;" title="Minimum 2 images"></div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function frontAddImageSlot() {
+      if (window.frontModalImages.length >= 5) {
+        showToast('Maximum 5 photos autorisées par article.');
+        return;
+      }
+      window.frontModalImages.push('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop&q=80');
+      renderFrontImageSlots();
+    }
+
+    function frontRemoveImageSlot(idx) {
+      if (window.frontModalImages.length <= 2) {
+        showToast('Au moins 2 photos requises pour cet article.');
+        return;
+      }
+      window.frontModalImages.splice(idx, 1);
+      if (window.frontModalCoverIndex >= window.frontModalImages.length) {
+        window.frontModalCoverIndex = 0;
+      } else if (window.frontModalCoverIndex === idx) {
+        window.frontModalCoverIndex = 0;
+      }
+      renderFrontImageSlots();
+    }
+
+    function frontSetCoverImage(idx) {
+      window.frontModalCoverIndex = idx;
+      renderFrontImageSlots();
+      showToast('Photo #' + (idx + 1) + ' sélectionnée comme image en avant !');
+    }
+
+    function frontUpdateSlotUrl(idx, val) {
+      window.frontModalImages[idx] = val.trim();
+      const prev = document.getElementById('frontPreview_' + idx);
+      if (prev) {
+        prev.src = val.trim() || '/images/logo.jpg';
+      }
+    }
+
+    function closeFrontModal() {
+      document.getElementById('frontProductModalContainer').innerHTML = '';
+    }
+
+    async function handleFrontSaveProduct(e, id) {
+      e.preventDefault();
+
+      const cleanImages = window.frontModalImages.map(img => (img || '').trim()).filter(Boolean);
+      if (cleanImages.length < 2) {
+        alert('Veuillez renseigner au moins 2 photos pour cet article (2 à 5 photos requises).');
+        return;
+      }
+
+      let covIdx = window.frontModalCoverIndex;
+      if (covIdx < 0 || covIdx >= cleanImages.length) {
+        covIdx = 0;
+      }
+      const coverImage = cleanImages[covIdx] || cleanImages[0];
+
+      const payload = {
+        name: document.getElementById('fp_name').value,
+        category: document.getElementById('fp_category').value,
+        stock: parseInt(document.getElementById('fp_stock').value) || 0,
+        costPrice: parseFloat(document.getElementById('fp_cost').value) || 0,
+        salePrice: parseFloat(document.getElementById('fp_sale').value) || 0,
+        promoPrice: parseFloat(document.getElementById('fp_promo').value) || 0,
+        isPromo: document.getElementById('fp_isPromo').checked,
+        isFeatured: document.getElementById('fp_isFeatured').checked,
+        published: document.getElementById('fp_published').checked,
+        image: coverImage,
+        images: cleanImages,
+        coverIndex: covIdx
+      };
+
+      const url = id ? '/api/products/' + id : '/api/products';
+      const method = id ? 'PUT' : 'POST';
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      closeFrontModal();
+      showToast('Article et photos enregistrés avec succès !');
+      initStore();
+    }
+
+    checkFrontAuth();
+    initStore();
+  </script>
+
+  <!-- PWA: Install Banner + Service Worker -->
+  <div id="pwaInstallBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#0f172a; color:#fff; padding:0.85rem 1.25rem; display:none; align-items:center; justify-content:space-between; gap:1rem; box-shadow:0 -4px 20px rgba(0,0,0,0.3); border-top:2px solid #c59b27;">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <img src="/images/logo.jpg" style="width:40px; height:40px; border-radius:50%; border:1.5px solid #c59b27;" />
+      <div>
+        <div style="font-weight:700; font-size:0.9rem;">📱 Installer Maison Angy</div>
+        <div style="font-size:0.75rem; color:#94a3b8;">Accès rapide depuis votre écran d'accueil !</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+      <button id="pwaInstallBtn" style="background:#c59b27; color:#0f172a; border:none; padding:0.5rem 1rem; border-radius:8px; font-weight:800; cursor:pointer; font-size:0.85rem;">
+        Installer
+      </button>
+      <button onclick="document.getElementById('pwaInstallBanner').style.display='none';" style="background:transparent; color:#94a3b8; border:1px solid #334155; padding:0.5rem 0.75rem; border-radius:8px; cursor:pointer; font-size:0.85rem;">
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('SW registered:', reg.scope);
+        }).catch(err => console.warn('SW error:', err));
+      });
+    }
+
+    // PWA Install Prompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('pwaInstallBanner');
+      if (banner) banner.style.display = 'flex';
+    });
+
+    document.getElementById('pwaInstallBtn').addEventListener('click', () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choice => {
+        deferredPrompt = null;
+        document.getElementById('pwaInstallBanner').style.display = 'none';
+      });
+    });
+
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('pwaInstallBanner').style.display = 'none';
+      deferredPrompt = null;
+    });
+
+    // Auto-open cart if ?panier=1
+    if (window.location.search.includes('panier=1')) {
+      window.addEventListener('load', () => setTimeout(() => {
+        if (typeof openCart === 'function') openCart();
+      }, 800));
+    }
+  

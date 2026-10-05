@@ -1,187 +1,375 @@
 {
   "settings": {
-    "storeName": "Maison Angy Collection",
-    "slogan": "Le style, pour tous. Sans compromis.",
-    "currency": "FCFA",
-    "whatsappCountryCode": "228",
-    "whatsappNumber": "93 84 92 00",
-    "fullWhatsapp": "22893849200",
-    "adminUsername": "93849200",
-    "adminPassword": "password2026",
-    "initialCash": 81500,
-    "currentCash": 81500,
-    "city": "Lomé, Togo",
     "address": "Lomé, Togo",
+    "adminPassword": "password2026",
+    "adminUsername": "93849200",
+    "city": "Lomé, Togo",
+    "currency": "FCFA",
+    "currentCash": 81500,
     "facebookUrl": "https://www.facebook.com/profile.php?id=61587838474305",
-    "logoUrl": "/images/logo.jpg",
+    "fullWhatsapp": "22893849200",
+    "initialCash": 81500,
     "instagramUrl": "https://instagram.com/maison_angy",
-    "tiktokUrl": "https://www.tiktok.com/@ange2647"
+    "logoUrl": "/images/logo.jpg",
+    "slogan": "Le style, pour tous. Sans compromis.",
+    "storeName": "Maison Angy Collection",
+    "tiktokUrl": "https://www.tiktok.com/@ange2647",
+    "whatsappCountryCode": "228",
+    "whatsappNumber": "93 84 92 00"
   },
-  "products": [],
+  "products": [
+    {
+      "available": true,
+      "category": "colliers  &  boucle d'oreille",
+      "colors": "",
+      "costPrice": 3000,
+      "coverIndex": 0,
+      "description": "",
+      "id": 1,
+      "image": "https://i.ibb.co/PZkRtCV5/338e2d26c989.jpg",
+      "images": [
+        "https://i.ibb.co/PZkRtCV5/338e2d26c989.jpg",
+        "https://i.ibb.co/0vckngT/82e89b49dceb.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "ensemble colliers et boucle d'oreille  ",
+      "promoPrice": 1000,
+      "published": true,
+      "salePrice": 6500,
+      "sizes": "",
+      "stock": 10
+    },
+    {
+      "available": true,
+      "category": "bracelet ",
+      "colors": "",
+      "costPrice": 670,
+      "coverIndex": 0,
+      "description": "",
+      "id": 2,
+      "image": "https://i.ibb.co/Z44gNPZ/5d10ae37d30a.jpg",
+      "images": [
+        "https://i.ibb.co/Z44gNPZ/5d10ae37d30a.jpg",
+        "https://i.ibb.co/GQrPZG0W/26f84572dfb6.jpg",
+        "https://i.ibb.co/wZJhFxXv/70ac5dbed72d.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "bracelet  simple",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1000,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "bracelet ",
+      "colors": "",
+      "costPrice": 840,
+      "coverIndex": 0,
+      "description": "",
+      "id": 3,
+      "image": "https://i.ibb.co/S4PP9mKQ/0b69c7a9bf15.jpg",
+      "images": [
+        "https://i.ibb.co/S4PP9mKQ/0b69c7a9bf15.jpg",
+        "https://i.ibb.co/h1gDLVfJ/b2c4bc7bdd28.jpg",
+        "https://i.ibb.co/nNd0FDzr/e4b84aa67d07.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "bracelet  de qualiter ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1300,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "packaging ",
+      "colors": "",
+      "costPrice": 340,
+      "coverIndex": 0,
+      "description": "",
+      "id": 4,
+      "image": "https://i.ibb.co/PkxThnZ/10c7f52b147d.jpg",
+      "images": [
+        "https://i.ibb.co/PkxThnZ/10c7f52b147d.jpg",
+        "https://i.ibb.co/v4f5myK5/4726772544ae.jpg",
+        "https://i.ibb.co/qMVmxWFZ/f2b4f6dd3edc.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "boite a bijoux ",
+      "promoPrice": 500,
+      "published": true,
+      "salePrice": 700,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "colliers  &  boucle d'oreille",
+      "colors": "",
+      "costPrice": 500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 5,
+      "image": "https://i.ibb.co/bM4zkRm5/e756b5bdb78b.jpg",
+      "images": [
+        "https://i.ibb.co/bM4zkRm5/e756b5bdb78b.jpg",
+        "https://i.ibb.co/21nXtvZR/c439aa0a47bf.jpg",
+        "https://i.ibb.co/xSqvHYBy/99817217cc16.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "ensemble bracelet, bague et boucle en résine ",
+      "promoPrice": 1200,
+      "published": true,
+      "salePrice": 1500,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "chaine ",
+      "colors": "",
+      "costPrice": 500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 6,
+      "image": "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg",
+      "images": [
+        "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg",
+        "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "chaine de cheville ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1000,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "chaine ",
+      "colors": "",
+      "costPrice": 670,
+      "coverIndex": 0,
+      "description": "",
+      "id": 7,
+      "image": "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg",
+      "images": [
+        "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg",
+        "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "chaine de hanche ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1500,
+      "sizes": "",
+      "stock": 0
+    }
+  ],
   "orders": [],
   "deliveryPersons": [
     {
       "id": 1,
       "name": "Livreur Kodjo (Express Moto)",
+      "notes": "Courses rapides Lomé Centre & Bè (1 000 - 1 500 F)",
       "phone": "90123456",
-      "zone": "Déckon, Tokoin, Bè, Grand Marché (Assigamé)",
-      "transportType": "Moto",
       "status": "Actif",
-      "notes": "Courses rapides Lomé Centre & Bè (1 000 - 1 500 F)"
+      "transportType": "Moto",
+      "zone": "Déckon, Tokoin, Bè, Grand Marché (Assigamé)"
     },
     {
       "id": 2,
       "name": "Livreur Folly (Moto Nord)",
+      "notes": "Zone Agoè & banlieue nord (1 500 - 2 000 F)",
       "phone": "91234567",
-      "zone": "Agoè (Nyivé, Cacavéli, 2 Lions), Hedzranawoé, Kégué",
-      "transportType": "Moto",
       "status": "Actif",
-      "notes": "Zone Agoè & banlieue nord (1 500 - 2 000 F)"
+      "transportType": "Moto",
+      "zone": "Agoè (Nyivé, Cacavéli, 2 Lions), Hedzranawoé, Kégué"
     },
     {
       "id": 3,
       "name": "Livreur Mawuli (Moto Ouest)",
+      "notes": "Zone Ouest Lomé",
       "phone": "92345678",
-      "zone": "Adidogomé, Avédji, Totsi, Amadahomé",
-      "transportType": "Moto",
       "status": "Actif",
-      "notes": "Zone Ouest Lomé"
+      "transportType": "Moto",
+      "zone": "Adidogomé, Avédji, Totsi, Amadahomé"
     },
     {
       "id": 4,
       "name": "Gare Routière / Compagnie (Expéditions Togo)",
+      "notes": "Dépôt colis aux compagnies de transport",
       "phone": "93456789",
-      "zone": "Intérieur : Tsévié, Kpalimé, Atakpamé, Sokodé, Kara",
-      "transportType": "Bus / Car",
       "status": "Actif",
-      "notes": "Dépôt colis aux compagnies de transport"
+      "transportType": "Bus / Car",
+      "zone": "Intérieur : Tsévié, Kpalimé, Atakpamé, Sokodé, Kara"
+    }
+  ],
+  "deliveryZones": [
+    {
+      "active": true,
+      "delai": "Livraison moto express",
+      "id": 1,
+      "name": "Kégué",
+      "price": 500
+    },
+    {
+      "active": true,
+      "delai": "Livraison moto rapide",
+      "id": 2,
+      "name": "Hedzranawoé",
+      "price": 800
+    },
+    {
+      "active": true,
+      "delai": "Centre des affaires Lomé",
+      "id": 3,
+      "name": "Déckon / Centre-ville / Assigamé",
+      "price": 1000
+    },
+    {
+      "active": true,
+      "delai": "Zone centrale Lomé",
+      "id": 4,
+      "name": "Tokoin (Wuiti, Hôpital, Ramco, Forever)",
+      "price": 1000
+    },
+    {
+      "active": true,
+      "delai": "Zone Sud-Est Lomé",
+      "id": 5,
+      "name": "Bè / Akodésséwa / Port",
+      "price": 1000
+    },
+    {
+      "active": true,
+      "delai": "Zone Nord Lomé",
+      "id": 6,
+      "name": "Agoè (Cacavéli, 2 Lions, Nyivé, Minamadou)",
+      "price": 1500
+    },
+    {
+      "active": true,
+      "delai": "Zone Ouest Lomé",
+      "id": 7,
+      "name": "Adidogomé / Totsi / Amadahomé",
+      "price": 1500
+    },
+    {
+      "active": true,
+      "delai": "Périphérie Est Lomé",
+      "id": 8,
+      "name": "Baguida / Avépozo",
+      "price": 2000
+    },
+    {
+      "active": true,
+      "delai": "Selon localisation exacte",
+      "id": 9,
+      "name": "Autre Quartier de Lomé",
+      "price": 1500
     }
   ],
   "trips": [],
   "cashTransactions": [
     {
-      "id": 1,
-      "dateTime": "2026-10-01 08:00:00",
-      "user": "Ange Ines",
-      "retrait": 0,
-      "depot": 81500,
-      "encaissement": 0,
+      "commentaires": "Report solde réel de trésorerie au 1er Octobre 2026",
       "creditClient": "",
+      "dateTime": "2026-10-01 08:00:00",
+      "depot": 81500,
       "ecart": 0,
+      "encaissement": 0,
+      "id": 1,
+      "retrait": 0,
       "total": 81500,
-      "commentaires": "Report solde réel de trésorerie au 1er Octobre 2026"
+      "user": "Ange Ines"
     }
   ],
   "users": [
     {
+      "createdAt": "2026-09-21",
       "id": 1,
       "name": "Ange Ines",
-      "phone": "93849200",
       "password": "password2026",
-      "role": "ADMIN",
-      "roleLabel": "Propriétaire & Administratrice",
-      "createdAt": "2026-09-21",
       "permissions": {
-        "products": true,
-        "orders": true,
-        "delivery": true,
-        "trips": true,
         "cash": true,
+        "delivery": true,
+        "orders": true,
+        "products": true,
         "profits": true,
         "settings": true,
-        "team": true
-      }
+        "team": true,
+        "trips": true
+      },
+      "phone": "93849200",
+      "role": "ADMIN",
+      "roleLabel": "Propriétaire & Administratrice"
     },
     {
+      "createdAt": "2026-09-21",
       "id": 2,
       "name": "Gérante Boutique",
-      "phone": "90000000",
       "password": "gerante2026",
-      "role": "GERANTE",
-      "roleLabel": "Gérante de Vente",
-      "createdAt": "2026-09-21",
       "permissions": {
-        "products": true,
-        "orders": true,
-        "delivery": true,
-        "trips": false,
         "cash": false,
+        "delivery": true,
+        "orders": true,
+        "products": true,
         "profits": false,
         "settings": false,
-        "team": false
-      }
+        "team": false,
+        "trips": false
+      },
+      "phone": "90000000",
+      "role": "GERANTE",
+      "roleLabel": "Gérante de Vente"
     }
   ],
-  "shipments": [],
+  "shipments": [
+    {
+      "id": 1,
+      "number": "ARR-2026-001",
+      "supplier": "Test",
+      "date": "2026-10-05",
+      "items": [
+        {
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 10,
+          "costPrice": 3000,
+          "salePrice": 6500,
+          "totalCost": 30000
+        }
+      ],
+      "totalQuantity": 10,
+      "totalCost": 30000,
+      "notes": "",
+      "registeredBy": "Ange Ines",
+      "createdAt": "2026-10-05T10:25:07.783Z"
+    }
+  ],
   "suppliers": [
     "Grossiste Assigamé (Lomé)",
     "Fournisseur Cotonou / Nigéria",
     "Importateur Chine / Dubaï",
     "Autre Fournisseur"
-  ],
-  "deliveryZones": [
-    {
-      "id": 1,
-      "name": "Kégué",
-      "price": 500,
-      "delai": "Livraison moto express",
-      "active": true
-    },
-    {
-      "id": 2,
-      "name": "Hedzranawoé",
-      "price": 800,
-      "delai": "Livraison moto rapide",
-      "active": true
-    },
-    {
-      "id": 3,
-      "name": "Déckon / Centre-ville / Assigamé",
-      "price": 1000,
-      "delai": "Centre des affaires Lomé",
-      "active": true
-    },
-    {
-      "id": 4,
-      "name": "Tokoin (Wuiti, Hôpital, Ramco, Forever)",
-      "price": 1000,
-      "delai": "Zone centrale Lomé",
-      "active": true
-    },
-    {
-      "id": 5,
-      "name": "Bè / Akodésséwa / Port",
-      "price": 1000,
-      "delai": "Zone Sud-Est Lomé",
-      "active": true
-    },
-    {
-      "id": 6,
-      "name": "Agoè (Cacavéli, 2 Lions, Nyivé, Minamadou)",
-      "price": 1500,
-      "delai": "Zone Nord Lomé",
-      "active": true
-    },
-    {
-      "id": 7,
-      "name": "Adidogomé / Totsi / Amadahomé",
-      "price": 1500,
-      "delai": "Zone Ouest Lomé",
-      "active": true
-    },
-    {
-      "id": 8,
-      "name": "Baguida / Avépozo",
-      "price": 2000,
-      "delai": "Périphérie Est Lomé",
-      "active": true
-    },
-    {
-      "id": 9,
-      "name": "Autre Quartier de Lomé",
-      "price": 1500,
-      "delai": "Selon localisation exacte",
-      "active": true
-    }
   ]
 }

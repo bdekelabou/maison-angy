@@ -1,5 +1,5 @@
 // Maison Angy - Service Worker PWA
-const CACHE_NAME = 'maison-angy-v3';
+const CACHE_NAME = 'maison-angy-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

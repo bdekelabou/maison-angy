@@ -478,6 +478,119 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // --- SHIPMENT MODIFICATION & DELETION ---
+    if (pathname.startsWith('/api/shipments/') && req.method === 'DELETE') {
+      const id = parseInt(pathname.split('/').pop());
+      const idx = db.shipments.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        const ship = db.shipments[idx];
+        // Revert stock
+        (ship.items || []).forEach(it => {
+          const p = db.products.find(prod => prod.id === parseInt(it.productId));
+          if (p) p.stock = Math.max(0, (p.stock || 0) - parseInt(it.quantity));
+        });
+        db.shipments.splice(idx, 1);
+        await saveDb(db);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ success: false, error: 'Not found' }));
+      }
+      return;
+    }
+
+    if (pathname.startsWith('/api/shipments/') && req.method === 'PUT') {
+      const id = parseInt(pathname.split('/').pop());
+      const idx = db.shipments.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        const oldShip = db.shipments[idx];
+        const data = await parseBody(req);
+        
+        // 1. Revert old stock
+        (oldShip.items || []).forEach(it => {
+          const p = db.products.find(prod => prod.id === parseInt(it.productId));
+          if (p) p.stock = Math.max(0, (p.stock || 0) - parseInt(it.quantity));
+        });
+
+        // 2. Apply new stock and prices
+        const items = Array.isArray(data.items) ? data.items : [];
+        let totalQty = 0;
+        let totalCost = 0;
+
+        const processedItems = items.map(it => {
+          const prodId = parseInt(it.productId);
+          const p = db.products.find(prod => prod.id === prodId);
+          const qty = parseInt(it.quantity) || 0;
+          const cost = parseFloat(it.costPrice) || (p ? p.costPrice : 0);
+          const sale = parseFloat(it.salePrice) || (p ? p.salePrice : 0);
+
+          if (p && qty > 0) {
+            p.stock = (p.stock || 0) + qty;
+            p.costPrice = cost;
+            if (it.salePrice && parseFloat(it.salePrice) > 0) p.salePrice = parseFloat(it.salePrice);
+          }
+          const lineTotal = qty * cost;
+          totalQty += qty;
+          totalCost += lineTotal;
+
+          return {
+            productId: prodId,
+            productName: p ? p.name : (it.productName || 'Article'),
+            quantity: qty,
+            costPrice: cost,
+            salePrice: sale,
+            totalCost: lineTotal
+          };
+        });
+
+        db.shipments[idx] = {
+          ...oldShip,
+          number: data.number || oldShip.number,
+          supplier: data.supplier || oldShip.supplier,
+          date: data.date || oldShip.date,
+          notes: data.notes !== undefined ? data.notes : oldShip.notes,
+          items: processedItems,
+          totalQuantity: totalQty,
+          totalCost: totalCost
+        };
+        await saveDb(db);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, shipment: db.shipments[idx] }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ success: false, error: 'Not found' }));
+      }
+      return;
+    }
+
+    // --- CASH DELETION ---
+    if (pathname.startsWith('/api/cash/') && req.method === 'DELETE') {
+      const id = parseInt(pathname.split('/').pop());
+      db.cashTransactions.sort((a, b) => (a.dateTime || '').localeCompare(b.dateTime || ''));
+      
+      const idx = db.cashTransactions.findIndex(t => t.id === id);
+      if (idx === -1) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ success: false, error: 'Non trouvé' }));
+        return;
+      }
+      
+      if (idx !== db.cashTransactions.length - 1) {
+        res.writeHead(403);
+        res.end(JSON.stringify({ success: false, error: 'Seule la transaction la plus récente peut être supprimée.' }));
+        return;
+      }
+
+      // It is the last one, safe to delete
+      db.cashTransactions.pop();
+      recalculateCash(db);
+      await saveDb(db);
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true, currentCash: db.settings.currentCash }));
+      return;
+    }
+
     // --- PRODUCTS ---
     if (pathname === '/api/products' && req.method === 'GET') {
       res.writeHead(200);
