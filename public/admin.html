@@ -1134,6 +1134,23 @@
     }
 
     // 5. TRIPS VIEW
+    async function deleteTrip(id) {
+      if (!confirm('Supprimer ce déplacement ? (Si la transaction de caisse existe encore, elle sera aussi supprimée)')) return;
+      try {
+        const res = await fetch('/api/trips/' + id, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast('✅ Déplacement supprimé.');
+          await loadData();
+          switchView('TRIPS');
+        } else {
+          alert('Erreur: ' + (json.error || 'Impossible de supprimer'));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+    
     function renderTrips() {
       const curr = appData.settings.currency || 'FCFA';
       const trips = appData.trips || [];

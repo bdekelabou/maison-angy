@@ -949,6 +949,28 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+        // --- TRIP DELETION ---
+    if (pathname.startsWith('/api/trips/') && req.method === 'DELETE') {
+      const id = parseInt(pathname.split('/').pop());
+      const idx = db.trips.findIndex(t => t.id === id);
+      if (idx !== -1) {
+        const trip = db.trips[idx];
+        const cashIdx = db.cashTransactions.findIndex(c => c.retrait === trip.cost && c.commentaires === 'Déplacement: ' + trip.description && c.dateTime === trip.dateTime);
+        if (cashIdx !== -1) {
+          db.cashTransactions.splice(cashIdx, 1);
+          recalculateCash(db);
+        }
+        db.trips.splice(idx, 1);
+        await saveDb(db);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, currentCash: db.settings.currentCash }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ success: false, error: 'Not found' }));
+      }
+      return;
+    }
+
     // --- CASH TRANSACTIONS (CAISSE) ---
     if (pathname === '/api/cash' && req.method === 'GET') {
       res.writeHead(200);
