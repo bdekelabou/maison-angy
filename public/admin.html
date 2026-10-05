@@ -2652,7 +2652,7 @@
         supplier: document.getElementById('ship_supplier').value.trim(),
         date: document.getElementById('ship_date').value,
         notes: document.getElementById('ship_notes').value.trim(),
-        registeredBy: currentUser ? currentUser.name : 'Ange Ines',
+        registeredBy: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.name : 'Ange Ines',
         items: window.currentShipmentRows
       };
 
