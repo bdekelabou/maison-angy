@@ -116,8 +116,8 @@ function recalculateCash(db) {
 // Compute key performance statistics
 function computeStats(db) {
   const totalSales = db.orders
-    .filter(o => o.status === 'LIVRE' || o.paymentStatus === 'PAYE')
-    .reduce((sum, o) => sum + (o.totalOrder || 0), 0);
+    .filter(o => o.status !== 'ANNULE')
+    .reduce((sum, o) => sum + (o.amountPaid !== undefined ? o.amountPaid : (o.paymentStatus === 'PAYE' || o.status === 'LIVRE' ? o.totalOrder : 0)), 0);
 
   const totalGrossMargin = db.orders
     .filter(o => o.status === 'LIVRE' || o.paymentStatus === 'PAYE')
@@ -127,15 +127,24 @@ function computeStats(db) {
     .filter(o => o.status === 'LIVRE' || o.paymentStatus === 'PAYE')
     .reduce((sum, o) => sum + (o.marginNet || 0), 0);
 
+  const totalDebts = db.orders
+    .filter(o => o.status !== 'ANNULE')
+    .reduce((sum, o) => sum + (o.remainingAmount !== undefined ? o.remainingAmount : 0), 0);
+
+  const debtOrdersCount = db.orders
+    .filter(o => o.status !== 'ANNULE' && (o.remainingAmount > 0)).length;
+
   const pendingOrders = db.orders.filter(o => o.status !== 'LIVRE' && o.status !== 'ANNULE').length;
   const lowStockCount = db.products.filter(p => p.stock <= (p.minStockAlert || 3)).length;
-  const totalStockValue = db.products.reduce((sum, p) => sum + (p.stock * p.costPrice), 0);
+  const totalStockValue = db.products.reduce((sum, p) => sum + (p.stock * (p.costPrice || 0)), 0);
   const totalPotentialSale = db.products.reduce((sum, p) => sum + (p.stock * (p.isPromo ? p.promoPrice : p.salePrice)), 0);
 
   return {
     totalSales,
     totalGrossMargin,
     totalNetMargin,
+    totalDebts,
+    debtOrdersCount,
     pendingOrders,
     lowStockCount,
     totalStockValue,
@@ -689,19 +698,21 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // CREATE ORDER (From Client Store or Admin)
+    // CREATE ORDER (From Client Store or Direct POS / Admin)
     if (pathname === '/api/orders' && req.method === 'POST') {
       const data = await parseBody(req);
       const orderId = 'CMD-' + new Date().getFullYear() + '-' + String(db.orders.length + 1).padStart(3, '0');
       
       const items = (data.items || []).map(item => {
-        const prod = db.products.find(p => p.id === item.productId);
-        const unitCost = prod ? prod.costPrice : 0;
-        const unitPrice = item.unitPrice || (prod ? (prod.isPromo ? prod.promoPrice : prod.salePrice) : 0);
+        const prod = db.products.find(p => p.id === parseInt(item.productId));
+        const unitCost = prod ? (prod.costPrice || 0) : 0;
+        const unitPrice = (item.unitPrice !== undefined && item.unitPrice !== null && item.unitPrice !== '') ? parseFloat(item.unitPrice) : (prod ? (prod.isPromo ? prod.promoPrice : prod.salePrice) : 0);
         const qty = parseInt(item.quantity) || 1;
         return {
           productId: item.productId,
           productName: item.productName || (prod ? prod.name : 'Article'),
+          selectedSize: item.selectedSize || '',
+          selectedColor: item.selectedColor || '',
           quantity: qty,
           unitPrice: unitPrice,
           costPrice: unitCost,
@@ -716,46 +727,154 @@ const server = http.createServer(async (req, res) => {
       const marginGross = totalItems - totalCost;
       const marginNet = marginGross - (data.deliveryFeePayer === 'BOUTIQUE' ? deliveryFee : 0);
 
+      // Payment & Debt Handling (Zoho style)
+      let amountPaid = 0;
+      if (data.amountPaid !== undefined && data.amountPaid !== null && data.amountPaid !== '') {
+        amountPaid = parseFloat(data.amountPaid) || 0;
+      } else if (data.paymentStatus === 'PAYE') {
+        amountPaid = totalOrder;
+      }
+
+      const remainingAmount = Math.max(0, totalOrder - amountPaid);
+      let paymentStatus = data.paymentStatus;
+      if (!paymentStatus) {
+        if (remainingAmount === 0 && amountPaid > 0) paymentStatus = 'PAYE';
+        else if (amountPaid > 0 && remainingAmount > 0) paymentStatus = 'PARTIEL';
+        else if (amountPaid === 0 && remainingAmount > 0) paymentStatus = 'IMPAYE';
+        else paymentStatus = 'PAYE';
+      }
+
+      const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+      const payments = [];
+      if (amountPaid > 0) {
+        payments.push({
+          amount: amountPaid,
+          method: data.paymentMethod || 'ESPECES',
+          date: nowStr,
+          note: data.paymentNote || (remainingAmount > 0 ? 'Acompte initial' : 'Règlement intégral')
+        });
+      }
+
+      const isDirectSale = data.orderSource === 'DIRECTE' || data.deliveryMode === 'VENTE_DIRECTE';
+
       const newOrder = {
         id: orderId,
+        orderSource: isDirectSale ? 'DIRECTE' : (data.orderSource || 'SITE_WEB'),
         customerName: data.customerName || 'Cliente Maison Angy',
         customerPhone: data.customerPhone || '',
-        customerAddress: data.customerAddress || '',
-        deliveryMode: data.deliveryMode || 'LIVRAISON_DOMICILE',
+        customerAddress: data.customerAddress || (isDirectSale ? 'Vente sur place / Maison' : ''),
+        deliveryMode: data.deliveryMode || (isDirectSale ? 'VENTE_DIRECTE' : 'LIVRAISON_DOMICILE'),
         deliveryFee: deliveryFee,
         deliveryFeePayer: data.deliveryFeePayer || 'CLIENT',
         deliveryPersonId: data.deliveryPersonId || null,
         deliveryPersonName: data.deliveryPersonName || '',
         deliveryPersonPhone: data.deliveryPersonPhone || '',
-        status: data.status || 'A_PREPARER',
-        paymentStatus: data.paymentStatus || 'A_LA_LIVRAISON',
+        status: data.status || (isDirectSale ? 'LIVRE' : 'A_PREPARER'),
+        paymentStatus: paymentStatus,
         paymentMethod: data.paymentMethod || 'ESPECES',
+        amountPaid: amountPaid,
+        remainingAmount: remainingAmount,
+        payments: payments,
         items: items,
         totalItems,
         totalOrder,
         marginGross,
         marginNet,
-        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        createdAt: nowStr,
         notes: data.notes || ''
       };
 
-      // Deduct stock if order confirmed
+      // Deduct stock
       items.forEach(it => {
-        const p = db.products.find(prod => prod.id === it.productId);
+        const p = db.products.find(prod => prod.id === parseInt(it.productId));
         if (p) {
-          p.stock = Math.max(0, p.stock - it.quantity);
+          p.stock = Math.max(0, (p.stock || 0) - it.quantity);
         }
       });
+
+      // Record in cash register if payment received immediately
+      if (amountPaid > 0) {
+        db.cashTransactions.push({
+          id: db.cashTransactions.length + 1,
+          dateTime: nowStr,
+          user: data.registeredBy || 'Ange Ines',
+          retrait: 0,
+          depot: 0,
+          encaissement: amountPaid,
+          creditClient: remainingAmount > 0 ? (newOrder.customerName + ' (Reste: ' + remainingAmount + ' F)') : '',
+          ecart: 0,
+          total: 0,
+          commentaires: 'Vente ' + (isDirectSale ? 'Directe ' : '') + orderId + ' - ' + newOrder.customerName + 
+            (remainingAmount > 0 ? ' (Acompte: ' + amountPaid + ' F / Reste dû: ' + remainingAmount + ' F)' : ' (Payé 100%)')
+        });
+        recalculateCash(db);
+      }
 
       db.orders.unshift(newOrder); // newest first
       await saveDb(db);
       res.writeHead(201);
-      res.end(JSON.stringify({ success: true, order: newOrder }));
+      res.end(JSON.stringify({ success: true, order: newOrder, currentCash: db.settings.currentCash }));
+      return;
+    }
+
+    // RECORD A PAYMENT ON A DEBT / ORDER (Zoho style partial or full payment)
+    if (pathname.match(/^\/api\/orders\/[^\/]+\/payments$/) && req.method === 'POST') {
+      const orderId = pathname.split('/')[3];
+      const data = await parseBody(req);
+      const order = db.orders.find(o => o.id === orderId);
+      if (!order) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ success: false, error: 'Commande introuvable' }));
+        return;
+      }
+      const payAmt = parseFloat(data.amount) || 0;
+      if (payAmt <= 0) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ success: false, error: 'Montant de paiement invalide' }));
+        return;
+      }
+
+      const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      if (!order.payments) order.payments = [];
+      order.payments.push({
+        amount: payAmt,
+        method: data.method || 'ESPECES',
+        date: nowStr,
+        note: data.note || 'Règlement dette / Versement'
+      });
+
+      order.amountPaid = (order.amountPaid || 0) + payAmt;
+      order.remainingAmount = Math.max(0, (order.totalOrder || 0) - order.amountPaid);
+      if (order.remainingAmount === 0) {
+        order.paymentStatus = 'PAYE';
+      } else {
+        order.paymentStatus = 'PARTIEL';
+      }
+
+      // Record into cash register!
+      db.cashTransactions.push({
+        id: db.cashTransactions.length + 1,
+        dateTime: nowStr,
+        user: data.registeredBy || 'Ange Ines',
+        retrait: 0,
+        depot: 0,
+        encaissement: payAmt,
+        creditClient: order.remainingAmount > 0 ? (order.customerName + ' (Reste: ' + order.remainingAmount + ' F)') : '',
+        ecart: 0,
+        total: 0,
+        commentaires: 'Règlement dette ' + order.id + ' - ' + order.customerName + ' (Versement: ' + payAmt + ' F' + (order.remainingAmount > 0 ? ' / Reste: ' + order.remainingAmount + ' F' : ' / Soldé ✅') + ')'
+      });
+      recalculateCash(db);
+      await saveDb(db);
+
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true, order, currentCash: db.settings.currentCash }));
       return;
     }
 
     // UPDATE ORDER (Assign delivery person, change status, validate payment)
-    if (pathname.startsWith('/api/orders/') && req.method === 'PUT') {
+    if (pathname.match(/^\/api\/orders\/[^\/]+$/) && req.method === 'PUT') {
       const orderId = pathname.split('/')[3];
       const data = await parseBody(req);
       const idx = db.orders.findIndex(o => o.id === orderId);
@@ -763,41 +882,74 @@ const server = http.createServer(async (req, res) => {
         const oldOrder = db.orders[idx];
         const updated = { ...oldOrder, ...data };
 
-        // If status changed to LIVRE or payment changed to PAYE and wasn't before
+        // If status changed to LIVRE or payment marked as paid
         if (data.status === 'LIVRE' && oldOrder.status !== 'LIVRE') {
-          updated.paymentStatus = 'PAYE';
-          // Auto record into cash register!
-          const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
-          db.cashTransactions.push({
-            id: db.cashTransactions.length + 1,
-            dateTime: nowStr,
-            user: 'Ange Ines',
-            retrait: 0,
-            depot: 0,
-            encaissement: updated.totalOrder,
-            creditClient: '',
-            ecart: 0,
-            total: 0,
-            commentaires: 'Vente ' + updated.id + ' - ' + updated.customerName + ' (' + updated.items.map(i => i.productName).join(', ') + ')'
-          });
-          recalculateCash(db);
+          const toCollect = (oldOrder.remainingAmount !== undefined) ? oldOrder.remainingAmount : (oldOrder.paymentStatus === 'PAYE' ? 0 : updated.totalOrder);
+          if (toCollect > 0) {
+            const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            db.cashTransactions.push({
+              id: db.cashTransactions.length + 1,
+              dateTime: nowStr,
+              user: 'Ange Ines',
+              retrait: 0,
+              depot: 0,
+              encaissement: toCollect,
+              creditClient: '',
+              ecart: 0,
+              total: 0,
+              commentaires: 'Vente ' + updated.id + ' - ' + updated.customerName + ' (Encaissé à la livraison)'
+            });
+            recalculateCash(db);
+            if (!updated.payments) updated.payments = [];
+            updated.payments.push({
+              amount: toCollect,
+              method: updated.paymentMethod || 'ESPECES',
+              date: nowStr,
+              note: 'Paiement à la livraison'
+            });
+            updated.amountPaid = (updated.amountPaid || 0) + toCollect;
+            updated.remainingAmount = 0;
+            updated.paymentStatus = 'PAYE';
+          }
         }
 
         // If cancelled, restore stock
         if (data.status === 'ANNULE' && oldOrder.status !== 'ANNULE') {
           oldOrder.items.forEach(it => {
-            const p = db.products.find(prod => prod.id === it.productId);
-            if (p) p.stock += it.quantity;
+            const p = db.products.find(prod => prod.id === parseInt(it.productId));
+            if (p) p.stock = (p.stock || 0) + (parseInt(it.quantity) || 0);
           });
         }
 
         db.orders[idx] = updated;
         await saveDb(db);
         res.writeHead(200);
-        res.end(JSON.stringify({ success: true, order: updated }));
+        res.end(JSON.stringify({ success: true, order: updated, currentCash: db.settings.currentCash }));
       } else {
         res.writeHead(404);
         res.end(JSON.stringify({ error: 'Order not found' }));
+      }
+      return;
+    }
+
+    // DELETE ORDER
+    if (pathname.match(/^\/api\/orders\/[^\/]+$/) && req.method === 'DELETE') {
+      const orderId = pathname.split('/')[3];
+      const idx = db.orders.findIndex(o => o.id === orderId);
+      if (idx !== -1) {
+        const order = db.orders[idx];
+        // Restore stock
+        (order.items || []).forEach(it => {
+          const p = db.products.find(prod => prod.id === parseInt(it.productId));
+          if (p) p.stock = (p.stock || 0) + (parseInt(it.quantity) || 0);
+        });
+        db.orders.splice(idx, 1);
+        await saveDb(db);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ success: false, error: 'Commande non trouvée' }));
       }
       return;
     }

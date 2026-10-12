@@ -184,6 +184,9 @@
           </div>
 
           <div class="topbar-actions">
+            <button class="btn-action-primary" style="background:#10b981; color:#fff; font-weight:700;" onclick="openNewSaleModal()">
+              🛍️ + Nouvelle Vente Directe (Maison / Boutique)
+            </button>
             <button class="btn-action-primary" onclick="openProductModal()">
               <span>+ Article</span>
             </button>
@@ -611,6 +614,16 @@
       document.getElementById('brandStoreName').textContent = appData.settings?.storeName || 'Maison Angy';
 
       const pending = (appData.orders || []).filter(o => o.status !== 'LIVRE' && o.status !== 'ANNULE').length;
+      const unpaidDebts = (appData.orders || []).filter(o => o.status !== 'ANNULE' && ((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0));
+      const debtBadge = document.getElementById('debtsBadge');
+      if (debtBadge) {
+        if (unpaidDebts.length > 0) {
+          debtBadge.style.display = 'inline-block';
+          debtBadge.textContent = unpaidDebts.length;
+        } else {
+          debtBadge.style.display = 'none';
+        }
+      }
       const badge = document.getElementById('pendingOrdersBadge');
       if (pending > 0) {
         badge.style.display = 'inline-block';
@@ -653,6 +666,7 @@
       else if (currentView === 'CASH') c.innerHTML = renderCash();
       else if (currentView === 'PROFITS') c.innerHTML = renderProfits();
       else if (currentView === 'SHIPMENTS') c.innerHTML = renderShipmentsView();
+      else if (currentView === 'DEBTS') c.innerHTML = renderDebtsView();
       else if (currentView === 'SETTINGS') c.innerHTML = renderSettings();
       if (currentView === 'TEAM') c.innerHTML = renderTeamView();
     }
@@ -779,7 +793,11 @@
     // 2. ORDERS VIEW
     function renderOrders() {
       const curr = appData.settings.currency || 'FCFA';
-      const orders = orderFilter === 'ALL' ? appData.orders : appData.orders.filter(o => o.status === orderFilter);
+      const orders = orderFilter === 'ALL' 
+        ? appData.orders 
+        : (orderFilter === 'DEBTS' 
+            ? appData.orders.filter(o => o.status !== 'ANNULE' && ((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0))
+            : appData.orders.filter(o => o.status === orderFilter));
 
       return `
         <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
@@ -837,13 +855,37 @@
                     <td>
                       <strong>${o.totalOrder.toLocaleString('fr-FR')} ${curr}</strong>
                       <div style="color:#10b981; font-size:0.75rem; font-weight:600;">+ ${(o.marginNet||0).toLocaleString('fr-FR')} F gain</div>
+                      ${((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0) ? `
+                        <div style="margin-top:0.35rem;">
+                          <span style="background:#fee2e2; border:1px solid #fca5a5; color:#b91c1c; font-size:0.72rem; padding:2px 6px; border-radius:4px; font-weight:800; display:inline-block;">
+                            ⚠️ Reste dû: ${(o.remainingAmount !== undefined ? o.remainingAmount : o.totalOrder).toLocaleString('fr-FR')} ${curr}
+                          </span>
+                        </div>
+                      ` : `
+                        <div style="margin-top:0.35rem;">
+                          <span style="background:#dcfce7; color:#15803d; font-size:0.72rem; padding:2px 6px; border-radius:4px; font-weight:700; display:inline-block;">
+                            ✅ Soldé (100%)
+                          </span>
+                        </div>
+                      `}
                     </td>
                     <td>${getStatusBadge(o.status)}</td>
                     <td>
-                      ${o.status !== 'LIVRE' ? `
-                        <button class="btn-sm-action success" onclick="markDelivered('${o.id}')">✓ Livré & Encaissé</button>
-                      ` : ''}
-                      <button class="btn-sm-action" onclick="openAssignModal('${o.id}')">✏️ Gérer</button>
+                      <div style="display:flex; flex-direction:column; gap:0.3rem;">
+                        ${((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0) ? `
+                          <button class="btn-sm-action" style="background:#10b981; color:#fff; font-weight:800; padding:4px 6px; font-size:0.75rem;" onclick="openRecordPaymentModal('${o.id}')">
+                            💵 Encaisser dette
+                          </button>
+                        ` : ''}
+                        ${o.status !== 'LIVRE' ? `
+                          <button class="btn-sm-action success" onclick="markDelivered('${o.id}')">✓ Livré & Encaissé</button>
+                        ` : ''}
+                        <div style="display:flex; gap:0.25rem;">
+                          <button class="btn-sm-action" style="flex:1;" onclick="openOrderDetailModal('${o.id}')" title="Voir ticket">👁️ Ticket</button>
+                          <button class="btn-sm-action" onclick="openAssignModal('${o.id}')" title="Gérer">✏️</button>
+                          <button class="btn-sm-action" style="background:#fee2e2; color:#b91c1c;" onclick="deleteOrder('${o.id}')" title="Supprimer la commande">🗑️</button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 `).join('')}
@@ -2823,6 +2865,728 @@
       `;
     }
 
+  
+    // --- 💳 DEBTS & ZOHO-STYLE CREDIT MANAGEMENT ---
+    function renderDebtsView() {
+      const curr = appData.settings.currency || 'FCFA';
+      const orders = appData.orders || [];
+      const debtOrders = orders.filter(o => o.status !== 'ANNULE' && ((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0));
+      
+      const totalDebts = debtOrders.reduce((sum, o) => sum + (o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)), 0);
+      const totalOriginal = debtOrders.reduce((sum, o) => sum + (o.totalOrder || 0), 0);
+      const totalRecovered = totalOriginal - totalDebts;
+
+      return `
+        <div style="background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); color:#fff; border-radius:12px; padding:1.75rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:3px solid #f87171;">
+          <div>
+            <span style="background:rgba(255,255,255,0.2); padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.75rem; font-weight:bold; text-transform:uppercase;">
+              💳 Gestion des Créances & Impayés (Style Zoho)
+            </span>
+            <h2 style="font-size:2rem; margin-top:0.4rem;">${totalDebts.toLocaleString('fr-FR')} ${curr}</h2>
+            <p style="color:#fecaca; font-size:0.85rem;">Total de l'argent dehors à recouvrer auprès de vos clientes</p>
+          </div>
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <button class="btn-action-primary" style="background:#fff; color:#991b1b; font-weight:800;" onclick="openNewSaleModal()">
+              🛍️ + Nouvelle Vente (Maison / Boutique)
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:1.5rem;">
+          <div class="stat-card" style="border-left: 4px solid #ef4444;">
+            <div class="stat-label">Total Dettes à Récupérer</div>
+            <div class="stat-val" style="color:#dc2626;">${totalDebts.toLocaleString('fr-FR')} ${curr}</div>
+            <div class="stat-sub">Somme totale non encore versée</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+            <div class="stat-label">Clientes Débitrices</div>
+            <div class="stat-val" style="color:#d97706;">${debtOrders.length}</div>
+            <div class="stat-sub">Commandes avec solde restant</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #10b981;">
+            <div class="stat-label">Acomptes Déjà Encaissés</div>
+            <div class="stat-val" style="color:#15803d;">${totalRecovered.toLocaleString('fr-FR')} ${curr}</div>
+            <div class="stat-sub">Déjà sécurisé sur ces ventes</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="panel-title">📋 Liste des Clientes avec Impayés / Acomptes (${debtOrders.length})</div>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Vente / Date</th>
+                  <th>Cliente & Relance WhatsApp</th>
+                  <th>Articles Achetés</th>
+                  <th>Total Vente</th>
+                  <th>Déjà Versé</th>
+                  <th>Reste Dû (Dette)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${debtOrders.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:3rem; color:#166534;">
+                      <div style="font-size:2.5rem; margin-bottom:0.5rem;">🎉</div>
+                      <h3 style="color:#15803d;">Aucune dette en cours !</h3>
+                      <p style="color:#64748b; font-size:0.9rem;">Toutes vos clientes sont à jour dans leurs paiements.</p>
+                    </td>
+                  </tr>
+                ` : debtOrders.map(o => {
+                  const remaining = o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0);
+                  const paid = o.amountPaid || (o.totalOrder - remaining);
+                  const cleanPhone = (o.customerPhone || '').replace(/[^0-9]/g, '');
+                  const waMsg = encodeURIComponent("Bonjour " + (o.customerName || 'chère cliente') + ", j'espère que vous allez bien ! C'est Maison Angy. Petit rappel amical concernant votre commande " + o.id + " : il reste un solde de " + remaining.toLocaleString('fr-FR') + " FCFA à régler. Merci de nous indiquer quand cela vous conviendra. Très belle journée ! ✨");
+                  
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${o.id}</strong>
+                        <div style="font-size:0.75rem; color:#64748b;">${o.createdAt}</div>
+                        <span style="font-size:0.7rem; background:#f1f5f9; padding:2px 5px; border-radius:4px; font-weight:600;">
+                          ${o.orderSource === 'DIRECTE' ? '🏠 Vente Directe' : '🌐 Site Web'}
+                        </span>
+                      </td>
+                      <td>
+                        <div style="font-weight:700; font-size:0.95rem; color:#0f172a;">${o.customerName}</div>
+                        ${cleanPhone ? `
+                          <div style="margin-top:0.25rem;">
+                            <a href="https://wa.me/${cleanPhone}?text=${waMsg}" target="_blank" 
+                               style="display:inline-flex; align-items:center; gap:4px; background:#dcfce7; color:#15803d; border:1px solid #86efac; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:700; text-decoration:none;">
+                              💬 Relancer sur WhatsApp
+                            </a>
+                          </div>
+                          <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">📞 ${o.customerPhone}</div>
+                        ` : `<span style="font-size:0.75rem; color:#94a3b8;">Aucun numéro</span>`}
+                      </td>
+                      <td>
+                        <div style="font-size:0.85rem;">
+                          ${(o.items || []).map(it => `<div><strong>${it.quantity}x</strong> ${it.productName}</div>`).join('')}
+                        </div>
+                      </td>
+                      <td><strong>${(o.totalOrder || 0).toLocaleString('fr-FR')} ${curr}</strong></td>
+                      <td>
+                        <span style="color:#15803d; font-weight:700;">+ ${paid.toLocaleString('fr-FR')} ${curr}</span>
+                        ${(o.payments && o.payments.length > 0) ? `
+                          <div style="font-size:0.7rem; color:#64748b;">(${o.payments.length} versement(s))</div>
+                        ` : ''}
+                      </td>
+                      <td>
+                        <div style="background:#fee2e2; border:1.5px solid #fca5a5; color:#b91c1c; padding:6px 10px; border-radius:8px; font-size:1.1rem; font-weight:800; display:inline-block;">
+                          ${remaining.toLocaleString('fr-FR')} ${curr}
+                        </div>
+                      </td>
+                      <td>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                          <button class="btn-sm-action" style="background:#10b981; color:#fff; font-weight:800; padding:6px 10px;" onclick="openRecordPaymentModal('${o.id}')">
+                            💵 Encaisser versement
+                          </button>
+                          <button class="btn-sm-action" style="background:#f1f5f9; color:#334155;" onclick="openOrderDetailModal('${o.id}')">
+                            👁️ Historique / Reçu
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- 🛍️ DIRECT SALES MODAL (POS / AT HOME) ---
+    window.currentSaleRows = [];
+
+    function openNewSaleModal() {
+      const products = appData.products || [];
+      if (products.length === 0) {
+        alert("Veuillez d'abord ajouter au moins un article dans votre catalogue !");
+        openProductModal();
+        return;
+      }
+
+      window.currentSaleRows = [{
+        productId: products[0].id,
+        quantity: 1,
+        unitPrice: products[0].isPromo ? products[0].promoPrice : products[0].salePrice
+      }];
+
+      const curr = appData.settings.currency || 'FCFA';
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:760px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="modal-head" style="flex-shrink:0; background:#0f172a; color:#fff;">
+              <div>
+                <h3 style="color:#f59e0b; margin:0;">🛍️ Enregistrer une Vente Directe (Maison / Boutique)</h3>
+                <p style="font-size:0.75rem; color:#94a3b8; margin:2px 0 0 0;">
+                  Sortie immédiate de stock, acompte et calcul automatique du reste à payer (Zoho).
+                </p>
+              </div>
+              <button class="close-btn" onclick="closeModal()" style="color:#fff;">&times;</button>
+            </div>
+
+            <form onsubmit="handleSaveDirectSale(event)" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+              <div class="modal-body" style="flex:1; overflow-y:auto; padding:1.25rem;">
+                
+                <!-- INFOS CLIENTE -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.85rem; margin-bottom:1rem;">
+                  <div style="font-weight:700; font-size:0.85rem; color:#1e293b; margin-bottom:0.5rem;">
+                    👤 Informations de la Cliente :
+                  </div>
+                  <div style="display:grid; grid-template-columns:1.5fr 1.2fr 1.3fr; gap:0.6rem;">
+                    <div>
+                      <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600;">Nom de la Cliente *</label>
+                      <input type="text" id="sale_customer_name" required placeholder="Ex: Mme Lawson, Afi..." style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+                    </div>
+                    <div>
+                      <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600;">Téléphone / WhatsApp</label>
+                      <input type="tel" id="sale_customer_phone" placeholder="Ex: 90 12 34 56" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+                    </div>
+                    <div>
+                      <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600;">Lieu / Remise</label>
+                      <select id="sale_delivery_mode" onchange="toggleSaleDeliveryFee()" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;">
+                        <option value="VENTE_DIRECTE">🏠 Sur place (Maison / Boutique)</option>
+                        <option value="LIVRAISON_DOMICILE">🛵 Livraison à domicile</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div id="saleDeliveryFeeRow" style="display:none; margin-top:0.6rem; padding-top:0.6rem; border-top:1px dashed #cbd5e1;">
+                    <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600;">Frais de livraison (${curr})</label>
+                    <input type="number" id="sale_delivery_fee" value="0" min="0" oninput="calculateSaleTotals()" style="width:180px; padding:0.45rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+                  </div>
+                </div>
+
+                <!-- ARTICLES VENDUS -->
+                <div style="margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700; color:#0f172a; font-size:0.9rem;">
+                    👗 Articles Vendus :
+                  </label>
+                  <button type="button" onclick="addSaleRow()" class="btn-sm-action primary" style="padding:0.35rem 0.75rem; font-size:0.8rem;">
+                    + Ajouter un article
+                  </button>
+                </div>
+
+                <div id="saleRowsContainer" style="display:flex; flex-direction:column; gap:0.5rem; max-height:220px; overflow-y:auto; padding-right:4px;">
+                </div>
+
+                <!-- RECAP TOTAL & ZOHO PAIEMENT -->
+                <div style="margin-top:1rem; background:#f0fdf4; border:1.5px solid #86efac; border-radius:8px; padding:1rem;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <div>
+                      <span style="font-size:0.8rem; color:#166534; font-weight:600;">Total Vente :</span>
+                      <div id="saleTotalOrderPreview" style="font-size:1.4rem; font-weight:800; color:#15803d;">0 ${curr}</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <span style="font-size:0.8rem; color:#64748b;">Articles : <strong id="saleTotalQtyPreview">0 pcs</strong></span>
+                    </div>
+                  </div>
+
+                  <!-- PAIEMENT REÇU & DETTE -->
+                  <div style="background:#fff; border:1px solid #bbf7d0; border-radius:8px; padding:0.85rem;">
+                    <label style="display:block; font-weight:700; font-size:0.85rem; color:#0f172a; margin-bottom:0.35rem;">
+                      💵 Montant Payé / Encaissé Tout de Suite (${curr}) *
+                    </label>
+                    <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap;">
+                      <input type="number" id="sale_amount_paid" min="0" required oninput="calculateSaleTotals()" 
+                             style="width:180px; padding:0.55rem; font-size:1.1rem; font-weight:800; color:#15803d; border:2px solid #10b981; border-radius:6px;" />
+                      <button type="button" onclick="setQuickSalePaid('FULL')" class="btn-sm-action" style="font-size:0.75rem; padding:0.4rem 0.6rem;">100% Tout Payé</button>
+                      <button type="button" onclick="setQuickSalePaid('ZERO')" class="btn-sm-action" style="font-size:0.75rem; padding:0.4rem 0.6rem; background:#fee2e2; color:#b91c1c;">0 F (À Crédit)</button>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; align-items:center;">
+                      <div>
+                        <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600;">Moyen de Paiement Reçu</label>
+                        <select id="sale_payment_method" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.82rem;">
+                          <option value="ESPECES">💵 Espèces (Entrée en Caisse)</option>
+                          <option value="TMONEY">📱 TMoney</option>
+                          <option value="FLOOZ">📱 Flooz</option>
+                          <option value="VIREMENT">🏦 Virement / Carte</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600;">Statut de la Dette (Automatique)</label>
+                        <div id="saleDebtStatusBadge" style="padding:0.45rem; border-radius:6px; font-size:0.85rem; font-weight:700; text-align:center;">
+                          --
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="margin-top:0.6rem;">
+                      <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600;">Note / Échéance de dette (facultatif)</label>
+                      <input type="text" id="sale_notes" placeholder="Ex: Promis de solder le restant vendredi prochain..." style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.82rem;" />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="modal-foot" style="flex-shrink:0;">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal" style="background:#10b981; font-weight:800; font-size:0.95rem;">
+                  ✅ Valider la Vente & Encaisser
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+
+      renderSaleRows();
+    }
+
+    function renderSaleRows() {
+      const container = document.getElementById('saleRowsContainer');
+      if (!container) return;
+      const products = appData.products || [];
+      const curr = appData.settings.currency || 'FCFA';
+
+      container.innerHTML = window.currentSaleRows.map((row, idx) => {
+        const prod = products.find(p => p.id === row.productId) || products[0];
+        const unitPrice = row.unitPrice !== undefined ? row.unitPrice : (prod.isPromo ? prod.promoPrice : prod.salePrice);
+        const lineTotal = (row.quantity || 1) * unitPrice;
+
+        return `
+          <div style="display:grid; grid-template-columns:2.5fr 1fr 1.3fr 1.3fr auto; gap:0.5rem; align-items:center; background:#fff; padding:0.5rem 0.75rem; border:1px solid #cbd5e1; border-radius:6px;">
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Article sélectionné</label>
+              <select onchange="updateSaleRowProduct(${idx}, this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.82rem; font-weight:600;">
+                ${products.map(p => `
+                  <option value="${p.id}" ${p.id === row.productId ? 'selected' : ''}>
+                    ${p.name} (Stock: ${p.stock} pcs)
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Quantité</label>
+              <input type="number" min="1" value="${row.quantity || 1}" oninput="updateSaleRowField(${idx}, 'quantity', this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem; font-weight:700; color:#2563eb;" />
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Prix Unitaire (${curr})</label>
+              <input type="number" min="0" value="${unitPrice}" oninput="updateSaleRowField(${idx}, 'unitPrice', this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem; font-weight:600;" />
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.7rem; color:#64748b; font-weight:600;">Total Ligne</label>
+              <div style="padding:0.45rem 0; font-weight:700; color:#0f172a; font-size:0.88rem;">${lineTotal.toLocaleString('fr-FR')} ${curr}</div>
+            </div>
+
+            <div style="text-align:right; padding-top:0.8rem;">
+              ${window.currentSaleRows.length > 1 ? `
+                <button type="button" onclick="removeSaleRow(${idx})" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer;" title="Retirer">✕</button>
+              ` : `<div style="width:28px;"></div>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      calculateSaleTotals(true);
+    }
+
+    function addSaleRow() {
+      const products = appData.products || [];
+      window.currentSaleRows.push({
+        productId: products[0] ? products[0].id : 1,
+        quantity: 1,
+        unitPrice: products[0] ? (products[0].isPromo ? products[0].promoPrice : products[0].salePrice) : 3000
+      });
+      renderSaleRows();
+    }
+
+    function removeSaleRow(idx) {
+      if (window.currentSaleRows.length <= 1) return;
+      window.currentSaleRows.splice(idx, 1);
+      renderSaleRows();
+    }
+
+    function updateSaleRowProduct(idx, prodId) {
+      const pId = parseInt(prodId);
+      const prod = (appData.products || []).find(p => p.id === pId);
+      if (prod) {
+        window.currentSaleRows[idx].productId = pId;
+        window.currentSaleRows[idx].unitPrice = prod.isPromo ? prod.promoPrice : prod.salePrice;
+      }
+      renderSaleRows();
+    }
+
+    function updateSaleRowField(idx, field, val) {
+      window.currentSaleRows[idx][field] = parseFloat(val) || 0;
+      calculateSaleTotals(false);
+    }
+
+    function toggleSaleDeliveryFee() {
+      const mode = document.getElementById('sale_delivery_mode')?.value;
+      const feeRow = document.getElementById('saleDeliveryFeeRow');
+      if (feeRow) feeRow.style.display = mode === 'LIVRAISON_DOMICILE' ? 'block' : 'none';
+      calculateSaleTotals();
+    }
+
+    function calculateSaleTotals(setDefaultPaid = false) {
+      const curr = appData.settings.currency || 'FCFA';
+      let totalItems = 0;
+      let totalQty = 0;
+
+      (window.currentSaleRows || []).forEach(r => {
+        const qty = r.quantity || 1;
+        const price = r.unitPrice || 0;
+        totalQty += qty;
+        totalItems += (qty * price);
+      });
+
+      const mode = document.getElementById('sale_delivery_mode')?.value;
+      const feeInput = document.getElementById('sale_delivery_fee');
+      const deliveryFee = (mode === 'LIVRAISON_DOMICILE' && feeInput) ? (parseFloat(feeInput.value) || 0) : 0;
+      const totalOrder = totalItems + deliveryFee;
+
+      const totalPreview = document.getElementById('saleTotalOrderPreview');
+      const qtyPreview = document.getElementById('saleTotalQtyPreview');
+      if (totalPreview) totalPreview.textContent = `${totalOrder.toLocaleString('fr-FR')} ${curr}`;
+      if (qtyPreview) qtyPreview.textContent = `${totalQty} pcs`;
+
+      const paidInput = document.getElementById('sale_amount_paid');
+      if (paidInput) {
+        if (setDefaultPaid && (!paidInput.value || paidInput.dataset.modified !== 'true')) {
+          paidInput.value = totalOrder;
+        }
+        const paid = parseFloat(paidInput.value) || 0;
+        const debt = Math.max(0, totalOrder - paid);
+        const badge = document.getElementById('saleDebtStatusBadge');
+        if (badge) {
+          if (debt === 0) {
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#15803d';
+            badge.innerHTML = '✅ Payé à 100% (Aucune dette)';
+          } else if (paid > 0) {
+            badge.style.background = '#fef3c7';
+            badge.style.color = '#b45309';
+            badge.innerHTML = `⚠️ Acompte : Reste ${debt.toLocaleString('fr-FR')} ${curr} dû`;
+          } else {
+            badge.style.background = '#fee2e2';
+            badge.style.color = '#b91c1c';
+            badge.innerHTML = `🔴 Dette : ${debt.toLocaleString('fr-FR')} ${curr} à crédit`;
+          }
+        }
+      }
+    }
+
+    function setQuickSalePaid(type) {
+      let totalItems = 0;
+      (window.currentSaleRows || []).forEach(r => {
+        totalItems += ((r.quantity || 1) * (r.unitPrice || 0));
+      });
+      const mode = document.getElementById('sale_delivery_mode')?.value;
+      const feeInput = document.getElementById('sale_delivery_fee');
+      const deliveryFee = (mode === 'LIVRAISON_DOMICILE' && feeInput) ? (parseFloat(feeInput.value) || 0) : 0;
+      const totalOrder = totalItems + deliveryFee;
+
+      const paidInput = document.getElementById('sale_amount_paid');
+      if (paidInput) {
+        paidInput.dataset.modified = 'true';
+        if (type === 'FULL') paidInput.value = totalOrder;
+        else if (type === 'ZERO') paidInput.value = 0;
+        calculateSaleTotals(false);
+      }
+    }
+
+    async function handleSaveDirectSale(e) {
+      e.preventDefault();
+      const customerName = document.getElementById('sale_customer_name').value.trim();
+      const customerPhone = document.getElementById('sale_customer_phone').value.trim();
+      const deliveryMode = document.getElementById('sale_delivery_mode').value;
+      const deliveryFee = deliveryMode === 'LIVRAISON_DOMICILE' ? (parseFloat(document.getElementById('sale_delivery_fee').value) || 0) : 0;
+      const amountPaid = parseFloat(document.getElementById('sale_amount_paid').value) || 0;
+      const paymentMethod = document.getElementById('sale_payment_method').value;
+      const notes = document.getElementById('sale_notes').value.trim();
+
+      const products = appData.products || [];
+      const items = window.currentSaleRows.map(r => {
+        const prod = products.find(p => p.id === r.productId);
+        return {
+          productId: r.productId,
+          productName: prod ? prod.name : 'Article',
+          quantity: r.quantity || 1,
+          unitPrice: r.unitPrice || 0
+        };
+      });
+
+      const payload = {
+        orderSource: 'DIRECTE',
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerAddress: deliveryMode === 'VENTE_DIRECTE' ? 'Vente sur place / Maison' : (customerPhone ? 'Livraison client' : 'Lomé'),
+        deliveryMode: deliveryMode,
+        deliveryFee: deliveryFee,
+        items: items,
+        amountPaid: amountPaid,
+        paymentMethod: paymentMethod,
+        notes: notes,
+        registeredBy: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.name : 'Ange Ines'
+      };
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          closeModal();
+          const order = json.order;
+          if (order.remainingAmount > 0) {
+            showToast(`✅ Vente ${order.id} enregistrée ! Acompte : ${order.amountPaid} F | Dette enregistrée : ${order.remainingAmount} F`);
+          } else {
+            showToast(`✅ Vente ${order.id} enregistrée et payée à 100% ! (${order.totalOrder} F)`);
+          }
+          await loadData();
+          if (currentView === 'DEBTS' && order.remainingAmount > 0) switchView('DEBTS');
+          else switchView('ORDERS');
+        } else {
+          alert('Erreur: ' + (json.error || 'Impossible d\'enregistrer la vente.'));
+        }
+      } catch (err) {
+        alert('Erreur réseau : ' + err.message);
+      }
+    }
+
+    // --- 💵 RECORD A PAYMENT ON A DEBT ---
+    function openRecordPaymentModal(orderId) {
+      const o = (appData.orders || []).find(ord => ord.id === orderId);
+      if (!o) return;
+      const curr = appData.settings.currency || 'FCFA';
+      const remaining = o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0);
+      const paid = o.amountPaid || (o.totalOrder - remaining);
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:500px;">
+            <div class="modal-head" style="background:#0f172a; color:#fff;">
+              <div>
+                <h3 style="color:#10b981; margin:0;">💵 Encaisser un Versement (Règlement Dette)</h3>
+                <span style="font-size:0.75rem; color:#94a3b8;">Commande ${o.id} - ${o.customerName}</span>
+              </div>
+              <button class="close-btn" onclick="closeModal()" style="color:#fff;">&times;</button>
+            </div>
+
+            <form onsubmit="handleSavePayment(event, '${o.id}')" style="padding:1.25rem;">
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.85rem; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem;">
+                  <span style="color:#64748b; font-size:0.85rem;">Total Commande :</span>
+                  <strong>${(o.totalOrder || 0).toLocaleString('fr-FR')} ${curr}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem;">
+                  <span style="color:#64748b; font-size:0.85rem;">Déjà Encaissé :</span>
+                  <strong style="color:#15803d;">+ ${paid.toLocaleString('fr-FR')} ${curr}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-top:1px dashed #cbd5e1; padding-top:0.4rem;">
+                  <span style="color:#b91c1c; font-weight:700; font-size:0.9rem;">Reste Dû Actuel :</span>
+                  <strong style="color:#b91c1c; font-size:1.15rem;">${remaining.toLocaleString('fr-FR')} ${curr}</strong>
+                </div>
+              </div>
+
+              <div style="margin-bottom:0.85rem;">
+                <label style="display:block; font-weight:700; font-size:0.85rem; color:#0f172a; margin-bottom:0.35rem;">
+                  Montant versé aujourd'hui (${curr}) *
+                </label>
+                <input type="number" id="pay_amount" required min="1" max="${remaining}" value="${remaining}" 
+                       style="width:100%; padding:0.6rem; font-size:1.15rem; font-weight:800; color:#15803d; border:2px solid #10b981; border-radius:6px;" />
+                <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">
+                  Par défaut le solde complet (${remaining} ${curr}), ou saisissez un acompte partiel.
+                </div>
+              </div>
+
+              <div style="margin-bottom:0.85rem;">
+                <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600; margin-bottom:0.25rem;">Moyen de Paiement</label>
+                <select id="pay_method" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;">
+                  <option value="ESPECES">💵 Espèces (Entrée dans le Journal de Caisse)</option>
+                  <option value="TMONEY">📱 TMoney</option>
+                  <option value="FLOOZ">📱 Flooz</option>
+                  <option value="VIREMENT">🏦 Virement / Carte</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:1.25rem;">
+                <label style="display:block; font-size:0.75rem; color:#64748b; font-weight:600; margin-bottom:0.25rem;">Note / Commentaire (facultatif)</label>
+                <input type="text" id="pay_note" placeholder="Ex: Paiement 2ème tranche, en espèces..." style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" />
+              </div>
+
+              <div class="modal-foot" style="padding:0; margin-top:1rem;">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="btn-primary-modal" style="background:#10b981; font-weight:800;">
+                  ✅ Encaisser & Mettre à Jour la Caisse
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleSavePayment(e, orderId) {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('pay_amount').value) || 0;
+      const method = document.getElementById('pay_method').value;
+      const note = document.getElementById('pay_note').value.trim();
+
+      try {
+        const res = await fetch('/api/orders/' + orderId + '/payments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: amount,
+            method: method,
+            note: note,
+            registeredBy: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.name : 'Ange Ines'
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          closeModal();
+          const o = json.order;
+          if (o.remainingAmount === 0) {
+            showToast(`🎉 Dette ${o.id} entièrement soldée ! (+ ${amount} F en caisse)`);
+          } else {
+            showToast(`✅ Versement de ${amount} F enregistré ! Nouveau reste dû : ${o.remainingAmount} F`);
+          }
+          await loadData();
+          if (currentView === 'DEBTS') switchView('DEBTS');
+          else if (currentView === 'ORDERS') switchView('ORDERS');
+        } else {
+          alert('Erreur: ' + (json.error || 'Impossible d\'enregistrer le paiement.'));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+
+    // --- 🧾 ORDER RECEIPT / DETAIL MODAL ---
+    function openOrderDetailModal(orderId) {
+      const o = (appData.orders || []).find(ord => ord.id === orderId);
+      if (!o) return;
+      const curr = appData.settings.currency || 'FCFA';
+      const remaining = o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0);
+      const paid = o.amountPaid || (o.totalOrder - remaining);
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:620px;">
+            <div class="modal-head" style="background:#0f172a; color:#fff;">
+              <div>
+                <h3 style="color:#c59b27; margin:0;">🧾 Ticket / Détail Commande ${o.id}</h3>
+                <span style="font-size:0.75rem; color:#94a3b8;">${o.createdAt} | ${o.orderSource === 'DIRECTE' ? 'Vente Directe' : 'Site Web'}</span>
+              </div>
+              <button class="close-btn" onclick="closeModal()" style="color:#fff;">&times;</button>
+            </div>
+
+            <div style="padding:1.25rem; max-height:80vh; overflow-y:auto;">
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem; margin-bottom:1rem; font-size:0.85rem;">
+                <strong>Cliente :</strong> ${o.customerName}<br>
+                <strong>Téléphone :</strong> ${o.customerPhone || 'Non renseigné'}<br>
+                <strong>Adresse / Lieu :</strong> ${o.customerAddress || 'Maison Angy'}
+              </div>
+
+              <div style="margin-bottom:1rem;">
+                <div style="font-weight:700; margin-bottom:0.5rem; font-size:0.9rem;">Articles commandés :</div>
+                <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                  <thead>
+                    <tr style="border-bottom:1px solid #cbd5e1; text-align:left;">
+                      <th style="padding:4px 0;">Article</th>
+                      <th style="padding:4px 0;">Qté</th>
+                      <th style="padding:4px 0;">P.U</th>
+                      <th style="padding:4px 0; text-align:right;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${(o.items || []).map(it => `
+                      <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:6px 0;">${it.productName}</td>
+                        <td style="padding:6px 0;">${it.quantity}</td>
+                        <td style="padding:6px 0;">${(it.unitPrice || 0).toLocaleString('fr-FR')} ${curr}</td>
+                        <td style="padding:6px 0; text-align:right; font-weight:700;">${((it.unitPrice || 0) * (it.quantity || 1)).toLocaleString('fr-FR')} ${curr}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:0.85rem; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                  <span>Total Commande :</span>
+                  <strong>${(o.totalOrder || 0).toLocaleString('fr-FR')} ${curr}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem; color:#15803d;">
+                  <span>Total Déjà Payé :</span>
+                  <strong>+ ${paid.toLocaleString('fr-FR')} ${curr}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-top:1px dashed #86efac; padding-top:0.4rem; color:${remaining > 0 ? '#b91c1c' : '#15803d'}; font-weight:800; font-size:1.1rem;">
+                  <span>Reste Dû :</span>
+                  <span>${remaining > 0 ? (remaining.toLocaleString('fr-FR') + ' ' + curr + ' (Dette)') : '0 FCFA (Soldé ✅)'}</span>
+                </div>
+              </div>
+
+              <div style="margin-bottom:1rem;">
+                <div style="font-weight:700; margin-bottom:0.5rem; font-size:0.9rem;">Historique des Versements Reçus :</div>
+                ${(!o.payments || o.payments.length === 0) ? `
+                  <div style="color:#64748b; font-size:0.85rem; font-style:italic;">Aucun versement enregistré pour le moment.</div>
+                ` : `
+                  <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                    ${o.payments.map((p, pIdx) => `
+                      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.5rem 0.75rem; display:flex; justify-content:space-between; align-items:center; font-size:0.82rem;">
+                        <div>
+                          <strong>Versement #${pIdx + 1}</strong> (${p.method || 'ESPECES'}) - <span style="color:#64748b;">${p.date}</span>
+                          ${p.note ? `<div style="font-size:0.75rem; color:#64748b;">${p.note}</div>` : ''}
+                        </div>
+                        <div style="font-weight:800; color:#15803d; font-size:0.95rem;">
+                          + ${(p.amount || 0).toLocaleString('fr-FR')} ${curr}
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+
+              <div class="modal-foot" style="padding:0; margin-top:1rem; display:flex; justify-content:space-between;">
+                ${remaining > 0 ? `
+                  <button type="button" class="btn-action-primary" style="background:#10b981; color:#fff;" onclick="closeModal(); openRecordPaymentModal('${o.id}')">
+                    💵 Encaisser un Versement
+                  </button>
+                ` : '<div></div>'}
+                <button type="button" class="btn-secondary" onclick="closeModal()">Fermer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function deleteOrder(orderId) {
+      if (!confirm('Supprimer cette commande/vente ? Les articles vendus seront automatiquement remis en stock.')) return;
+      try {
+        const res = await fetch('/api/orders/' + orderId, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast('✅ Commande supprimée et stock restauré.');
+          await loadData();
+          if (currentView === 'DEBTS') switchView('DEBTS');
+          else switchView('ORDERS');
+        } else {
+          alert('Erreur: ' + (json.error || 'Impossible de supprimer.'));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+  
   </script>
 </body>
 </html>
