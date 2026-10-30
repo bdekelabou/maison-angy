@@ -8,40 +8,45 @@ const DATA_FILE = path.join(__dirname, 'data', 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 let memoryDb = null;
+let firebaseLoaded = false;
 const FIREBASE_URL = 'https://maison-angy-default-rtdb.firebaseio.com/db.json';
+
+function normalizeDbObject(data) {
+  const dbObj = {
+    settings: data.settings || { storeName: 'Maison Angy', currency: 'FCFA', currentCash: 81500 },
+    products: data.products || [],
+    orders: data.orders || [],
+    deliveryPersons: data.deliveryPersons || [],
+    deliveryZones: data.deliveryZones || [],
+    trips: data.trips || [],
+    cashTransactions: data.cashTransactions || [],
+    users: data.users || [],
+    shipments: data.shipments || [],
+    suppliers: data.suppliers || []
+  };
+  ['products', 'orders', 'deliveryPersons', 'deliveryZones', 'trips', 'cashTransactions', 'users', 'shipments', 'suppliers'].forEach(k => {
+    if (!Array.isArray(dbObj[k])) {
+      if (typeof dbObj[k] === 'object' && dbObj[k] !== null) {
+        dbObj[k] = Object.values(dbObj[k]).filter(Boolean);
+      } else {
+        dbObj[k] = [];
+      }
+    }
+  });
+  return dbObj;
+}
 
 // Helper to read DB
 async function readDb() {
-  if (!memoryDb) {
+  if (!memoryDb || !firebaseLoaded) {
     try {
       console.log('Fetching DB from Firebase...');
       const res = await fetch(FIREBASE_URL);
       if (res.ok) {
         const data = await res.json();
         if (data && Object.keys(data).length > 0) {
-          memoryDb = {
-            settings: data.settings || { storeName: 'Maison Angy', currency: 'FCFA', currentCash: 81500 },
-            products: data.products || [],
-            orders: data.orders || [],
-            deliveryPersons: data.deliveryPersons || [],
-            deliveryZones: data.deliveryZones || [],
-            trips: data.trips || [],
-            cashTransactions: data.cashTransactions || [],
-            users: data.users || [],
-            shipments: data.shipments || [],
-            suppliers: data.suppliers || []
-          };
-          // Firebase might convert arrays with missing elements into objects with integer keys
-          // ensure they are arrays
-          ['products', 'orders', 'deliveryPersons', 'deliveryZones', 'trips', 'cashTransactions', 'users', 'shipments', 'suppliers'].forEach(k => {
-            if (!Array.isArray(memoryDb[k])) {
-              if (typeof memoryDb[k] === 'object') {
-                memoryDb[k] = Object.values(memoryDb[k]).filter(Boolean);
-              } else {
-                memoryDb[k] = [];
-              }
-            }
-          });
+          memoryDb = normalizeDbObject(data);
+          firebaseLoaded = true;
           console.log('Firebase DB loaded successfully.');
         }
       } else {
@@ -49,6 +54,20 @@ async function readDb() {
       }
     } catch (err) {
       console.error('Error reading db from Firebase:', err);
+    }
+
+    // Fallback to local data/db.json if Firebase failed
+    if (!memoryDb && fs.existsSync(DATA_FILE)) {
+      try {
+        console.log('Loading fallback DB from local data/db.json...');
+        const raw = fs.readFileSync(DATA_FILE, 'utf-8').replace(/^\uFEFF/, '');
+        const localData = JSON.parse(raw);
+        if (localData && Object.keys(localData).length > 0) {
+          memoryDb = normalizeDbObject(localData);
+        }
+      } catch (localErr) {
+        console.error('Error reading local db.json:', localErr);
+      }
     }
     
     // Fallback if empty or failed
@@ -87,12 +106,15 @@ async function saveDb(db) {
     // Also save locally for backup
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf-8');
     
-    // Push to Firebase
-    await fetch(FIREBASE_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(db)
-    });
+    // Push to Firebase only if Firebase was loaded or has non-empty products
+    if (firebaseLoaded || (db.products && db.products.length > 0)) {
+      const res = await fetch(FIREBASE_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(db)
+      });
+      if (res.ok) firebaseLoaded = true;
+    }
     return true;
   } catch (err) {
     console.error('Error writing db to Firebase:', err);
