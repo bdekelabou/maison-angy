@@ -174,24 +174,27 @@
       <header class="topbar">
         <div class="topbar-left">
           <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
-          <div class="topbar-title" id="pageTitle">Tableau de Bord - Octobre 2026</div>
+          <div class="topbar-title" id="pageTitle">Tableau de Bord - Maison Angy</div>
         </div>
 
         <div class="topbar-right">
-          <div id="topUserBadge" style="font-size:0.85rem; color:#64748b; background:#f1f5f9; padding:0.4rem 0.8rem; border-radius:8px; display:inline-flex; align-items:center; gap:0.35rem;"></div>
+          <div id="topUserBadge" style="font-size:0.82rem; color:#475569; background:#f1f5f9; padding:0.38rem 0.75rem; border-radius:9999px; display:inline-flex; align-items:center; gap:0.35rem; white-space:nowrap; border:1px solid #e2e8f0;"></div>
           <div class="cash-pill" title="Trésorerie disponible en caisse">
             <span>🪙 Caisse : <strong id="topbarCash">81 500 FCFA</strong></span>
           </div>
 
           <div class="topbar-actions">
             <button class="btn-action-primary" style="background:#10b981; color:#fff; font-weight:700;" onclick="openNewSaleModal()">
-              🛍️ + Nouvelle Vente Directe (Maison / Boutique)
+              <span>🛍️ + Vente (Live / Boutique)</span>
             </button>
             <button class="btn-action-primary" onclick="openProductModal()">
-              <span>+ Article</span>
+              <span>👗 + Article</span>
             </button>
-            <button class="btn-action-primary" style="background: #0f172a; color: #fff;" onclick="openDeliveryPersonModal()">
-              <span>+ Livreur</span>
+            <button class="btn-action-primary" style="background:#334155; color:#fff;" onclick="openTripModal('DEPLACEMENT')">
+              <span>⛽ + Déplacement / Charge</span>
+            </button>
+            <button class="btn-action-primary" style="background:#0f172a; color:#fff;" onclick="openDeliveryPersonModal()">
+              <span>🛵 + Livreur</span>
             </button>
           </div>
         </div>
@@ -676,70 +679,86 @@
       const s = appData.stats || {};
       const curr = appData.settings.currency || 'FCFA';
       const cash = appData.settings?.currentCash !== undefined ? appData.settings.currentCash : 81500;
-      const pending = (appData.orders || []).filter(o => o.status !== 'LIVRE' && o.status !== 'ANNULE');
       const products = appData.products || [];
+      const u = getCurrentUser();
+      const isAdmin = u.role === 'ADMIN';
+      const perms = u.permissions || (isAdmin ? { cash: true, profits: true, trips: true } : {});
+      const canSeeCash = isAdmin || perms.cash === true;
+      const canSeeProfits = isAdmin || perms.profits === true;
+
+      const grossMargin = s.totalGrossMargin || 0;
+      const tripsAndCharges = (s.totalTripsCost || 0) + (s.totalSalariesCost || 0) + (s.totalOtherCharges || 0);
+      const netReal = s.totalNetMargin !== undefined ? s.totalNetMargin : (grossMargin - tripsAndCharges);
 
       return `
-        <!-- Welcome Banner with carried-over cash of 81 500 F -->
-        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; border-radius:12px; padding:1.75rem; margin-bottom:1.5rem; border-bottom:3px solid #c59b27;">
-          <span style="background:rgba(197,155,39,0.2); border:1px solid #c59b27; padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.75rem; font-weight:bold; text-transform:uppercase; color:#fef3c7;">
-            ✨ Nouveau Départ - Octobre 2026
-          </span>
-          <h2 style="font-size:1.6rem; margin-top:0.5rem;">Bienvenue dans votre Espace de Gestion Maison Angy</h2>
-          <p style="color:#94a3b8; font-size:0.9rem; margin-top:0.25rem;">
-            Votre trésorerie réelle de <strong>${cash.toLocaleString('fr-FR')} ${curr}</strong> est conservée. Vos stocks et commandes sont prêts pour accueillir vos nouveaux arrivages d'octobre !
-          </p>
-          <div style="display:flex; gap:0.75rem; margin-top:1.25rem; flex-wrap:wrap;">
+        <!-- Welcome Banner -->
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; border-radius:12px; padding:1.5rem 1.75rem; margin-bottom:1.5rem; border-bottom:3px solid #c59b27; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <span style="background:rgba(197,155,39,0.2); border:1px solid #c59b27; padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.75rem; font-weight:bold; text-transform:uppercase; color:#fef3c7;">
+              ${isAdmin ? '👑 Espace Propriétaire — Maison Angy' : '💼 Espace Assistante & Live TikTok'}
+            </span>
+            <h2 style="font-size:1.45rem; margin-top:0.5rem;">Bonjour ${u.name || 'Ange Ines'} ✨</h2>
+            <p style="color:#94a3b8; font-size:0.88rem; margin-top:0.2rem;">
+              ${canSeeCash ? `Trésorerie en caisse : <strong style="color:#fef3c7;">${cash.toLocaleString('fr-FR')} ${curr}</strong> • ` : ''}Gérez vos ventes Live TikTok, votre stock et vos livraisons en un clic.
+            </p>
+          </div>
+          <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <button class="btn-action-primary" style="background:#10b981; color:#fff; font-weight:800;" onclick="openNewSaleModal()">
+              <span>🛍️ + Nouvelle Vente (Live / Boutique)</span>
+            </button>
             <button class="btn-action-primary" onclick="openProductModal()">
-              <span>+ Ajouter un Article d'Octobre</span>
+              <span>👗 + Nouvel Article</span>
             </button>
-            <button class="btn-action-primary" style="background:#0f172a; border:1px solid #c59b27; color:#fef3c7;" onclick="openDeliveryPersonModal()">
-              <span>+ Ajouter un Livreur</span>
+            <button class="btn-action-primary" style="background:#334155; color:#fff; border:1px solid #64748b;" onclick="openTripModal('DEPLACEMENT')">
+              <span>⛽ + Déplacement / Salaire</span>
             </button>
-            <button class="btn-action-primary" style="background:#10b981; color:#fff;" onclick="openCashModal('DEPOT')">
-              <span>+ Dépôt / Vente Caisse</span>
-            </button>
-            <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="switchView('TEAM')">
-              <span>👥 Gérer l'Équipe & Gérantes</span>
-            </button>
+            ${isAdmin ? `
+              <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="switchView('TEAM')">
+                <span>👥 Compte Assistante</span>
+              </button>
+            ` : ''}
           </div>
         </div>
 
         <!-- KPIs -->
         <div class="kpi-grid">
-          <div class="kpi-card gold">
-            <div class="kpi-icon gold">🪙</div>
+          ${canSeeCash ? `
+            <div class="kpi-card gold" style="cursor:pointer;" onclick="switchView('CASH')">
+              <div class="kpi-icon gold">🪙</div>
+              <div class="kpi-info">
+                <h4>Trésorerie Disponible</h4>
+                <div class="kpi-value">${cash.toLocaleString('fr-FR')} ${curr}</div>
+                <div class="kpi-sub">Solde réel en caisse</div>
+              </div>
+            </div>
+          ` : ''}
+
+          ${canSeeProfits ? `
+            <div class="kpi-card green" style="cursor:pointer;" onclick="switchView('PROFITS')">
+              <div class="kpi-icon green">📈</div>
+              <div class="kpi-info">
+                <h4>Bénéfice Net Réel</h4>
+                <div class="kpi-value" style="color:${netReal >= 0 ? '#059669' : '#dc2626'};">${netReal.toLocaleString('fr-FR')} ${curr}</div>
+                <div class="kpi-sub">Gain brut (${grossMargin.toLocaleString('fr-FR')} F) - Frais (${tripsAndCharges.toLocaleString('fr-FR')} F)</div>
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="kpi-card blue" style="cursor:pointer;" onclick="switchView('ORDERS')">
+            <div class="kpi-icon blue">🛍️</div>
             <div class="kpi-info">
-              <h4>Trésorerie Disponible</h4>
-              <div class="kpi-value">${cash.toLocaleString('fr-FR')} ${curr}</div>
-              <div class="kpi-sub">Solde en espèces en caisse</div>
+              <h4>Commandes & Ventes</h4>
+              <div class="kpi-value">${(appData.orders || []).length} vente(s)</div>
+              <div class="kpi-sub">${(s.debtOrdersCount || 0) > 0 ? `⚠️ ${s.debtOrdersCount} reste(s) à payer (${(s.totalDebts || 0).toLocaleString('fr-FR')} F)` : '✅ Tous les paiements à jour'}</div>
             </div>
           </div>
 
-          <div class="kpi-card green">
-            <div class="kpi-icon green">💰</div>
-            <div class="kpi-info">
-              <h4>Marge Nette Octobre</h4>
-              <div class="kpi-value">${(s.totalNetMargin || 0).toLocaleString('fr-FR')} ${curr}</div>
-              <div class="kpi-sub">Bénéfice réalisé</div>
-            </div>
-          </div>
-
-          <div class="kpi-card blue">
-            <div class="kpi-icon blue">🛵</div>
-            <div class="kpi-info">
-              <h4>Livreurs Enregistrés</h4>
-              <div class="kpi-value">${(appData.deliveryPersons || []).length}</div>
-              <div class="kpi-sub">Prêts pour livrer</div>
-            </div>
-          </div>
-
-          <div class="kpi-card orange">
+          <div class="kpi-card orange" style="cursor:pointer;" onclick="switchView('PRODUCTS')">
             <div class="kpi-icon orange">👗</div>
             <div class="kpi-info">
               <h4>Articles en Stock</h4>
-              <div class="kpi-value">${products.length}</div>
-              <div class="kpi-sub">Prêt pour octobre</div>
+              <div class="kpi-value">${products.length} réf. (${products.reduce((acc, p) => acc + (p.stock || 0), 0)} pcs)</div>
+              <div class="kpi-sub">${(s.lowStockCount || 0) > 0 ? `⚠️ ${s.lowStockCount} article(s) en stock bas` : 'Stock prêt pour les Lives'}</div>
             </div>
           </div>
         </div>
@@ -747,42 +766,61 @@
         <!-- Orders Panel -->
         <div class="panel">
           <div class="panel-header">
-            <div class="panel-title">⭐ Commandes Récentes</div>
-            <button class="btn-sm-action primary" onclick="switchView('ORDERS')">Voir tout</button>
+            <div class="panel-title">⭐ Dernières Commandes & Ventes</div>
+            <div style="display:flex; gap:0.5rem;">
+              <button class="btn-sm-action success" onclick="openNewSaleModal()">+ Enregistrer Vente</button>
+              <button class="btn-sm-action primary" onclick="switchView('ORDERS')">Voir tout (${(appData.orders || []).length})</button>
+            </div>
           </div>
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>N° Commande</th>
-                  <th>Cliente & Contact</th>
-                  <th>Articles</th>
-                  <th>Mode Réception</th>
-                  <th>Livreur</th>
-                  <th>Montant</th>
+                  <th>N° & Date</th>
+                  <th>Cliente</th>
+                  <th>Articles achetés</th>
+                  <th>Mode & Livreur</th>
+                  <th>Montant & Paiement</th>
                   <th>Statut</th>
                 </tr>
               </thead>
               <tbody>
                 ${(appData.orders || []).length === 0 ? `
                   <tr>
-                    <td colspan="7" style="text-align:center; padding:3rem;">
+                    <td colspan="6" style="text-align:center; padding:3rem;">
                       <div style="font-size:2rem; margin-bottom:0.5rem;">🛍️</div>
-                      <h4>Aucune commande en cours</h4>
-                      <p style="color:#64748b; font-size:0.85rem;">Dès qu'une cliente commande sur la boutique, elle apparaîtra ici.</p>
+                      <h4>Aucune commande enregistrée</h4>
+                      <p style="color:#64748b; font-size:0.85rem;">Cliquez sur « + Nouvelle Vente » en haut pour enregistrer une vente pendant ou après votre Live.</p>
                     </td>
                   </tr>
-                ` : appData.orders.slice(0, 5).map(o => `
+                ` : appData.orders.slice(0, 6).map(o => {
+                  const rem = o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0);
+                  return `
                   <tr>
-                    <td><strong>${o.id}</strong></td>
-                    <td><strong>${o.customerName}</strong><div>${o.customerPhone}</div></td>
-                    <td>${o.items.map(i => `<div>${i.quantity}x ${i.productName}</div>`).join('')}</td>
-                    <td>${getDeliveryBadge(o.deliveryMode)}</td>
-                    <td>${o.deliveryPersonName || 'Non assigné'}</td>
-                    <td><strong>${o.totalOrder.toLocaleString('fr-FR')} ${curr}</strong></td>
+                    <td>
+                      <strong>${o.id}</strong>
+                      <div style="font-size:0.75rem; color:#64748b;">${o.createdAt || ''}</div>
+                    </td>
+                    <td>
+                      <strong>${o.customerName}</strong>
+                      ${o.customerPhone ? `<div style="font-size:0.78rem; color:#64748b;">📞 ${o.customerPhone}</div>` : ''}
+                    </td>
+                    <td>${o.items.map(i => `<div style="font-size:0.85rem;"><strong>${i.quantity}x</strong> ${i.productName}</div>`).join('')}</td>
+                    <td>
+                      ${getDeliveryBadge(o.deliveryMode)}
+                      <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">${o.deliveryPersonName || 'Sur place / Non assigné'}</div>
+                    </td>
+                    <td>
+                      <strong>${o.totalOrder.toLocaleString('fr-FR')} ${curr}</strong>
+                      <div>
+                        ${rem > 0
+                          ? `<span style="color:#b91c1c; font-size:0.74rem; font-weight:700;">⚠️ Reste dû : ${rem.toLocaleString('fr-FR')} F</span>`
+                          : `<span style="color:#15803d; font-size:0.74rem; font-weight:700;">✅ Payé</span>`}
+                      </div>
+                    </td>
                     <td>${getStatusBadge(o.status)}</td>
                   </tr>
-                `).join('')}
+                `}).join('')}
               </tbody>
             </table>
           </div>
@@ -791,104 +829,166 @@
     }
 
     // 2. ORDERS VIEW
+    window.orderSearchQuery = window.orderSearchQuery || '';
+    function handleOrderSearch(val) {
+      window.orderSearchQuery = val;
+      renderView();
+      const input = document.getElementById('orderSearchInput');
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    }
+
     function renderOrders() {
       const curr = appData.settings.currency || 'FCFA';
-      const orders = orderFilter === 'ALL' 
-        ? appData.orders 
-        : (orderFilter === 'DEBTS' 
-            ? appData.orders.filter(o => o.status !== 'ANNULE' && ((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0))
-            : appData.orders.filter(o => o.status === orderFilter));
+      const u = getCurrentUser();
+      const canSeeProfits = u.role === 'ADMIN' || (u.permissions && u.permissions.profits === true);
+
+      let orders = appData.orders || [];
+      if (orderFilter === 'DEBTS') {
+        orders = orders.filter(o => o.status !== 'ANNULE' && ((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0));
+      } else if (orderFilter === 'DIRECTE') {
+        orders = orders.filter(o => o.orderSource === 'DIRECTE' || o.deliveryMode === 'VENTE_DIRECTE');
+      } else if (orderFilter === 'SITE_WEB') {
+        orders = orders.filter(o => o.orderSource !== 'DIRECTE' && o.deliveryMode !== 'VENTE_DIRECTE');
+      } else if (orderFilter !== 'ALL') {
+        orders = orders.filter(o => o.status === orderFilter);
+      }
+
+      const q = (window.orderSearchQuery || '').trim().toLowerCase();
+      if (q) {
+        orders = orders.filter(o =>
+          (o.id || '').toLowerCase().includes(q) ||
+          (o.customerName || '').toLowerCase().includes(q) ||
+          (o.customerPhone || '').toLowerCase().includes(q) ||
+          (o.items || []).some(it => (it.productName || '').toLowerCase().includes(q))
+        );
+      }
 
       return `
-        <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
-          ${[
-            { id: 'ALL', label: 'Toutes les commandes' },
-            { id: 'A_PREPARER', label: '🟡 À préparer' },
-            { id: 'EN_LIVRAISON', label: '🟠 En livraison' },
-            { id: 'A_RECUPERER', label: '🔵 À récupérer' },
-            { id: 'EXPEDITION', label: '🟣 Expéditions' },
-            { id: 'LIVRE', label: '🟢 Livrées & Encaissées' }
-          ].map(f => `
-            <button class="btn-sm-action ${orderFilter === f.id ? 'primary' : ''}" onclick="filterOrders('${f.id}')">
-              ${f.label}
-            </button>
-          `).join('')}
-        </div>
-
         <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">🚚 Gestion des Commandes & Livraisons (${orders.length})</div>
+          <div class="panel-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+            <div>
+              <div class="panel-title">🛍️ Commandes, Ventes Live & Livraisons (${orders.length})</div>
+              <p style="font-size:0.82rem; color:#64748b; margin-top:2px;">Toutes vos ventes en boutique/Live TikTok et vos commandes WhatsApp bien rangées au même endroit.</p>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+              <input type="text" id="orderSearchInput" value="${window.orderSearchQuery || ''}" oninput="handleOrderSearch(this.value)" placeholder="🔍 Chercher cliente, N°, article..." style="padding:0.5rem 0.85rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.85rem; min-width:220px;" />
+              <button class="btn-action-primary" style="background:#10b981; color:#fff;" onclick="openNewSaleModal()">
+                <span>🛍️ + Nouvelle Vente (Live / Boutique)</span>
+              </button>
+            </div>
           </div>
+
+          <!-- Filtres propres -->
+          <div style="display:flex; gap:0.45rem; padding:0.85rem 1.25rem; border-bottom:1px solid #e2e8f0; background:#fff; flex-wrap:wrap;">
+            ${[
+              { id: 'ALL', label: '📋 Toutes (' + (appData.orders || []).length + ')' },
+              { id: 'DIRECTE', label: '🏠 Ventes Directes / Live' },
+              { id: 'A_PREPARER', label: '🟡 À préparer' },
+              { id: 'EN_LIVRAISON', label: '🟠 En livraison' },
+              { id: 'LIVRE', label: '🟢 Livrées' },
+              { id: 'DEBTS', label: '⚠️ Reste à payer / Dettes' }
+            ].map(f => `
+              <button class="btn-sm-action ${orderFilter === f.id ? 'primary' : ''}" onclick="filterOrders('${f.id}')" style="padding:0.4rem 0.8rem;">
+                ${f.label}
+              </button>
+            `).join('')}
+          </div>
+
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>N°</th>
-                  <th>Date</th>
-                  <th>Cliente & Contact</th>
-                  <th>Articles</th>
+                  <th>Commande</th>
+                  <th>Cliente & Quartier</th>
+                  <th>Articles commandés</th>
                   <th>Mode & Livreur</th>
-                  <th>Montant & Gain</th>
+                  <th>Montant & Paiement</th>
                   <th>Statut</th>
-                  <th>Actions</th>
+                  <th style="text-align:right;">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                ${orders.length === 0 ? '<tr><td colspan="8" style="text-align:center; padding:3rem;">Aucune commande dans cette liste.</td></tr>' : orders.map(o => `
+                ${orders.length === 0 ? '<tr><td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">Aucune commande trouvée pour ce filtre.</td></tr>' : orders.map(o => {
+                  const rem = o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0);
+                  const cleanPhone = (o.customerPhone || '').replace(/[^0-9]/g, '');
+                  return `
                   <tr>
-                    <td><strong>${o.id}</strong></td>
-                    <td style="font-size:0.8rem; color:#64748b;">${o.createdAt}</td>
                     <td>
-                      <strong>${o.customerName}</strong>
-                      <div><a href="https://wa.me/${(o.customerPhone||'').replace(/[^0-9]/g,'')}" target="_blank" style="color:#16a34a; font-weight:600; text-decoration:none;">💬 WhatsApp</a></div>
-                      <div style="font-size:0.75rem; color:#64748b;">📍 ${o.customerAddress}</div>
+                      <strong style="color:#0f172a;">${o.id}</strong>
+                      <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">${o.createdAt}</div>
+                      <span style="display:inline-block; margin-top:3px; font-size:0.68rem; font-weight:700; padding:1px 6px; border-radius:4px; background:${o.orderSource === 'DIRECTE' ? '#f1f5f9' : '#e0f2fe'}; color:${o.orderSource === 'DIRECTE' ? '#334155' : '#0369a1'};">
+                        ${o.orderSource === 'DIRECTE' ? '🏠 Boutique / Live' : '🌐 Site Web'}
+                      </span>
                     </td>
-                    <td>${o.items.map(it => `<div><strong>${it.quantity}x</strong> ${it.productName}</div>`).join('')}</td>
+                    <td>
+                      <strong style="font-size:0.92rem; color:#0f172a;">${o.customerName}</strong>
+                      ${cleanPhone ? `
+                        <div style="margin-top:2px;">
+                          <a href="https://wa.me/${cleanPhone.startsWith('228') ? cleanPhone : '228' + cleanPhone}" target="_blank" style="color:#16a34a; font-size:0.78rem; font-weight:700; text-decoration:none;">
+                            💬 ${o.customerPhone}
+                          </a>
+                        </div>
+                      ` : ''}
+                      <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">📍 ${o.customerAddress || 'Sur place'}</div>
+                    </td>
+                    <td>
+                      <div style="display:flex; flex-direction:column; gap:3px;">
+                        ${o.items.map(it => `
+                          <div style="font-size:0.84rem; background:#f8fafc; padding:3px 7px; border-radius:4px; border:1px solid #e2e8f0;">
+                            <strong style="color:#0f172a;">${it.quantity}x</strong> ${it.productName}
+                            ${it.selectedSize ? `<span style="color:#b45309; font-weight:700; font-size:0.75rem;"> (Taille ${it.selectedSize})</span>` : ''}
+                          </div>
+                        `).join('')}
+                      </div>
+                    </td>
                     <td>
                       <div>${getDeliveryBadge(o.deliveryMode)}</div>
                       ${o.deliveryPersonName ? `
-                        <div style="font-size:0.8rem; margin-top:0.25rem;">Livreur: <strong>${o.deliveryPersonName}</strong></div>
-                      ` : `
-                        <button class="btn-sm-action" style="margin-top:0.35rem;" onclick="openAssignModal('${o.id}')">+ Choisir livreur</button>
-                      `}
+                        <div style="font-size:0.78rem; color:#334155; margin-top:4px;">🛵 <strong>${o.deliveryPersonName}</strong></div>
+                      ` : (o.deliveryMode !== 'VENTE_DIRECTE' ? `
+                        <button class="btn-sm-action" style="margin-top:4px; font-size:0.74rem; padding:3px 7px;" onclick="openAssignModal('${o.id}')">+ Choisir livreur</button>
+                      ` : `<div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Remis sur place</div>`)}
                     </td>
                     <td>
-                      <strong>${o.totalOrder.toLocaleString('fr-FR')} ${curr}</strong>
-                      <div style="color:#10b981; font-size:0.75rem; font-weight:600;">+ ${(o.marginNet||0).toLocaleString('fr-FR')} F gain</div>
-                      ${((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0) ? `
-                        <div style="margin-top:0.35rem;">
+                      <strong style="font-size:0.95rem; color:#0f172a;">${o.totalOrder.toLocaleString('fr-FR')} ${curr}</strong>
+                      ${canSeeProfits ? `<div style="color:#059669; font-size:0.74rem; font-weight:700;">Gain brut : +${(o.marginNet || o.marginGross || 0).toLocaleString('fr-FR')} F</div>` : ''}
+                      <div style="margin-top:4px;">
+                        ${rem > 0 ? `
                           <span style="background:#fee2e2; border:1px solid #fca5a5; color:#b91c1c; font-size:0.72rem; padding:2px 6px; border-radius:4px; font-weight:800; display:inline-block;">
-                            ⚠️ Reste dû: ${(o.remainingAmount !== undefined ? o.remainingAmount : o.totalOrder).toLocaleString('fr-FR')} ${curr}
+                            ⚠️ Reste dû : ${rem.toLocaleString('fr-FR')} ${curr}
                           </span>
-                        </div>
-                      ` : `
-                        <div style="margin-top:0.35rem;">
+                        ` : `
                           <span style="background:#dcfce7; color:#15803d; font-size:0.72rem; padding:2px 6px; border-radius:4px; font-weight:700; display:inline-block;">
                             ✅ Soldé (100%)
                           </span>
-                        </div>
-                      `}
+                        `}
+                      </div>
                     </td>
                     <td>${getStatusBadge(o.status)}</td>
-                    <td>
-                      <div style="display:flex; flex-direction:column; gap:0.3rem;">
-                        ${((o.remainingAmount !== undefined ? o.remainingAmount : (o.paymentStatus !== 'PAYE' ? o.totalOrder : 0)) > 0) ? `
-                          <button class="btn-sm-action" style="background:#10b981; color:#fff; font-weight:800; padding:4px 6px; font-size:0.75rem;" onclick="openRecordPaymentModal('${o.id}')">
-                            💵 Encaisser dette
-                          </button>
-                        ` : ''}
-                        ${o.status !== 'LIVRE' ? `
-                          <button class="btn-sm-action success" onclick="markDelivered('${o.id}')">✓ Livré & Encaissé</button>
-                        ` : ''}
-                        <div style="display:flex; gap:0.25rem;">
-                          <button class="btn-sm-action" style="flex:1;" onclick="openOrderDetailModal('${o.id}')" title="Voir ticket">👁️ Ticket</button>
-                          <button class="btn-sm-action" onclick="openAssignModal('${o.id}')" title="Gérer">✏️</button>
-                          <button class="btn-sm-action" style="background:#fee2e2; color:#b91c1c;" onclick="deleteOrder('${o.id}')" title="Supprimer la commande">🗑️</button>
+                    <td style="text-align:right;">
+                      <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+                        <div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
+                          ${rem > 0 ? `
+                            <button class="btn-sm-action" style="background:#10b981; color:#fff; border-color:#10b981; font-weight:700; font-size:0.74rem; padding:4px 8px;" onclick="openRecordPaymentModal('${o.id}')">
+                              💵 Encaisser
+                            </button>
+                          ` : ''}
+                          ${o.status !== 'LIVRE' ? `
+                            <button class="btn-sm-action success" style="font-size:0.74rem; padding:4px 8px;" onclick="markDelivered('${o.id}')">✓ Livré</button>
+                          ` : ''}
+                        </div>
+                        <div style="display:flex; gap:4px; justify-content:flex-end;">
+                          <button class="btn-sm-action" style="padding:4px 7px; font-size:0.75rem;" onclick="openOrderDetailModal('${o.id}')" title="Voir ticket / reçu">🧾 Reçu</button>
+                          <button class="btn-sm-action" style="padding:4px 7px; font-size:0.75rem;" onclick="openAssignModal('${o.id}')" title="Modifier livreur">🛵</button>
+                          <button class="btn-sm-action danger" style="padding:4px 7px; font-size:0.75rem;" onclick="deleteOrder('${o.id}')" title="Supprimer">🗑️</button>
                         </div>
                       </div>
                     </td>
                   </tr>
-                `).join('')}
+                `}).join('')}
               </tbody>
             </table>
           </div>
@@ -1063,32 +1163,61 @@
     }
 
     // 4. PRODUCTS VIEW
+    window.productSearchQuery = window.productSearchQuery || '';
+    window.productCatFilter = window.productCatFilter || 'ALL';
+
+    function filterProductsSearch(val) {
+      window.productSearchQuery = val;
+      renderView();
+      const inp = document.getElementById('prodSearchInput');
+      if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }
+
+    function filterProductsCategory(cat) {
+      window.productCatFilter = cat;
+      renderView();
+    }
+
     function renderProducts() {
       const curr = appData.settings.currency || 'FCFA';
-      const products = appData.products || [];
+      const allProducts = appData.products || [];
+      const u = getCurrentUser();
+      const canSeeFinance = u.role === 'ADMIN' || (u.permissions && u.permissions.profits === true);
+
+      const categories = ['ALL', ...Array.from(new Set(allProducts.map(p => p.category).filter(Boolean)))];
+      const q = (window.productSearchQuery || '').trim().toLowerCase();
+      const products = allProducts.filter(p => {
+        if (window.productCatFilter && window.productCatFilter !== 'ALL' && p.category !== window.productCatFilter) return false;
+        if (!q) return true;
+        return (p.name || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
+      });
 
       return `
         <div class="panel">
           <!-- SOUS-ONGLETS DE GESTION DU STOCK (STYLE HIBOUTIK) -->
-          <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc;">
+          <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc; flex-wrap:wrap;">
             <button onclick="switchView('PRODUCTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:#fff; color:#0f172a; border:1px solid #cbd5e1; border-bottom:3px solid #c59b27;">
-              👗 Stock & Articles Actuels (${products.length})
+              👗 Stock & Articles Actuels (${allProducts.length})
             </button>
             <button onclick="switchView('SHIPMENTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
               📦 Historique des Arrivages Fournisseurs (${(appData.shipments || []).length})
             </button>
           </div>
 
-          <div class="panel-header">
+          <div class="panel-header" style="flex-wrap:wrap; gap:0.85rem;">
             <div>
-              <div class="panel-title">👗 Stock en Boutique (${products.length} articles)</div>
-              <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">Consultez vos articles en rayon, gérez les prix et lancez un réassort immédiat.</p>
+              <div class="panel-title">👗 Stock en Boutique (${products.length} / ${allProducts.length} articles)</div>
+              <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">Recherche rapide pendant vos Lives TikTok, gestion des stocks et réassort en 1 clic.</p>
             </div>
-            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+              <input type="text" id="prodSearchInput" value="${(window.productSearchQuery || '').replace(/"/g, '&quot;')}" oninput="filterProductsSearch(this.value)" placeholder="🔍 Chercher un article (slip, brassière, robe...)" style="padding:0.48rem 0.85rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.82rem; min-width:220px;" />
+              <select onchange="filterProductsCategory(this.value)" style="padding:0.48rem 0.75rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.82rem; font-weight:600; background:#fff;">
+                ${categories.map(cat => `<option value="${cat}" ${window.productCatFilter === cat ? 'selected' : ''}>${cat === 'ALL' ? '📂 Toutes catégories' : cat}</option>`).join('')}
+              </select>
               <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="window.editingShipmentId=null; openNewShipmentModal()">
-                <span>📦 + Nouvel Arrivage Fournisseur</span>
+                <span>📦 + Nouvel Arrivage</span>
               </button>
-              <button class="btn-action-primary" onclick="openProductModal()">+ Créer un Nouvel Article</button>
+              <button class="btn-action-primary" onclick="openProductModal()">+ Nouvel Article</button>
             </div>
           </div>
           <div class="data-table-wrap">
@@ -1097,73 +1226,75 @@
                 <tr>
                   <th>Article</th>
                   <th>Catégorie</th>
-                  <th>Coût Achat</th>
-                  <th>Prix Normal</th>
+                  ${canSeeFinance ? `<th>Coût Achat</th>` : ''}
+                  <th>Prix Vente</th>
                   <th>Prix Promo</th>
-                  <th>Marge Unitaire</th>
+                  ${canSeeFinance ? `<th>Gain / Pièce</th>` : ''}
                   <th>Stock Actuel</th>
-                  <th>Actions</th>
+                  <th style="text-align:right;">Actions Rapides</th>
                 </tr>
               </thead>
               <tbody>
                 ${products.length === 0 ? `
                   <tr>
-                    <td colspan="8" style="text-align:center; padding:4rem 1rem;">
-                      <div style="font-size:3rem; margin-bottom:1rem;">✨</div>
-                      <h3>Prêt pour votre nouveau stock d'Octobre !</h3>
-                      <p style="color:#64748b; margin-top:0.5rem; margin-bottom:1.5rem;">
-                        Cliquez sur le bouton ci-dessous pour ajouter votre premier article (collants, boubous, robes, ensembles...).
+                    <td colspan="${canSeeFinance ? 8 : 6}" style="text-align:center; padding:3.5rem 1rem;">
+                      <div style="font-size:2.5rem; margin-bottom:0.75rem;">✨</div>
+                      <h3>Aucun article trouvé</h3>
+                      <p style="color:#64748b; margin-top:0.4rem; margin-bottom:1.25rem;">
+                        Modifiez votre recherche ou cliquez ci-dessous pour ajouter un nouvel article.
                       </p>
                       <button class="btn-action-primary" onclick="openProductModal()" style="margin:0 auto;">
-                        + Ajouter le Premier Article
+                        + Ajouter un Article
                       </button>
                     </td>
                   </tr>
                 ` : products.map(p => {
                   const effective = p.isPromo ? p.promoPrice : p.salePrice;
-                  const margin = effective - p.costPrice;
+                  const margin = effective - (p.costPrice || 0);
                   const pct = effective > 0 ? Math.round((margin / effective) * 100) : 0;
                   const isLow = p.stock <= (p.minStockAlert || 3);
                   return `
                     <tr>
                       <td>
                         <div style="display:flex; align-items:center; gap:0.75rem;">
-                          <div style="position:relative; width:44px; height:44px; flex-shrink:0;">
-                            <img src="${p.image}" alt="${p.name}" style="width:100%; height:100%; border-radius:6px; object-fit:cover; background:#f1f5f9; border:1px solid #cbd5e1;" />
+                          <div style="position:relative; width:46px; height:46px; flex-shrink:0;">
+                            <img src="${p.image}" alt="${p.name}" onerror="this.src='/images/logo-maison-angy.svg'" style="width:100%; height:100%; border-radius:8px; object-fit:cover; background:#f1f5f9; border:1px solid #cbd5e1;" />
                             ${p.images && p.images.length > 1 ? `<span style="position:absolute; bottom:-3px; right:-3px; background:#0f172a; color:#fff; font-size:0.6rem; padding:1px 4px; border-radius:4px; font-weight:700; border:1px solid #c59b27;" title="${p.images.length} photos enregistrées">📷 ${p.images.length}</span>` : ''}
                           </div>
                           <div>
-                            <strong>${p.name}</strong>
-                            <div style="display:flex; gap:0.25rem; margin-top:0.2rem;">
-                              ${p.isFeatured ? '<span class="badge-status status-en-livraison" style="font-size:0.65rem;">⭐ EN AVANT</span>' : ''}
-                              ${p.isPromo ? '<span class="badge-status status-annule" style="font-size:0.65rem;">🏷️ PROMO</span>' : ''}
-                              ${p.published === false ? '<span class="badge-status" style="background:#cbd5e1; color:#334155; font-size:0.65rem;">👁️ MASQUÉ</span>' : '<span class="badge-status status-livre" style="font-size:0.65rem;">VISIBLE</span>'}
+                            <strong style="color:#0f172a; font-size:0.9rem;">${p.name}</strong>
+                            <div style="display:flex; gap:0.25rem; margin-top:0.25rem; flex-wrap:wrap;">
+                              ${p.isFeatured ? '<span class="badge-status status-en-livraison" style="font-size:0.62rem; padding:1px 6px;">⭐ EN AVANT</span>' : ''}
+                              ${p.isPromo ? '<span class="badge-status status-annule" style="font-size:0.62rem; padding:1px 6px;">🏷️ PROMO</span>' : ''}
+                              ${p.published === false ? '<span class="badge-status" style="background:#cbd5e1; color:#334155; font-size:0.62rem; padding:1px 6px;">👁️ MASQUÉ</span>' : '<span class="badge-status status-livre" style="font-size:0.62rem; padding:1px 6px;">EN LIGNE</span>'}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td>${p.category}</td>
-                      <td>${p.costPrice.toLocaleString('fr-FR')} ${curr}</td>
-                      <td style="${p.isPromo ? 'text-decoration:line-through; color:#94a3b8;' : 'font-weight:600;'}">${p.salePrice.toLocaleString('fr-FR')} ${curr}</td>
-                      <td>${p.isPromo ? `<strong style="color:#ef4444;">${p.promoPrice.toLocaleString('fr-FR')} ${curr}</strong>` : '-'}</td>
-                      <td><strong style="color:${margin > 0 ? '#10b981' : '#ef4444'};">+${margin.toLocaleString('fr-FR')} F (${pct}%)</strong></td>
+                      <td><span style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:0.78rem; font-weight:600;">${p.category || 'Non classé'}</span></td>
+                      ${canSeeFinance ? `<td style="color:#475569; font-weight:600;">${(p.costPrice || 0).toLocaleString('fr-FR')} ${curr}</td>` : ''}
+                      <td style="${p.isPromo ? 'text-decoration:line-through; color:#94a3b8;' : 'font-weight:700; color:#0f172a;'}">${(p.salePrice || 0).toLocaleString('fr-FR')} ${curr}</td>
+                      <td>${p.isPromo ? `<strong style="color:#ef4444;">${(p.promoPrice || 0).toLocaleString('fr-FR')} ${curr}</strong>` : '<span style="color:#94a3b8;">-</span>'}</td>
+                      ${canSeeFinance ? `<td><strong style="color:${margin > 0 ? '#10b981' : '#ef4444'};">+${margin.toLocaleString('fr-FR')} F (${pct}%)</strong></td>` : ''}
                       <td>
-                        <span style="padding:0.25rem 0.6rem; border-radius:9999px; font-weight:bold; font-size:0.85rem; background:${isLow ? '#fee2e2' : '#ecfdf5'}; color:${isLow ? '#b91c1c' : '#15803d'};">
+                        <span style="padding:0.28rem 0.65rem; border-radius:9999px; font-weight:700; font-size:0.82rem; white-space:nowrap; background:${isLow ? '#fee2e2' : '#ecfdf5'}; color:${isLow ? '#b91c1c' : '#15803d'};">
                           ${p.stock} pcs ${isLow ? '⚠️' : ''}
                         </span>
                       </td>
-                      <td>
-                        <button class="btn-sm-action" onclick="toggleProductFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la mise en avant' : 'Mettre en avant sur la page'}">
-                          ${p.isFeatured ? '⭐ Retirer' : '⭐ Mettre en avant'}
-                        </button>
-                        <button class="btn-sm-action" onclick="toggleProductPublished(${p.id})" title="${p.published === false ? 'Publier sur la boutique' : 'Masquer de la boutique'}">
-                          ${p.published === false ? '👁️ Publier' : '👁️ Masquer'}
-                        </button>
-                        <button class="btn-sm-action" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; font-weight:700;" onclick="openNewShipmentModal(${p.id})" title="Réceptionner un nouvel arrivage pour cet article">
-                          📦 Réassort
-                        </button>
-                        <button class="btn-sm-action" onclick="openProductModal(${p.id})" title="Modifier">✏️</button>
-                        <button class="btn-sm-action danger" onclick="deleteProduct(${p.id})" title="Supprimer">🗑️</button>
+                      <td style="text-align:right;">
+                        <div style="display:inline-flex; gap:0.3rem; align-items:center; flex-wrap:nowrap;">
+                          <button class="btn-sm-action" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; font-weight:700; white-space:nowrap;" onclick="openNewShipmentModal(${p.id})" title="Ajouter du stock (Nouvel arrivage)">
+                            📦 +Stock
+                          </button>
+                          <button class="btn-sm-action" onclick="toggleProductFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la mise en avant' : 'Mettre en avant sur la boutique'}">
+                            ${p.isFeatured ? '⭐' : '☆'}
+                          </button>
+                          <button class="btn-sm-action" onclick="toggleProductPublished(${p.id})" title="${p.published === false ? 'Publier sur la boutique' : 'Masquer de la boutique'}">
+                            ${p.published === false ? '🙈' : '👁️'}
+                          </button>
+                          <button class="btn-sm-action" onclick="openProductModal(${p.id})" title="Modifier cet article">✏️</button>
+                          <button class="btn-sm-action danger" onclick="deleteProduct(${p.id})" title="Supprimer cet article">🗑️</button>
+                        </div>
                       </td>
                     </tr>
                   `;
@@ -1175,16 +1306,17 @@
       `;
     }
 
-    // 5. TRIPS VIEW
+    // 5. TRIPS & EXPENSES VIEW (Déplacements Marchandises + Salaires + Charges)
     async function deleteTrip(id) {
-      if (!confirm('Supprimer ce déplacement ? (Si la transaction de caisse existe encore, elle sera aussi supprimée)')) return;
+      if (!confirm('Supprimer cette dépense / ce déplacement ? (Le montant sera automatiquement recrédité dans la caisse)')) return;
       try {
         const res = await fetch('/api/trips/' + id, { method: 'DELETE' });
         const json = await res.json();
         if (json.success) {
-          showToast('✅ Déplacement supprimé.');
+          showToast('✅ Dépense supprimée et caisse mise à jour.');
           await loadData();
-          switchView('TRIPS');
+          if (currentView === 'PROFITS') switchView('PROFITS');
+          else switchView('TRIPS');
         } else {
           alert('Erreur: ' + (json.error || 'Impossible de supprimer'));
         }
@@ -1196,15 +1328,49 @@
     function renderTrips() {
       const curr = appData.settings.currency || 'FCFA';
       const trips = appData.trips || [];
+      const totalDeplacements = trips.filter(t => (t.category || 'DEPLACEMENT') === 'DEPLACEMENT').reduce((sum, t) => sum + (t.cost || 0), 0);
+      const totalSalaires = trips.filter(t => t.category === 'SALAIRE').reduce((sum, t) => sum + (t.cost || 0), 0);
+      const totalCharges = trips.filter(t => t.category === 'CHARGE').reduce((sum, t) => sum + (t.cost || 0), 0);
       const totalCost = trips.reduce((sum, t) => sum + (t.cost || 0), 0);
 
       return `
+        <div class="kpi-grid" style="margin-bottom:1.25rem;">
+          <div class="kpi-card orange">
+            <div class="kpi-icon orange">🛵</div>
+            <div class="kpi-info">
+              <h4>Déplacements Marchandises</h4>
+              <div class="kpi-value" style="color:#ea580c;">-${totalDeplacements.toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Marché, grossistes, transport colis</div>
+            </div>
+          </div>
+          <div class="kpi-card purple">
+            <div class="kpi-icon purple">👩‍💼</div>
+            <div class="kpi-info">
+              <h4>Salaires (Assistante / Équipe)</h4>
+              <div class="kpi-value" style="color:#7c3aed;">-${totalSalaires.toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Rémunérations & commissions</div>
+            </div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-icon red">📦</div>
+            <div class="kpi-info">
+              <h4>Autres Charges Boutique</h4>
+              <div class="kpi-value" style="color:#dc2626;">-${totalCharges.toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Forfait internet Live, sachets, pub...</div>
+            </div>
+          </div>
+        </div>
+
         <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">🛵 Déplacements & Frais Logistiques (${trips.length})</div>
-            <div class="panel-tools">
-              <span style="font-weight:700; color:#b91c1c;">Total : ${totalCost.toLocaleString('fr-FR')} ${curr}</span>
-              <button class="btn-action-primary" onclick="openTripModal()">+ Nouveau Déplacement</button>
+          <div class="panel-header" style="flex-wrap:wrap; gap:0.75rem;">
+            <div>
+              <div class="panel-title">⛽ Déplacements Marchandises, Salaires & Charges (${trips.length})</div>
+              <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">Toutes ces dépenses sont automatiquement déduites de votre Gain Brut pour calculer votre vrai Bénéfice Net Réel.</p>
+            </div>
+            <div class="panel-tools" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+              <span style="font-weight:800; color:#b91c1c; background:#fef2f2; padding:0.4rem 0.75rem; border-radius:8px; border:1px solid #fecaca;">Total déduit : -${totalCost.toLocaleString('fr-FR')} ${curr}</span>
+              <button class="btn-action-primary" onclick="openTripModal('DEPLACEMENT')">🛵 + Déplacement Marchandise</button>
+              <button class="btn-action-primary" style="background:#7c3aed; color:#fff;" onclick="openTripModal('SALAIRE')">👩‍💼 + Payer Salaire / Charge</button>
             </div>
           </div>
           <div class="data-table-wrap">
@@ -1212,20 +1378,34 @@
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Motif / Destination</th>
-                  <th>Moyen Transport</th>
-                  <th>Montant Payé</th>
+                  <th>Catégorie</th>
+                  <th>Motif / Détails</th>
+                  <th>Mode / Moyen</th>
+                  <th>Montant Déduit</th>
+                  <th style="text-align:right;">Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${trips.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:3rem;">Aucun déplacement enregistré pour octobre.</td></tr>' : trips.map(t => `
+                ${trips.length === 0 ? '<tr><td colspan="6" style="text-align:center; padding:3rem;">Aucun déplacement ni charge enregistré pour le moment.</td></tr>' : trips.slice().reverse().map(t => {
+                  const cat = t.category || 'DEPLACEMENT';
+                  const catBadge = cat === 'SALAIRE'
+                    ? '<span class="badge-status" style="background:#ede9fe; color:#6d28d9; font-weight:700;">👩‍💼 SALAIRE</span>'
+                    : cat === 'CHARGE'
+                    ? '<span class="badge-status" style="background:#fee2e2; color:#b91c1c; font-weight:700;">📦 CHARGE BOUTIQUE</span>'
+                    : '<span class="badge-status status-a-recuperer">🛵 DÉPLACEMENT MARCHANDISE</span>';
+                  return `
                   <tr>
-                    <td>${t.dateTime}</td>
+                    <td style="white-space:nowrap; font-size:0.82rem; color:#475569; font-weight:600;">${t.dateTime || t.date || '-'}</td>
+                    <td>${catBadge}</td>
                     <td><strong>${t.description}</strong></td>
-                    <td><span class="badge-status status-a-recuperer">${t.transportType}</span></td>
-                    <td><strong style="color:#b91c1c;">-${t.cost.toLocaleString('fr-FR')} ${curr}</strong></td>
+                    <td><span style="font-size:0.8rem; color:#475569;">${t.transportType || '-'}</span></td>
+                    <td><strong style="color:#b91c1c;">-${(t.cost || 0).toLocaleString('fr-FR')} ${curr}</strong></td>
+                    <td style="text-align:right;">
+                      <button class="btn-sm-action danger" onclick="deleteTrip(${t.id})" title="Supprimer cette dépense">🗑️</button>
+                    </td>
                   </tr>
-                `).join('')}
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -1233,7 +1413,7 @@
       `;
     }
 
-    // 6. CASH VIEW (81 500 F)
+    // 6. CASH VIEW
     async function deleteCash(id) {
       if (!confirm('Supprimer cette transaction de caisse ? Seule la plus récente peut être supprimée.')) return;
       try {
@@ -1261,9 +1441,9 @@
           <div>
             <span style="font-size:0.8rem; color:#c59b27; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Solde de Caisse en Direct</span>
             <h2 style="font-size:2.2rem; margin-top:0.25rem;">${cash.toLocaleString('fr-FR')} ${curr}</h2>
-            <p style="color:#94a3b8; font-size:0.85rem;">Solde réel prêt pour vos nouveaux arrivages d'Octobre 2026</p>
+            <p style="color:#94a3b8; font-size:0.85rem;">Solde réel disponible en caisse (espèces & Mobile Money)</p>
           </div>
-          <div style="display:flex; gap:0.75rem;">
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
             <button class="btn-action-primary" style="background:#10b981; color:#fff;" onclick="openCashModal('DEPOT')">+ Dépôt / Entrée Espèces</button>
             <button class="btn-action-primary" style="background:#ef4444; color:#fff;" onclick="openCashModal('RETRAIT')">+ Retrait / Dépense</button>
           </div>
@@ -1281,6 +1461,7 @@
                   <th>Commentaire</th>
                   <th>Entrée (Encaissement / Dépôt)</th>
                   <th>Sortie (Retrait)</th>
+                  <th style="text-align:right;">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -1306,59 +1487,280 @@
       `;
     }
 
-    // 7. PROFITS VIEW
+    // 7. PROFITS VIEW (Bénéfice Brut - Déplacements Marchandises - Salaires & Charges = Bénéfice Net Réel par Mois)
+    window.selectedProfitMonth = window.selectedProfitMonth || 'ALL';
+
+    function formatMonthLabel(ym) {
+      if (!ym || ym === 'ALL') return 'Tous les mois (Cumul Global)';
+      const names = {
+        '01': 'Janvier', '02': 'Février', '03': 'Mars', '04': 'Avril',
+        '05': 'Mai', '06': 'Juin', '07': 'Juillet', '08': 'Août',
+        '09': 'Septembre', '10': 'Octobre', '11': 'Novembre', '12': 'Décembre'
+      };
+      const parts = ym.split('-');
+      if (parts.length === 2) return `${names[parts[1]] || parts[1]} ${parts[0]}`;
+      return ym;
+    }
+
+    function extractYearMonth(dateStr) {
+      if (!dateStr) return '2026-10';
+      const s = String(dateStr).trim();
+      // Format YYYY-MM-DD
+      if (/^\d{4}-\d{2}/.test(s)) return s.slice(0, 7);
+      // Format DD/MM/YYYY
+      const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (m) return `${m[3]}-${m[2]}`;
+      return '2026-10';
+    }
+
+    function changeProfitMonth(ym) {
+      window.selectedProfitMonth = ym;
+      renderView();
+    }
+
     function renderProfits() {
-      const s = appData.stats || {};
       const curr = appData.settings.currency || 'FCFA';
+      const deliveredOrders = (appData.orders || []).filter(o => o.status === 'LIVRE');
+      const allTrips = appData.trips || [];
+      const allCash = appData.cashTransactions || [];
+
+      // Collect all available months
+      const monthSet = new Set(['2026-10', new Date().toISOString().slice(0, 7)]);
+      deliveredOrders.forEach(o => monthSet.add(extractYearMonth(o.date || o.createdAt)));
+      allTrips.forEach(t => monthSet.add(extractYearMonth(t.date || t.dateTime)));
+      allCash.forEach(c => {
+        if (c.category === 'SALAIRE' || c.category === 'CHARGE' || /salaire|paie|gérante|assistante/i.test(c.commentaires || '')) {
+          monthSet.add(extractYearMonth(c.date || c.dateTime));
+        }
+      });
+      const availableMonths = Array.from(monthSet).sort().reverse();
+
+      // Helper to compute stats for a given month ('ALL' or 'YYYY-MM')
+      function computeMonthBreakdown(ym) {
+        const ords = ym === 'ALL' ? deliveredOrders : deliveredOrders.filter(o => extractYearMonth(o.date || o.createdAt) === ym);
+        const trps = ym === 'ALL' ? allTrips : allTrips.filter(t => extractYearMonth(t.date || t.dateTime) === ym);
+        const csh = ym === 'ALL' ? allCash : allCash.filter(c => extractYearMonth(c.date || c.dateTime) === ym);
+
+        const sales = ords.reduce((sum, o) => sum + (o.totalItems || 0), 0);
+        const costOfGoods = ords.reduce((sum, o) => sum + ((o.totalItems || 0) - (o.marginNet || o.marginGross || 0)), 0);
+        const grossGain = ords.reduce((sum, o) => sum + (o.marginNet || o.marginGross || 0), 0);
+
+        const tripsDeplacement = trps.filter(t => (t.category || 'DEPLACEMENT') === 'DEPLACEMENT').reduce((sum, t) => sum + (t.cost || 0), 0);
+        const tripsSalaire = trps.filter(t => t.category === 'SALAIRE').reduce((sum, t) => sum + (t.cost || 0), 0);
+        const tripsCharge = trps.filter(t => t.category === 'CHARGE').reduce((sum, t) => sum + (t.cost || 0), 0);
+
+        const cashSalaire = csh.filter(c => !c.tripId && (c.category === 'SALAIRE' || /salaire|paie|gérante|assistante/i.test(c.commentaires || ''))).reduce((sum, c) => sum + (c.retrait || 0), 0);
+        const cashCharge = csh.filter(c => !c.tripId && c.category === 'CHARGE').reduce((sum, c) => sum + (c.retrait || 0), 0);
+
+        const totalDeplacements = tripsDeplacement;
+        const totalSalaires = tripsSalaire + cashSalaire;
+        const totalCharges = tripsCharge + cashCharge;
+        const netReal = grossGain - totalDeplacements - totalSalaires - totalCharges;
+
+        return {
+          orders: ords,
+          trips: trps,
+          sales,
+          costOfGoods,
+          grossGain,
+          totalDeplacements,
+          totalSalaires,
+          totalCharges,
+          netReal
+        };
+      }
+
+      const selMonth = window.selectedProfitMonth || 'ALL';
+      const cur = computeMonthBreakdown(selMonth);
 
       return `
-        <div class="kpi-grid">
-          <div class="kpi-card green">
-            <div class="kpi-icon green">🪙</div>
-            <div class="kpi-info">
-              <h4>Ventes Encaissées</h4>
-              <div class="kpi-value">${(s.totalSales || 0).toLocaleString('fr-FR')} ${curr}</div>
+        <!-- BARRE DE SELECTION DU MOIS ET ACTIONS RAPIDES -->
+        <div class="panel" style="margin-bottom:1.25rem; padding:1rem 1.25rem; background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; border-bottom:3px solid #c59b27;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+              <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#c59b27; font-weight:700;">📊 Calcul Comptable Réel — Maison Angy</span>
+              <h3 style="font-size:1.25rem; margin-top:0.2rem; color:#fff;">Bilan : ${formatMonthLabel(selMonth)}</h3>
+              <p style="font-size:0.82rem; color:#cbd5e1; margin-top:2px;">Formule appliquée : <strong>Gain Brut Ventes</strong> − <strong>Déplacements Marchandises</strong> − <strong>Salaires & Charges</strong> = <strong>Bénéfice Net Réel</strong></p>
             </div>
-          </div>
-
-          <div class="kpi-card gold">
-            <div class="kpi-icon gold">📈</div>
-            <div class="kpi-info">
-              <h4>Bénéfice Net Réalisé</h4>
-              <div class="kpi-value">${(s.totalNetMargin || 0).toLocaleString('fr-FR')} ${curr}</div>
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <select onchange="changeProfitMonth(this.value)" style="padding:0.55rem 0.9rem; border-radius:8px; border:1.5px solid #c59b27; background:#0f172a; color:#fef3c7; font-weight:700; font-size:0.85rem; cursor:pointer;">
+                <option value="ALL" ${selMonth === 'ALL' ? 'selected' : ''}>📅 Tous les mois (Cumul)</option>
+                ${availableMonths.map(ym => `<option value="${ym}" ${selMonth === ym ? 'selected' : ''}>🗓️ ${formatMonthLabel(ym)}</option>`).join('')}
+              </select>
+              <button class="btn-action-primary" onclick="openTripModal('DEPLACEMENT')" style="background:#ea580c; color:#fff;">
+                🛵 + Déplacement Marchandise
+              </button>
+              <button class="btn-action-primary" onclick="openTripModal('SALAIRE')" style="background:#7c3aed; color:#fff;">
+                👩‍💼 + Salaire / Charge
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="panel">
+        <!-- LES 4 CARTES DU CALCUL DU BENEFICE NET REEL -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
+          <div class="kpi-card green">
+            <div class="kpi-icon green">1️⃣</div>
+            <div class="kpi-info">
+              <h4>Gain Brut sur Ventes</h4>
+              <div class="kpi-value" style="color:#059669;">+${cur.grossGain.toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Ventes (${cur.sales.toLocaleString('fr-FR')} F) − Achat (${cur.costOfGoods.toLocaleString('fr-FR')} F)</div>
+            </div>
+          </div>
+
+          <div class="kpi-card orange">
+            <div class="kpi-icon orange">2️⃣</div>
+            <div class="kpi-info">
+              <h4>− Déplacements Marchandises</h4>
+              <div class="kpi-value" style="color:#ea580c;">-${cur.totalDeplacements.toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Courses marché, grossistes, colis</div>
+            </div>
+          </div>
+
+          <div class="kpi-card purple">
+            <div class="kpi-icon purple">3️⃣</div>
+            <div class="kpi-info">
+              <h4>− Salaires & Charges</h4>
+              <div class="kpi-value" style="color:#7c3aed;">-${(cur.totalSalaires + cur.totalCharges).toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Salaires (${cur.totalSalaires.toLocaleString('fr-FR')} F) + Charges (${cur.totalCharges.toLocaleString('fr-FR')} F)</div>
+            </div>
+          </div>
+
+          <div class="kpi-card gold" style="border:2px solid ${cur.netReal >= 0 ? '#10b981' : '#ef4444'}; background:${cur.netReal >= 0 ? '#f0fdf4' : '#fef2f2'};">
+            <div class="kpi-icon gold">✅</div>
+            <div class="kpi-info">
+              <h4 style="color:#0f172a; font-weight:800;">= BÉNÉFICE NET RÉEL (Ce qu'il reste)</h4>
+              <div class="kpi-value" style="color:${cur.netReal >= 0 ? '#15803d' : '#b91c1c'}; font-size:1.55rem;">
+                ${cur.netReal >= 0 ? '+' : ''}${cur.netReal.toLocaleString('fr-FR')} ${curr}
+              </div>
+              <div class="kpi-sub" style="font-weight:700; color:#334155;">
+                ${selMonth === 'ALL' ? 'Reste net en poche sur toutes les périodes' : 'Ce qu\'il reste vraiment en ' + formatMonthLabel(selMonth)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLEAU RECAPITULATIF MOIS PAR MOIS (Ex: En Octobre il reste tel montant) -->
+        <div class="panel" style="margin-bottom:1.5rem;">
           <div class="panel-header">
-            <div class="panel-title">🔎 Rentabilité Détaillée des Ventes d'Octobre</div>
+            <div>
+              <div class="panel-title">🗓️ Bilan Mois par Mois : Ce qu'il vous reste réellement</div>
+              <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">Cliquez sur un mois pour voir le détail des ventes et des déplacements de ce mois.</p>
+            </div>
           </div>
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Commande</th>
-                  <th>Articles</th>
-                  <th>Prix Vente</th>
-                  <th>Coût Achat</th>
-                  <th>Bénéfice Net</th>
+                  <th>Mois</th>
+                  <th>Chiffre d'Affaires</th>
+                  <th>Gain Brut (Marge Ventes)</th>
+                  <th>− Déplacements Marchandises</th>
+                  <th>− Salaires & Charges</th>
+                  <th>= Bénéfice Net Réel (Reste)</th>
+                  <th style="text-align:right;">Détail</th>
                 </tr>
               </thead>
               <tbody>
-                ${(appData.orders || []).filter(o => o.status === 'LIVRE').length === 0 ? `
-                  <tr><td colspan="5" style="text-align:center; padding:3rem;">Vos calculs de rentabilité nette apparaîtront dès que vos premières commandes d'octobre seront livrées.</td></tr>
-                ` : appData.orders.filter(o => o.status === 'LIVRE').map(o => `
-                  <tr>
-                    <td><strong>${o.id}</strong> (${o.customerName})</td>
-                    <td>${o.items.map(i => i.productName).join(', ')}</td>
-                    <td>${o.totalItems.toLocaleString('fr-FR')} F</td>
-                    <td>${(o.totalItems - o.marginGross).toLocaleString('fr-FR')} F</td>
-                    <td><strong style="color:#059669;">+${o.marginNet.toLocaleString('fr-FR')} F</strong></td>
-                  </tr>
-                `).join('')}
+                ${availableMonths.map(ym => {
+                  const m = computeMonthBreakdown(ym);
+                  const isSelected = selMonth === ym;
+                  return `
+                    <tr style="${isSelected ? 'background:#fefce8;' : ''}">
+                      <td><strong>🗓️ ${formatMonthLabel(ym)}</strong></td>
+                      <td>${m.sales.toLocaleString('fr-FR')} ${curr} <span style="font-size:0.75rem; color:#64748b;">(${m.orders.length} cmd)</span></td>
+                      <td><strong style="color:#059669;">+${m.grossGain.toLocaleString('fr-FR')} ${curr}</strong></td>
+                      <td><strong style="color:#ea580c;">-${m.totalDeplacements.toLocaleString('fr-FR')} ${curr}</strong></td>
+                      <td><strong style="color:#7c3aed;">-${(m.totalSalaires + m.totalCharges).toLocaleString('fr-FR')} ${curr}</strong></td>
+                      <td>
+                        <span style="padding:0.3rem 0.7rem; border-radius:8px; font-weight:800; font-size:0.9rem; background:${m.netReal >= 0 ? '#dcfce7' : '#fee2e2'}; color:${m.netReal >= 0 ? '#15803d' : '#b91c1c'};">
+                          ${m.netReal >= 0 ? '+' : ''}${m.netReal.toLocaleString('fr-FR')} ${curr}
+                        </span>
+                      </td>
+                      <td style="text-align:right;">
+                        <button class="btn-sm-action" onclick="changeProfitMonth('${ym}')">🔎 Voir ce mois</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- DETAIL DES VENTES ET DES CHARGES DU MOIS SELECTIONNE -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap:1.25rem;">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🛍️ Gains Bruts par Vente Livrée (${cur.orders.length})</div>
+            </div>
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date / Cmd</th>
+                    <th>Articles</th>
+                    <th>Prix Vente</th>
+                    <th>Coût Achat</th>
+                    <th>Gain Brut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${cur.orders.length === 0 ? `
+                    <tr><td colspan="5" style="text-align:center; padding:2.5rem; color:#64748b;">Aucune vente livrée sur cette période.</td></tr>
+                  ` : cur.orders.map(o => `
+                    <tr>
+                      <td>
+                        <strong>${o.id}</strong><br/>
+                        <small style="color:#64748b;">${o.date || ''} • ${o.customerName}</small>
+                      </td>
+                      <td style="font-size:0.82rem;">${(o.items || []).map(i => `${i.productName} (x${i.quantity || 1})`).join(', ')}</td>
+                      <td>${(o.totalItems || 0).toLocaleString('fr-FR')} F</td>
+                      <td>${((o.totalItems || 0) - (o.marginNet || o.marginGross || 0)).toLocaleString('fr-FR')} F</td>
+                      <td><strong style="color:#059669;">+${(o.marginNet || o.marginGross || 0).toLocaleString('fr-FR')} F</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">⛽ Déplacements & Salaires Déduits (${cur.trips.length})</div>
+              <button class="btn-sm-action" onclick="openTripModal('DEPLACEMENT')">+ Ajouter</button>
+            </div>
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Motif</th>
+                    <th>Montant</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${cur.trips.length === 0 ? `
+                    <tr><td colspan="5" style="text-align:center; padding:2.5rem; color:#64748b;">Aucun déplacement ni salaire déduit sur cette période.</td></tr>
+                  ` : cur.trips.slice().reverse().map(t => {
+                    const cat = t.category || 'DEPLACEMENT';
+                    return `
+                    <tr>
+                      <td style="font-size:0.78rem; color:#64748b; white-space:nowrap;">${t.date || t.dateTime || '-'}</td>
+                      <td><span style="font-size:0.72rem; font-weight:700; padding:2px 6px; border-radius:4px; background:${cat === 'SALAIRE' ? '#ede9fe' : cat === 'CHARGE' ? '#fee2e2' : '#ffedd5'}; color:${cat === 'SALAIRE' ? '#6d28d9' : cat === 'CHARGE' ? '#b91c1c' : '#c2410c'};">${cat}</span></td>
+                      <td><strong>${t.description}</strong></td>
+                      <td><strong style="color:#b91c1c;">-${(t.cost || 0).toLocaleString('fr-FR')} F</strong></td>
+                      <td style="text-align:right;">
+                        <button class="btn-sm-action danger" onclick="deleteTrip(${t.id})" title="Supprimer">🗑️</button>
+                      </td>
+                    </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       `;
@@ -2160,40 +2562,59 @@
       }
     }
 
-    // Modal: Trip
-    function openTripModal() {
+    // Modal: Trip / Expense (Déplacement Marchandise, Salaire Assistante, Charge Boutique)
+    function openTripModal(defaultCategory = 'DEPLACEMENT') {
       const curr = appData.settings.currency || 'FCFA';
+      const today = new Date().toISOString().slice(0, 10);
       document.getElementById('modalContainer').innerHTML = `
         <div class="admin-modal-overlay active">
           <div class="admin-modal-card">
             <div class="modal-head">
-              <h3>Enregistrer un Déplacement ou Frais Logistique</h3>
+              <h3>⛽ Enregistrer un Déplacement, Salaire ou Charge</h3>
               <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             <form onsubmit="handleSaveTrip(event)">
               <div class="modal-body">
+                <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:0.85rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Type de dépense (déduit du Bénéfice) *</label>
+                    <select id="trip_category" onchange="updateTripModalPlaceholders(this.value)" style="width:100%; padding:0.6rem; border-radius:6px; border:1.5px solid #cbd5e1; font-weight:700;">
+                      <option value="DEPLACEMENT" ${defaultCategory === 'DEPLACEMENT' ? 'selected' : ''}>🛵 Déplacement Marchandise (Marché, Colis...)</option>
+                      <option value="SALAIRE" ${defaultCategory === 'SALAIRE' ? 'selected' : ''}>👩‍💼 Salaire (Assistante / Équipe)</option>
+                      <option value="CHARGE" ${defaultCategory === 'CHARGE' ? 'selected' : ''}>📦 Charge Boutique (Internet Live, Sachets...)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Date (Mois comptable) *</label>
+                    <input type="date" id="trip_date" required value="${today}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  </div>
+                </div>
                 <div style="margin-bottom:1rem;">
-                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Motif / Destination *</label>
-                  <input type="text" id="trip_desc" required placeholder="Ex: Taxi aller-retour Grand Marché (Assigamé), Assiyéyé, colis gare..." style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                  <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Motif / Destination / Détails *</label>
+                  <input type="text" id="trip_desc" required placeholder="${defaultCategory === 'SALAIRE' ? 'Ex: Salaire Assistante Octobre, Commission Live...' : 'Ex: Taxi aller-retour Grand Marché (Assigamé), Vakpossito...'}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                   <div>
                     <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Montant payé (${curr}) *</label>
-                    <input type="number" id="trip_cost" required value="2000" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;" />
+                    <input type="number" id="trip_cost" required value="${defaultCategory === 'SALAIRE' ? '15000' : '2000'}" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1; font-weight:700;" />
                   </div>
                   <div>
-                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Transport</label>
+                    <label style="display:block; font-weight:600; margin-bottom:0.35rem;">Moyen / Mode</label>
                     <select id="trip_type" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #cbd5e1;">
                       <option value="TAXI_MOTO">Moto / Zémidjan</option>
                       <option value="TAXI">Taxi Ville</option>
-                      <option value="BUS_CAR">Car / Agence</option>
+                      <option value="BUS_CAR">Car / Agence / Colis</option>
+                      <option value="ESPECES_TMONEY">Espèces / Mixx / Flooz</option>
                     </select>
                   </div>
+                </div>
+                <div style="background:#f8fafc; border-left:3px solid #c59b27; padding:0.65rem 0.85rem; border-radius:6px; font-size:0.8rem; color:#475569;">
+                  💡 Ce montant sera déduit de votre <strong>Caisse</strong> et retiré de votre <strong>Gain Brut</strong> pour calculer votre <strong>Bénéfice Net Réel</strong> du mois choisi.
                 </div>
               </div>
               <div class="modal-foot">
                 <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
-                <button type="submit" class="btn-primary-modal">Enregistrer la sortie</button>
+                <button type="submit" class="btn-primary-modal">Enregistrer & Déduire du Bénéfice</button>
               </div>
             </form>
           </div>
@@ -2201,20 +2622,45 @@
       `;
     }
 
+    function updateTripModalPlaceholders(cat) {
+      const desc = document.getElementById('trip_desc');
+      const cost = document.getElementById('trip_cost');
+      const type = document.getElementById('trip_type');
+      if (!desc) return;
+      if (cat === 'SALAIRE') {
+        desc.placeholder = 'Ex: Salaire Assistante Octobre, Prime Live TikTok...';
+        if (cost && cost.value === '2000') cost.value = '15000';
+        if (type) type.value = 'ESPECES_TMONEY';
+      } else if (cat === 'CHARGE') {
+        desc.placeholder = 'Ex: Forfait Internet Live TikTok, Sachets emballage, Publicité...';
+        if (type) type.value = 'ESPECES_TMONEY';
+      } else {
+        desc.placeholder = 'Ex: Taxi aller-retour Grand Marché (Assigamé), Vakpossito...';
+        if (type) type.value = 'TAXI_MOTO';
+      }
+    }
+
     async function handleSaveTrip(e) {
       e.preventDefault();
+      const cat = document.getElementById('trip_category') ? document.getElementById('trip_category').value : 'DEPLACEMENT';
+      const dateVal = document.getElementById('trip_date') ? document.getElementById('trip_date').value : '';
       await fetch('/api/trips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          category: cat,
+          date: dateVal,
+          dateTime: dateVal,
           description: document.getElementById('trip_desc').value,
           cost: parseFloat(document.getElementById('trip_cost').value) || 0,
           transportType: document.getElementById('trip_type').value
         })
       });
       closeModal();
-      showToast('Déplacement déduit de la caisse.');
-      loadData();
+      showToast('✅ Dépense enregistrée et déduite du Bénéfice Net Réel.');
+      await loadData();
+      if (currentView === 'PROFITS') switchView('PROFITS');
+      else if (currentView === 'TRIPS') switchView('TRIPS');
     }
 
     // Modal: Cash

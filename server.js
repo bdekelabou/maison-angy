@@ -137,33 +137,61 @@ function recalculateCash(db) {
 
 // Compute key performance statistics
 function computeStats(db) {
-  const totalSales = db.orders
-    .filter(o => o.status !== 'ANNULE')
+  const validOrders = (db.orders || []).filter(o => o.status !== 'ANNULE');
+  const paidOrDeliveredOrders = validOrders.filter(o => o.status === 'LIVRE' || o.paymentStatus === 'PAYE' || (o.amountPaid && o.amountPaid > 0));
+
+  const totalSales = validOrders
     .reduce((sum, o) => sum + (o.amountPaid !== undefined ? o.amountPaid : (o.paymentStatus === 'PAYE' || o.status === 'LIVRE' ? o.totalOrder : 0)), 0);
 
-  const totalGrossMargin = db.orders
-    .filter(o => o.status === 'LIVRE' || o.paymentStatus === 'PAYE')
-    .reduce((sum, o) => sum + (o.marginGross || 0), 0);
+  // Gain brut sur les ventes (Prix de vente - Coût d'achat des articles vendus)
+  const totalGrossMargin = paidOrDeliveredOrders
+    .reduce((sum, o) => sum + (o.marginNet !== undefined ? o.marginNet : (o.marginGross || 0)), 0);
 
-  const totalNetMargin = db.orders
-    .filter(o => o.status === 'LIVRE' || o.paymentStatus === 'PAYE')
-    .reduce((sum, o) => sum + (o.marginNet || 0), 0);
+  // Frais de déplacement pour les marchandises
+  const trips = db.trips || [];
+  const totalTripsCost = trips
+    .filter(t => !t.category || t.category === 'DEPLACEMENT')
+    .reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
 
-  const totalDebts = db.orders
-    .filter(o => o.status !== 'ANNULE')
+  // Salaires et autres charges enregistrés dans Déplacements/Charges ou Caisse
+  const tripsSalaries = trips
+    .filter(t => t.category === 'SALAIRE')
+    .reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+
+  const tripsCharges = trips
+    .filter(t => t.category === 'CHARGE')
+    .reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0);
+
+  const cashSalaries = (db.cashTransactions || [])
+    .filter(c => c.retrait > 0 && !c.fromTrip && (c.category === 'SALAIRE' || /salaire|paie /i.test(c.commentaires || '')))
+    .reduce((sum, c) => sum + (parseFloat(c.retrait) || 0), 0);
+
+  const cashCharges = (db.cashTransactions || [])
+    .filter(c => c.retrait > 0 && !c.fromTrip && c.category === 'CHARGE')
+    .reduce((sum, c) => sum + (parseFloat(c.retrait) || 0), 0);
+
+  const totalSalariesCost = tripsSalaries + cashSalaries;
+  const totalOtherCharges = tripsCharges + cashCharges;
+
+  // Bénéfice Net Réel = Gain Brut - Déplacements Marchandises - Salaires - Charges
+  const totalNetMargin = totalGrossMargin - totalTripsCost - totalSalariesCost - totalOtherCharges;
+
+  const totalDebts = validOrders
     .reduce((sum, o) => sum + (o.remainingAmount !== undefined ? o.remainingAmount : 0), 0);
 
-  const debtOrdersCount = db.orders
-    .filter(o => o.status !== 'ANNULE' && (o.remainingAmount > 0)).length;
+  const debtOrdersCount = validOrders.filter(o => (o.remainingAmount > 0)).length;
 
-  const pendingOrders = db.orders.filter(o => o.status !== 'LIVRE' && o.status !== 'ANNULE').length;
-  const lowStockCount = db.products.filter(p => p.stock <= (p.minStockAlert || 3)).length;
-  const totalStockValue = db.products.reduce((sum, p) => sum + (p.stock * (p.costPrice || 0)), 0);
-  const totalPotentialSale = db.products.reduce((sum, p) => sum + (p.stock * (p.isPromo ? p.promoPrice : p.salePrice)), 0);
+  const pendingOrders = validOrders.filter(o => o.status !== 'LIVRE').length;
+  const lowStockCount = (db.products || []).filter(p => p.stock <= (p.minStockAlert || 3)).length;
+  const totalStockValue = (db.products || []).reduce((sum, p) => sum + (p.stock * (p.costPrice || 0)), 0);
+  const totalPotentialSale = (db.products || []).reduce((sum, p) => sum + (p.stock * (p.isPromo ? p.promoPrice : p.salePrice)), 0);
 
   return {
     totalSales,
     totalGrossMargin,
+    totalTripsCost,
+    totalSalariesCost,
+    totalOtherCharges,
     totalNetMargin,
     totalDebts,
     debtOrdersCount,
@@ -172,8 +200,8 @@ function computeStats(db) {
     totalStockValue,
     totalPotentialSale,
     currentCash: db.settings.currentCash || 81500,
-    productCount: db.products.length,
-    orderCount: db.orders.length
+    productCount: (db.products || []).length,
+    orderCount: (db.orders || []).length
   };
 }
 
@@ -1089,31 +1117,39 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/trips' && req.method === 'POST') {
       const data = await parseBody(req);
-      const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      const nowIso = new Date().toISOString();
+      const nowStr = data.date ? (data.date + ' ' + nowIso.substring(11, 19)) : nowIso.replace('T', ' ').substring(0, 19);
       const cost = parseFloat(data.cost) || 0;
+      const category = data.category || 'DEPLACEMENT'; // DEPLACEMENT | SALAIRE | CHARGE
+      const prefixLabel = category === 'SALAIRE' ? 'Salaire: ' : (category === 'CHARGE' ? 'Charge: ' : 'Déplacement: ');
       const newTrip = {
         id: db.trips.length > 0 ? Math.max(...db.trips.map(t => t.id)) + 1 : 1,
         dateTime: nowStr,
-        description: data.description || 'Frais de transport / Déplacement',
+        category: category,
+        description: data.description || (category === 'SALAIRE' ? 'Salaire Assistante / Équipe' : 'Frais de transport / Déplacement'),
         cost: cost,
-        transportType: data.transportType || 'TAXI_MOTO',
+        transportType: data.transportType || (category === 'SALAIRE' ? 'SALAIRE' : (category === 'CHARGE' ? 'CHARGE' : 'TAXI_MOTO')),
         relatedSupplierOrder: data.relatedSupplierOrder || '',
         notes: data.notes || ''
       };
       db.trips.unshift(newTrip);
 
       // Record in cash register as withdrawal
+      const nextCashId = db.cashTransactions.length > 0 ? Math.max(...db.cashTransactions.map(c => c.id || 0)) + 1 : 1;
       db.cashTransactions.push({
-        id: db.cashTransactions.length + 1,
+        id: nextCashId,
         dateTime: nowStr,
-        user: 'Ange Ines',
+        user: data.user || 'Ange Ines',
         retrait: cost,
         depot: 0,
         encaissement: 0,
         creditClient: '',
         ecart: 0,
         total: 0,
-        commentaires: 'Déplacement: ' + newTrip.description
+        category: category,
+        fromTrip: true,
+        tripId: newTrip.id,
+        commentaires: prefixLabel + newTrip.description
       });
       recalculateCash(db);
       await saveDb(db);
@@ -1129,7 +1165,7 @@ const server = http.createServer(async (req, res) => {
       const idx = db.trips.findIndex(t => t.id === id);
       if (idx !== -1) {
         const trip = db.trips[idx];
-        const cashIdx = db.cashTransactions.findIndex(c => c.retrait === trip.cost && c.commentaires === 'Déplacement: ' + trip.description && c.dateTime === trip.dateTime);
+        const cashIdx = db.cashTransactions.findIndex(c => c.tripId === trip.id || (c.retrait === trip.cost && c.dateTime === trip.dateTime));
         if (cashIdx !== -1) {
           db.cashTransactions.splice(cashIdx, 1);
           recalculateCash(db);
@@ -1157,9 +1193,11 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/cash' && req.method === 'POST') {
       const data = await parseBody(req);
-      const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      const nowIso = new Date().toISOString();
+      const nowStr = data.date ? (data.date + ' ' + nowIso.substring(11, 19)) : nowIso.replace('T', ' ').substring(0, 19);
+      const nextCashId = db.cashTransactions.length > 0 ? Math.max(...db.cashTransactions.map(c => c.id || 0)) + 1 : 1;
       const newTx = {
-        id: db.cashTransactions.length + 1,
+        id: nextCashId,
         dateTime: nowStr,
         user: data.user || 'Ange Ines',
         retrait: parseFloat(data.retrait) || 0,
@@ -1168,6 +1206,7 @@ const server = http.createServer(async (req, res) => {
         creditClient: data.creditClient || '',
         ecart: parseFloat(data.ecart) || 0,
         total: 0,
+        category: data.category || '',
         commentaires: data.commentaires || ''
       };
       db.cashTransactions.push(newTx);
