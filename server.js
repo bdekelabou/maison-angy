@@ -751,7 +751,15 @@ const server = http.createServer(async (req, res) => {
     // CREATE ORDER (From Client Store or Direct POS / Admin)
     if (pathname === '/api/orders' && req.method === 'POST') {
       const data = await parseBody(req);
-      const orderId = 'CMD-' + new Date().getFullYear() + '-' + String(db.orders.length + 1).padStart(3, '0');
+      const maxNum = (db.orders || []).reduce((max, o) => {
+        const m = String(o.id || '').match(/CMD-\d{4}-(\d+)/);
+        if (m) {
+          const num = parseInt(m[1], 10);
+          return num > max ? num : max;
+        }
+        return max;
+      }, 0);
+      const orderId = 'CMD-' + new Date().getFullYear() + '-' + String(maxNum + 1).padStart(3, '0');
       
       const items = (data.items || []).map(item => {
         const prod = db.products.find(p => p.id === parseInt(item.productId));

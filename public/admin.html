@@ -3746,6 +3746,12 @@
 
     async function handleSaveDirectSale(e) {
       e.preventDefault();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        if (submitBtn.disabled) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Enregistrement...';
+      }
       const customerName = document.getElementById('sale_customer_name').value.trim();
       const customerPhone = document.getElementById('sale_customer_phone').value.trim();
       const deliveryMode = document.getElementById('sale_delivery_mode').value;
@@ -3880,6 +3886,12 @@
 
     async function handleSavePayment(e, orderId) {
       e.preventDefault();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        if (submitBtn.disabled) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Enregistrement...';
+      }
       const amount = parseFloat(document.getElementById('pay_amount').value) || 0;
       const method = document.getElementById('pay_method').value;
       const note = document.getElementById('pay_note').value.trim();
@@ -4016,7 +4028,9 @@
     }
 
     async function deleteOrder(orderId) {
-      if (!confirm('Supprimer cette commande/vente ? Les articles vendus seront automatiquement remis en stock.')) return;
+      const o = (appData.orders || []).find(ord => ord.id === orderId);
+      const name = o ? (' (' + o.id + ' - ' + o.customerName + ')') : (' (' + orderId + ')');
+      if (!confirm('Supprimer cette commande/vente' + name + ' ? Les articles vendus seront automatiquement remis en stock.')) return;
       try {
         const res = await fetch('/api/orders/' + orderId, { method: 'DELETE' });
         const json = await res.json();
