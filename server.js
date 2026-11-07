@@ -940,6 +940,45 @@ const server = http.createServer(async (req, res) => {
         const oldOrder = db.orders[idx];
         const updated = { ...oldOrder, ...data };
 
+        // If items are being updated
+        if (data.items && Array.isArray(data.items)) {
+          // Revert old items stock
+          (oldOrder.items || []).forEach(it => {
+            const p = db.products.find(prod => prod.id === parseInt(it.productId));
+            if (p) p.stock = (p.stock || 0) + (parseInt(it.quantity) || 0);
+          });
+          // Prepare new items
+          const newItems = data.items.map(it => {
+            const prod = db.products.find(p => p.id === parseInt(it.productId));
+            const unitCost = prod ? (prod.costPrice || 0) : (it.costPrice || 0);
+            const unitPrice = parseFloat(it.unitPrice) || 0;
+            const qty = parseInt(it.quantity) || 1;
+            return {
+              productId: parseInt(it.productId),
+              productName: it.productName || (prod ? prod.name : 'Article'),
+              selectedSize: it.selectedSize || '',
+              selectedColor: it.selectedColor || '',
+              quantity: qty,
+              unitPrice: unitPrice,
+              costPrice: unitCost,
+              total: unitPrice * qty
+            };
+          });
+          // Deduct new items stock
+          newItems.forEach(it => {
+            const p = db.products.find(prod => prod.id === parseInt(it.productId));
+            if (p) p.stock = Math.max(0, (p.stock || 0) - it.quantity);
+          });
+          updated.items = newItems;
+          const totalItems = newItems.reduce((sum, it) => sum + it.total, 0);
+          updated.totalItems = totalItems;
+          updated.totalOrder = totalItems + (updated.deliveryFeePayer === 'CLIENT' ? (parseFloat(updated.deliveryFee) || 0) : 0);
+          updated.remainingAmount = Math.max(0, updated.totalOrder - (updated.amountPaid || 0));
+          if (updated.remainingAmount === 0 && (updated.amountPaid || 0) > 0) updated.paymentStatus = 'PAYE';
+          else if ((updated.amountPaid || 0) > 0 && updated.remainingAmount > 0) updated.paymentStatus = 'PARTIEL';
+          else if ((updated.amountPaid || 0) === 0 && updated.remainingAmount > 0) updated.paymentStatus = 'IMPAYE';
+        }
+
         // If status changed to LIVRE or payment marked as paid
         if (data.status === 'LIVRE' && oldOrder.status !== 'LIVRE') {
           const toCollect = (oldOrder.remainingAmount !== undefined) ? oldOrder.remainingAmount : (oldOrder.paymentStatus === 'PAYE' ? 0 : updated.totalOrder);
