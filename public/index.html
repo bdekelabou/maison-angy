@@ -376,7 +376,7 @@
       try {
         const res = await fetch('/api/all');
         const data = await res.json();
-        if (data.products) products = data.products.filter(p => p.available !== false);
+        if (data.products) products = data.products.filter(p => p.available !== false && !p.isArchived);
         if (data.deliveryZones && data.deliveryZones.length > 0) {
           deliveryZones = data.deliveryZones;
         }

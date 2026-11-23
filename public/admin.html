@@ -341,6 +341,30 @@
       checkAuth();
     }
 
+    async function toggleProductArchived(id) {
+      const p = (appData.products || []).find(prod => prod.id === id);
+      if (!p) return;
+      const willArchive = !p.isArchived;
+      const confirmMsg = willArchive 
+        ? `Voulez-vous archiver "${p.name}" ? Il sera masqué du catalogue actif et de la boutique, mais conservé dans l'onglet "📁 Articles Archivés".`
+        : `Voulez-vous désarchiver "${p.name}" et le remettre en vente active ?`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch('/api/products/' + id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isArchived: willArchive, published: !willArchive })
+        });
+        const json = await res.json();
+        showToast(willArchive ? '📁 Article archivé avec succès !' : '↩️ Article restauré dans le stock actif !');
+        await loadData();
+        renderView();
+      } catch (err) {
+        alert('Erreur: ' + err.message);
+      }
+    }
+
     async function toggleProductFeatured(id) {
       const p = appData.products.find(item => item.id === id);
       if (!p) return;
@@ -805,7 +829,20 @@
                       <strong>${o.customerName}</strong>
                       ${o.customerPhone ? `<div style="font-size:0.78rem; color:#64748b;">📞 ${o.customerPhone}</div>` : ''}
                     </td>
-                    <td>${o.items.map(i => `<div style="font-size:0.85rem;"><strong>${i.quantity}x</strong> ${i.productName}</div>`).join('')}</td>
+                    <td>
+                      <div style="min-width:160px; max-width:240px;">
+                        <span style="font-size:0.72rem; font-weight:800; background:#f1f5f9; color:#1e293b; padding:1px 6px; border-radius:4px; display:inline-block; margin-bottom:3px; border:1px solid #cbd5e1;">
+                          🛍️ ${(o.items || []).length} réf. (${(o.items || []).reduce((s, it) => s + (it.quantity || 1), 0)} pcs)
+                        </span>
+                        <div style="max-height:55px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; padding-right:2px;">
+                          ${(o.items || []).map(i => `
+                            <div style="font-size:0.78rem; line-height:1.2; background:#f8fafc; padding:2px 5px; border-radius:4px; border:1px solid #e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${i.quantity}x ${i.productName}">
+                              <strong>${i.quantity}x</strong> ${i.productName}
+                            </div>
+                          `).join('')}
+                        </div>
+                      </div>
+                    </td>
                     <td>
                       ${getDeliveryBadge(o.deliveryMode)}
                       <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">${o.deliveryPersonName || 'Sur place / Non assigné'}</div>
@@ -935,13 +972,23 @@
                       <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">📍 ${o.customerAddress || 'Sur place'}</div>
                     </td>
                     <td>
-                      <div style="display:flex; flex-direction:column; gap:3px;">
-                        ${o.items.map(it => `
-                          <div style="font-size:0.84rem; background:#f8fafc; padding:3px 7px; border-radius:4px; border:1px solid #e2e8f0;">
-                            <strong style="color:#0f172a;">${it.quantity}x</strong> ${it.productName}
-                            ${it.selectedSize ? `<span style="color:#b45309; font-weight:700; font-size:0.75rem;"> (Taille ${it.selectedSize})</span>` : ''}
-                          </div>
-                        `).join('')}
+                      <div style="min-width:180px; max-width:260px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                          <span style="font-size:0.72rem; font-weight:800; background:#f1f5f9; color:#1e293b; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e1;">
+                            🛍️ ${(o.items || []).length} réf. (${(o.items || []).reduce((s, it) => s + (it.quantity || 1), 0)} pcs)
+                          </span>
+                          <button class="btn-sm-action" onclick="openOrderDetailModal('${o.id}')" style="padding:1px 5px; font-size:0.68rem; background:transparent; color:#64748b; border:none; text-decoration:underline; cursor:pointer;" title="Voir le détail complet">
+                            Détails ↗
+                          </button>
+                        </div>
+                        <div style="max-height:68px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; padding-right:2px;">
+                          ${(o.items || []).map(it => `
+                            <div style="font-size:0.78rem; line-height:1.2; background:#f8fafc; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${it.quantity}x ${it.productName}">
+                              <strong style="color:#0f172a;">${it.quantity}x</strong> ${it.productName}
+                              ${it.selectedSize ? `<span style="color:#b45309; font-weight:700; font-size:0.7rem;"> (T.${it.selectedSize})</span>` : ''}
+                            </div>
+                          `).join('')}
+                        </div>
                       </div>
                     </td>
                     <td>
@@ -972,18 +1019,18 @@
                       <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
                         <div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
                           ${rem > 0 ? `
-                            <button class="btn-sm-action" style="background:#10b981; color:#fff; border-color:#10b981; font-weight:700; font-size:0.74rem; padding:4px 8px;" onclick="openRecordPaymentModal('${o.id}')">
-                              💵 Encaisser
+                            <button class="btn-sm-action" style="background:#10b981; color:#fff; border-color:#10b981; font-weight:800; font-size:0.75rem; padding:4px 9px; box-shadow:0 1px 2px rgba(16,185,129,0.3);" onclick="openRecordPaymentModal('${o.id}')">
+                              💵 Encaisser dette
                             </button>
                           ` : ''}
                           ${o.status !== 'LIVRE' ? `
                             <button class="btn-sm-action success" style="font-size:0.74rem; padding:4px 8px;" onclick="markDelivered('${o.id}')">✓ Livré</button>
                           ` : ''}
                         </div>
-                        <div style="display:flex; gap:4px; justify-content:flex-end;">
-                          <button class="btn-sm-action" style="padding:4px 7px; font-size:0.75rem;" onclick="openOrderDetailModal('${o.id}')" title="Voir ticket / reçu">🧾 Reçu</button>
-                          <button class="btn-sm-action" style="padding:4px 7px; font-size:0.75rem;" onclick="openAssignModal('${o.id}')" title="Modifier livreur">🛵</button>
-                          <button class="btn-sm-action danger" style="padding:4px 7px; font-size:0.75rem;" onclick="deleteOrder('${o.id}')" title="Supprimer">🗑️</button>
+                        <div style="display:flex; gap:4px; justify-content:flex-end; margin-top:2px;">
+                          <button class="btn-sm-action" style="padding:4px 7px; font-size:0.75rem; background:#f8fafc; color:#1e293b; border:1px solid #cbd5e1;" onclick="openOrderDetailModal('${o.id}')" title="Voir ticket / reçu">👁️ Ticket</button>
+                          <button class="btn-sm-action" style="padding:4px 7px; font-size:0.75rem; background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-weight:700;" onclick="openEditOrderItemsModal('${o.id}')" title="Modifier les articles et quantités">✏️</button>
+                          <button class="btn-sm-action danger" style="padding:4px 7px; font-size:0.75rem;" onclick="deleteOrder('${o.id}')" title="Supprimer la commande">🗑️</button>
                         </div>
                       </div>
                     </td>
@@ -1184,9 +1231,16 @@
       const u = getCurrentUser();
       const canSeeFinance = u.role === 'ADMIN' || (u.permissions && u.permissions.profits === true);
 
+      window.productTabFilter = window.productTabFilter || 'ACTIVE';
+      const activeProducts = allProducts.filter(p => !p.isArchived);
+      const archivedProducts = allProducts.filter(p => p.isArchived === true);
+
+      const baseList = window.productTabFilter === 'ARCHIVED' ? archivedProducts : activeProducts;
+
       const categories = ['ALL', ...Array.from(new Set(allProducts.map(p => p.category).filter(Boolean)))];
       const q = (window.productSearchQuery || '').trim().toLowerCase();
-      const products = allProducts.filter(p => {
+      const products = baseList.filter(p => {
+        if (window.hideZeroStock && p.stock <= 0) return false;
         if (window.productCatFilter && window.productCatFilter !== 'ALL' && p.category !== window.productCatFilter) return false;
         if (!q) return true;
         return (p.name || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
@@ -1194,26 +1248,33 @@
 
       return `
         <div class="panel">
-          <!-- SOUS-ONGLETS DE GESTION DU STOCK (STYLE HIBOUTIK) -->
+          <!-- SOUS-ONGLETS DE GESTION DU STOCK AVEC ARCHIVAGE -->
           <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc; flex-wrap:wrap;">
-            <button onclick="switchView('PRODUCTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:#fff; color:#0f172a; border:1px solid #cbd5e1; border-bottom:3px solid #c59b27;">
-              👗 Stock & Articles Actuels (${allProducts.length})
+            <button onclick="window.productTabFilter='ACTIVE'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter !== 'ARCHIVED' ? '#fff' : 'transparent'}; color:${window.productTabFilter !== 'ARCHIVED' ? '#0f172a' : '#64748b'}; border:${window.productTabFilter !== 'ARCHIVED' ? '1px solid #cbd5e1; border-bottom:3px solid #c59b27;' : 'none'};">
+              👗 Articles en Vente (${activeProducts.length})
+            </button>
+            <button onclick="window.productTabFilter='ARCHIVED'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter === 'ARCHIVED' ? '#fff' : 'transparent'}; color:${window.productTabFilter === 'ARCHIVED' ? '#92400e' : '#64748b'}; border:${window.productTabFilter === 'ARCHIVED' ? '1px solid #cbd5e1; border-bottom:3px solid #f59e0b;' : 'none'};">
+              📁 Articles Archivés / Finis (${archivedProducts.length})
             </button>
             <button onclick="switchView('SHIPMENTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-              📦 Historique des Arrivages Fournisseurs (${(appData.shipments || []).length})
+              📦 Historique des Arrivages (${(appData.shipments || []).length})
             </button>
           </div>
 
           <div class="panel-header" style="flex-wrap:wrap; gap:0.85rem;">
             <div>
-              <div class="panel-title">👗 Stock en Boutique (${products.length} / ${allProducts.length} articles)</div>
-              <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">Recherche rapide pendant vos Lives TikTok, gestion des stocks et réassort en 1 clic.</p>
+              <div class="panel-title">${window.productTabFilter === 'ARCHIVED' ? '📁 Articles Archivés' : '👗 Stock en Boutique'} (${products.length} articles)</div>
+              <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">${window.productTabFilter === 'ARCHIVED' ? 'Articles épuisés ou arrêtés. Cliquez sur ↩️ Restaurer pour les remettre en vente active.' : 'Recherche rapide pendant vos Lives TikTok, gestion des stocks et réassort en 1 clic.'}</p>
             </div>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
-              <input type="text" id="prodSearchInput" value="${(window.productSearchQuery || '').replace(/"/g, '&quot;')}" oninput="filterProductsSearch(this.value)" placeholder="🔍 Chercher un article (slip, brassière, robe...)" style="padding:0.48rem 0.85rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.82rem; min-width:220px;" />
+              <input type="text" id="prodSearchInput" value="${(window.productSearchQuery || '').replace(/"/g, '&quot;')}" oninput="filterProductsSearch(this.value)" placeholder="🔍 Chercher un article..." style="padding:0.48rem 0.85rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.82rem; min-width:200px;" />
               <select onchange="filterProductsCategory(this.value)" style="padding:0.48rem 0.75rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.82rem; font-weight:600; background:#fff;">
                 ${categories.map(cat => `<option value="${cat}" ${window.productCatFilter === cat ? 'selected' : ''}>${cat === 'ALL' ? '📂 Toutes catégories' : cat}</option>`).join('')}
               </select>
+              <label style="display:inline-flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:700; color:#475569; background:#fff; padding:0.48rem 0.75rem; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer;">
+                <input type="checkbox" ${window.hideZeroStock ? 'checked' : ''} onchange="window.hideZeroStock=this.checked; renderView();" style="cursor:pointer;" />
+                🚫 Masquer stock 0
+              </label>
               <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="window.editingShipmentId=null; openNewShipmentModal()">
                 <span>📦 + Nouvel Arrivage</span>
               </button>
@@ -1283,15 +1344,24 @@
                       </td>
                       <td style="text-align:right;">
                         <div style="display:inline-flex; gap:0.3rem; align-items:center; flex-wrap:nowrap;">
-                          <button class="btn-sm-action" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; font-weight:700; white-space:nowrap;" onclick="openNewShipmentModal(${p.id})" title="Ajouter du stock (Nouvel arrivage)">
-                            📦 +Stock
-                          </button>
-                          <button class="btn-sm-action" onclick="toggleProductFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la mise en avant' : 'Mettre en avant sur la boutique'}">
-                            ${p.isFeatured ? '⭐' : '☆'}
-                          </button>
-                          <button class="btn-sm-action" onclick="toggleProductPublished(${p.id})" title="${p.published === false ? 'Publier sur la boutique' : 'Masquer de la boutique'}">
-                            ${p.published === false ? '🙈' : '👁️'}
-                          </button>
+                          ${p.isArchived ? `
+                            <button class="btn-sm-action" style="background:#fef3c7; color:#92400e; border:1px solid #fcd34d; font-weight:700; white-space:nowrap;" onclick="toggleProductArchived(${p.id})" title="Désarchiver (remettre dans le stock actif)">
+                              ↩️ Restaurer
+                            </button>
+                          ` : `
+                            <button class="btn-sm-action" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; font-weight:700; white-space:nowrap;" onclick="openNewShipmentModal(${p.id})" title="Ajouter du stock (Nouvel arrivage)">
+                              📦 +Stock
+                            </button>
+                            <button class="btn-sm-action" onclick="toggleProductFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la mise en avant' : 'Mettre en avant sur la boutique'}">
+                              ${p.isFeatured ? '⭐' : '☆'}
+                            </button>
+                            <button class="btn-sm-action" onclick="toggleProductPublished(${p.id})" title="${p.published === false ? 'Publier sur la boutique' : 'Masquer de la boutique'}">
+                              ${p.published === false ? '🙈' : '👁️'}
+                            </button>
+                            <button class="btn-sm-action" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;" onclick="toggleProductArchived(${p.id})" title="Archiver cet article fini pour ne plus encombrer le tableau">
+                              📁
+                            </button>
+                          `}
                           <button class="btn-sm-action" onclick="openProductModal(${p.id})" title="Modifier cet article">✏️</button>
                           <button class="btn-sm-action danger" onclick="deleteProduct(${p.id})" title="Supprimer cet article">🗑️</button>
                         </div>
@@ -2200,6 +2270,11 @@
                     <input type="checkbox" id="p_published" ${!p || p.published !== false ? 'checked' : ''} />
                     <span>👁️ Publié sur la boutique (décocher pour masquer)</span>
                   </label>
+
+                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:600; font-size:0.85rem; grid-column:1/-1; background:#fff7ed; padding:6px 10px; border-radius:6px; border:1px solid #fed7aa; color:#9a3412;">
+                    <input type="checkbox" id="p_isArchived" ${p && p.isArchived ? 'checked' : ''} />
+                    <span>📁 Archiver cet article (épuisé / fini / masquer du catalogue actif)</span>
+                  </label>
                 </div>
 
                 <div class="margin-preview-box" id="marginPreviewBox" style="margin-bottom:1rem;">
@@ -2530,6 +2605,7 @@
         isPromo: document.getElementById('p_isPromo').checked,
         isFeatured: document.getElementById('p_isFeatured').checked,
         published: document.getElementById('p_published').checked,
+        isArchived: document.getElementById('p_isArchived') ? document.getElementById('p_isArchived').checked : false,
         description: (document.getElementById('p_description') ? document.getElementById('p_description').value.trim() : ''),
         sizes: (document.getElementById('p_sizes') ? document.getElementById('p_sizes').value.trim() : ''),
         colors: (document.getElementById('p_colors') ? document.getElementById('p_colors').value.trim() : ''),
@@ -3087,6 +3163,24 @@
                   </div>
                 </div>
 
+                <!-- OPTION PAIEMENT FOURNISSEUR DIRECT DEPUIS LA CAISSE -->
+                <div style="margin-top:0.85rem; padding:0.85rem 1.1rem; background:#fffbeb; border:1.5px solid #fcd34d; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                  <div style="display:flex; align-items:flex-start; gap:0.65rem; max-width:440px;">
+                    <input type="checkbox" id="ship_pay_cash" checked style="width:19px; height:19px; margin-top:2px; accent-color:#d97706; cursor:pointer;" onchange="updateShipmentCashPreview()" />
+                    <div>
+                      <label for="ship_pay_cash" style="font-weight:700; color:#92400e; font-size:0.88rem; cursor:pointer; display:block;">
+                        💳 Payer cet arrivage immédiatement avec la caisse
+                      </label>
+                      <div style="font-size:0.75rem; color:#b45309; margin-top:2px;">
+                        Déduit automatiquement le montant de l'achat de la caisse (Solde actuel : <strong>${(appData.settings.currentCash || 0).toLocaleString('fr-FR')} FCFA</strong>).
+                      </div>
+                    </div>
+                  </div>
+                  <div id="shipCashDeductPreview" style="font-weight:800; font-size:1.1rem; color:#b45309; text-align:right; white-space:nowrap;">
+                    -0 FCFA
+                  </div>
+                </div>
+
                 <!-- NOTES BORDEREAU -->
                 <div style="margin-top:0.75rem;">
                   <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.25rem;">Notes / Référence Colis (facultatif)</label>
@@ -3105,6 +3199,25 @@
         </div>
       `;
       renderShipmentRows();
+    }
+
+    function updateShipmentCashPreview() {
+      const curr = appData.settings.currency || 'FCFA';
+      let totalCost = 0;
+      (window.currentShipmentRows || []).forEach(r => {
+        totalCost += ((r.quantity || 0) * (r.costPrice || 0));
+      });
+      const deductPrev = document.getElementById('shipCashDeductPreview');
+      const payCashCb = document.getElementById('ship_pay_cash');
+      if (deductPrev) {
+        if (payCashCb && payCashCb.checked) {
+          deductPrev.textContent = '-' + totalCost.toLocaleString('fr-FR') + ' ' + curr;
+          deductPrev.style.color = '#b45309';
+        } else {
+          deductPrev.textContent = '0 ' + curr + ' (Non déduit)';
+          deductPrev.style.color = '#64748b';
+        }
+      }
     }
 
     function renderShipmentRows() {
@@ -3167,6 +3280,7 @@
       const costPreview = document.getElementById('shipTotalCostPreview');
       if (qtyPreview) qtyPreview.textContent = `+${totalQty} pièces`;
       if (costPreview) costPreview.textContent = `${totalCost.toLocaleString('fr-FR')} ${curr}`;
+      updateShipmentCashPreview();
     }
 
     function addShipmentRow() {
@@ -3210,15 +3324,18 @@
       const costPreview = document.getElementById('shipTotalCostPreview');
       if (qtyPreview) qtyPreview.textContent = `+${totalQty} pièces`;
       if (costPreview) costPreview.textContent = `${totalCost.toLocaleString('fr-FR')} ${curr}`;
+      updateShipmentCashPreview();
     }
 
     async function handleSaveShipment(e) {
       e.preventDefault();
+      const payFromCash = document.getElementById('ship_pay_cash') ? document.getElementById('ship_pay_cash').checked : false;
       const payload = {
         number: document.getElementById('ship_number').value.trim(),
         supplier: document.getElementById('ship_supplier').value.trim(),
         date: document.getElementById('ship_date').value,
         notes: document.getElementById('ship_notes').value.trim(),
+        payFromCash: payFromCash,
         registeredBy: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.name : 'Ange Ines',
         items: window.currentShipmentRows
       };
@@ -3410,8 +3527,17 @@
                         ` : `<span style="font-size:0.75rem; color:#94a3b8;">Aucun numéro</span>`}
                       </td>
                       <td>
-                        <div style="font-size:0.85rem;">
-                          ${(o.items || []).map(it => `<div><strong>${it.quantity}x</strong> ${it.productName}</div>`).join('')}
+                        <div style="min-width:160px; max-width:230px;">
+                          <div style="font-size:0.72rem; font-weight:800; background:#f1f5f9; color:#1e293b; padding:1px 6px; border-radius:4px; display:inline-block; margin-bottom:3px; border:1px solid #cbd5e1;">
+                            🛍️ ${(o.items || []).length} réf. (${(o.items || []).reduce((s, it) => s + (it.quantity || 1), 0)} pcs)
+                          </div>
+                          <div style="max-height:65px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; padding-right:2px;">
+                            ${(o.items || []).map(it => `
+                              <div style="font-size:0.78rem; line-height:1.2; background:#f8fafc; padding:2px 5px; border-radius:4px; border:1px solid #e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${it.quantity}x ${it.productName}">
+                                <strong>${it.quantity}x</strong> ${it.productName}
+                              </div>
+                            `).join('')}
+                          </div>
                         </div>
                       </td>
                       <td><strong>${(o.totalOrder || 0).toLocaleString('fr-FR')} ${curr}</strong></td>
@@ -3428,12 +3554,17 @@
                       </td>
                       <td>
                         <div style="display:flex; flex-direction:column; gap:4px;">
-                          <button class="btn-sm-action" style="background:#10b981; color:#fff; font-weight:800; padding:6px 10px;" onclick="openRecordPaymentModal('${o.id}')">
+                          <button class="btn-sm-action" style="background:#10b981; color:#fff; font-weight:800; padding:5px 8px; font-size:0.78rem;" onclick="openRecordPaymentModal('${o.id}')">
                             💵 Encaisser versement
                           </button>
-                          <button class="btn-sm-action" style="background:#f1f5f9; color:#334155;" onclick="openOrderDetailModal('${o.id}')">
-                            👁️ Historique / Reçu
-                          </button>
+                          <div style="display:flex; gap:3px;">
+                            <button class="btn-sm-action" style="background:#f1f5f9; color:#334155; padding:4px 7px; font-size:0.74rem; flex:1;" onclick="openOrderDetailModal('${o.id}')">
+                              👁️ Reçu
+                            </button>
+                            <button class="btn-sm-action" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-weight:700; padding:4px 8px; font-size:0.74rem;" onclick="openEditOrderItemsModal('${o.id}')" title="Modifier les articles et quantités">
+                              ✏️
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -3450,7 +3581,7 @@
     window.currentSaleRows = [];
 
     function openNewSaleModal() {
-      const products = appData.products || [];
+      const products = (appData.products || []).filter(p => !p.isArchived);
       if (products.length === 0) {
         alert("Veuillez d'abord ajouter au moins un article dans votre catalogue !");
         openProductModal();
@@ -4061,7 +4192,7 @@
                 <h3 style="color:#c59b27; margin:0;">✏️ Modifier les Articles de la Commande ${o.id}</h3>
                 <span style="font-size:0.75rem; color:#94a3b8;">Cliente : ${o.customerName}</span>
               </div>
-              <button class="close-btn" onclick="openOrderDetailModal('${o.id}')" style="color:#fff;">&times;</button>
+              <button class="close-btn" onclick="closeModal()" style="color:#fff;">&times;</button>
             </div>
 
             <form onsubmit="handleSaveOrderItems(event, '${o.id}')" style="padding:1.25rem;">
@@ -4099,7 +4230,7 @@
               </div>
 
               <div class="modal-foot" style="padding:0; display:flex; justify-content:space-between;">
-                <button type="button" class="btn-secondary" onclick="openOrderDetailModal('${o.id}')">Annuler</button>
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
                 <button type="submit" class="btn-primary-modal" style="background:#10b981; font-weight:800;">💾 Enregistrer & Ajuster les Stocks</button>
               </div>
             </form>
@@ -4165,9 +4296,10 @@
         });
         const json = await res.json();
         if (json.success) {
-          showToast('✅ Articles de la commande mis à jour et stocks ajustés !');
+          showToast('✅ Commande ' + orderId + ' et stocks mis à jour avec succès !');
+          closeModal();
           await loadData();
-          openOrderDetailModal(orderId);
+          renderView();
         } else {
           alert('Erreur: ' + (json.error || 'Impossible de mettre à jour'));
         }

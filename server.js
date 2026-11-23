@@ -496,6 +496,9 @@ const server = http.createServer(async (req, res) => {
           if (it.salePrice && parseFloat(it.salePrice) > 0) {
             p.salePrice = parseFloat(it.salePrice); // met à jour le prix de vente habituel si spécifié
           }
+          if (p.isArchived) {
+            p.isArchived = false; // Réactiver l'article s'il était archivé
+          }
         }
 
         const lineTotal = qty * cost;
@@ -525,6 +528,30 @@ const server = http.createServer(async (req, res) => {
         createdAt: new Date().toISOString()
       };
 
+      newShipment.paidFromCash = !!data.payFromCash;
+
+      // Si l'utilisateur a choisi de payer cet arrivage avec la caisse
+      if (data.payFromCash && totalCost > 0) {
+        if (!db.cashTransactions) db.cashTransactions = [];
+        const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        db.cashTransactions.push({
+          id: db.cashTransactions.length > 0 ? Math.max(...db.cashTransactions.map(t => t.id || 0)) + 1 : 1,
+          dateTime: nowStr,
+          user: data.registeredBy || 'Ange Ines',
+          retrait: totalCost,
+          depot: 0,
+          encaissement: 0,
+          creditClient: '',
+          ecart: 0,
+          total: 0,
+          category: 'FOURNISSEUR',
+          fromShipment: true,
+          shipmentId: newShipment.id,
+          commentaires: `Paiement Arrivage Fournisseur ${shipmentNumber} - ${newShipment.supplier}`
+        });
+        recalculateCash(db);
+      }
+
       db.shipments.unshift(newShipment);
       await saveDb(db);
 
@@ -532,7 +559,8 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({
         success: true,
         shipment: newShipment,
-        products: db.products
+        products: db.products,
+        currentCash: db.settings.currentCash
       }));
       return;
     }
@@ -548,10 +576,18 @@ const server = http.createServer(async (req, res) => {
           const p = db.products.find(prod => prod.id === parseInt(it.productId));
           if (p) p.stock = Math.max(0, (p.stock || 0) - parseInt(it.quantity));
         });
+        // Si cet arrivage avait été payé avec la caisse, rembourser la caisse
+        if (db.cashTransactions) {
+          const initLen = db.cashTransactions.length;
+          db.cashTransactions = db.cashTransactions.filter(t => !(t.fromShipment && t.shipmentId === id));
+          if (db.cashTransactions.length !== initLen) {
+            recalculateCash(db);
+          }
+        }
         db.shipments.splice(idx, 1);
         await saveDb(db);
         res.writeHead(200);
-        res.end(JSON.stringify({ success: true }));
+        res.end(JSON.stringify({ success: true, currentCash: db.settings.currentCash }));
       } else {
         res.writeHead(404);
         res.end(JSON.stringify({ success: false, error: 'Not found' }));
@@ -977,6 +1013,11 @@ const server = http.createServer(async (req, res) => {
           if (updated.remainingAmount === 0 && (updated.amountPaid || 0) > 0) updated.paymentStatus = 'PAYE';
           else if ((updated.amountPaid || 0) > 0 && updated.remainingAmount > 0) updated.paymentStatus = 'PARTIEL';
           else if ((updated.amountPaid || 0) === 0 && updated.remainingAmount > 0) updated.paymentStatus = 'IMPAYE';
+
+          // Recalculer les marges brute et nette
+          const totalCostOfItems = newItems.reduce((sum, it) => sum + ((it.costPrice || 0) * it.quantity), 0);
+          updated.marginGross = totalItems - totalCostOfItems;
+          updated.marginNet = updated.marginGross - (updated.deliveryFeePayer === 'BOUTIQUE' ? (parseFloat(updated.deliveryFee) || 0) : 0);
         }
 
         // If status changed to LIVRE or payment marked as paid
