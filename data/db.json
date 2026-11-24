@@ -1,698 +1,2310 @@
-﻿{
-    "cashTransactions":  [
-                             {
-                                 "commentaires":  "Report solde réel de trésorerie au 1er Octobre 2026",
-                                 "creditClient":  "",
-                                 "dateTime":  "2026-10-01 08:00:00",
-                                 "depot":  81500,
-                                 "ecart":  0,
-                                 "encaissement":  0,
-                                 "id":  1,
-                                 "retrait":  0,
-                                 "total":  81500,
-                                 "user":  "Ange Ines"
-                             },
-                             {
-                                 "commentaires":  "nouvelle arrivages ",
-                                 "creditClient":  "",
-                                 "dateTime":  "2026-10-05 16:20:48",
-                                 "depot":  0,
-                                 "ecart":  0,
-                                 "encaissement":  0,
-                                 "id":  2,
-                                 "retrait":  28000,
-                                 "total":  0,
-                                 "user":  "Ange Ines"
-                             },
-                             {
-                                 "commentaires":  "Déplacement: grand marcher , vakpossito",
-                                 "creditClient":  "",
-                                 "dateTime":  "2026-10-05 16:46:50",
-                                 "depot":  0,
-                                 "ecart":  0,
-                                 "encaissement":  0,
-                                 "id":  3,
-                                 "retrait":  3000,
-                                 "total":  0,
-                                 "user":  "Ange Ines"
-                             },
-                             {
-                                 "commentaires":  "Règlement dette CMD-2026-001 - micale (Versement: 3000 F / Reste: 900 F)",
-                                 "creditClient":  "micale (Reste: 900 F)",
-                                 "dateTime":  "2026-10-15 10:35:01",
-                                 "depot":  0,
-                                 "ecart":  0,
-                                 "encaissement":  3000,
-                                 "id":  4,
-                                 "retrait":  0,
-                                 "total":  0,
-                                 "user":  "Ange Ines"
-                             }
-                         ],
-    "deliveryPersons":  [
-                            {
-                                "id":  1,
-                                "name":  "Livreur Kodjo (Express Moto)",
-                                "notes":  "Courses rapides Lomé Centre \u0026 Bè (1 000 - 1 500 F)",
-                                "phone":  "90123456",
-                                "status":  "Actif",
-                                "transportType":  "Moto",
-                                "zone":  "Déckon, Tokoin, Bè, Grand Marché (Assigamé)"
-                            },
-                            {
-                                "id":  2,
-                                "name":  "Livreur Folly (Moto Nord)",
-                                "notes":  "Zone Agoè \u0026 banlieue nord (1 500 - 2 000 F)",
-                                "phone":  "91234567",
-                                "status":  "Actif",
-                                "transportType":  "Moto",
-                                "zone":  "Agoè (Nyivé, Cacavéli, 2 Lions), Hedzranawoé, Kégué"
-                            },
-                            {
-                                "id":  3,
-                                "name":  "Livreur Mawuli (Moto Ouest)",
-                                "notes":  "Zone Ouest Lomé",
-                                "phone":  "92345678",
-                                "status":  "Actif",
-                                "transportType":  "Moto",
-                                "zone":  "Adidogomé, Avédji, Totsi, Amadahomé"
-                            },
-                            {
-                                "id":  4,
-                                "name":  "Gare Routière / Compagnie (Expéditions Togo)",
-                                "notes":  "Dépôt colis aux compagnies de transport",
-                                "phone":  "93456789",
-                                "status":  "Actif",
-                                "transportType":  "Bus / Car",
-                                "zone":  "Intérieur : Tsévié, Kpalimé, Atakpamé, Sokodé, Kara"
-                            }
-                        ],
-    "deliveryZones":  [
-                          {
-                              "active":  true,
-                              "delai":  "Livraison moto express",
-                              "id":  1,
-                              "name":  "Kégué",
-                              "price":  500
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Livraison moto rapide",
-                              "id":  2,
-                              "name":  "Hedzranawoé",
-                              "price":  800
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Centre des affaires Lomé",
-                              "id":  3,
-                              "name":  "Déckon / Centre-ville / Assigamé",
-                              "price":  1000
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Zone centrale Lomé",
-                              "id":  4,
-                              "name":  "Tokoin (Wuiti, Hôpital, Ramco, Forever)",
-                              "price":  1000
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Zone Sud-Est Lomé",
-                              "id":  5,
-                              "name":  "Bè / Akodésséwa / Port",
-                              "price":  1000
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Zone Nord Lomé",
-                              "id":  6,
-                              "name":  "Agoè (Cacavéli, 2 Lions, Nyivé, Minamadou)",
-                              "price":  1500
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Zone Ouest Lomé",
-                              "id":  7,
-                              "name":  "Adidogomé / Totsi / Amadahomé",
-                              "price":  1500
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Périphérie Est Lomé",
-                              "id":  8,
-                              "name":  "Baguida / Avépozo",
-                              "price":  2000
-                          },
-                          {
-                              "active":  true,
-                              "delai":  "Selon localisation exacte",
-                              "id":  9,
-                              "name":  "Autre Quartier de Lomé",
-                              "price":  1500
-                          }
-                      ],
-    "orders":  [
-                   {
-                       "amountPaid":  0,
-                       "createdAt":  "2026-10-15 10:34:05",
-                       "customerAddress":  "Vente sur place / Maison",
-                       "customerName":  "micale",
-                       "customerPhone":  "",
-                       "deliveryFee":  0,
-                       "deliveryFeePayer":  "CLIENT",
-                       "deliveryMode":  "VENTE_DIRECTE",
-                       "deliveryPersonName":  "",
-                       "deliveryPersonPhone":  "",
-                       "id":  "CMD-2026-003",
-                       "items":  [
-                                     {
-                                         "costPrice":  670,
-                                         "productId":  11,
-                                         "productName":  "brume du corps ",
-                                         "quantity":  2,
-                                         "selectedColor":  "",
-                                         "selectedSize":  "",
-                                         "total":  2000,
-                                         "unitPrice":  1000
-                                     }
-                                 ],
-                       "marginGross":  660,
-                       "marginNet":  660,
-                       "notes":  "",
-                       "orderSource":  "DIRECTE",
-                       "paymentMethod":  "ESPECES",
-                       "paymentStatus":  "IMPAYE",
-                       "remainingAmount":  2000,
-                       "status":  "LIVRE",
-                       "totalItems":  2000,
-                       "totalOrder":  2000
-                   },
-                   {
-                       "amountPaid":  3000,
-                       "createdAt":  "2026-10-12 11:29:38",
-                       "customerAddress":  "Vente sur place / Maison",
-                       "customerName":  "micale",
-                       "customerPhone":  "",
-                       "deliveryFee":  0,
-                       "deliveryFeePayer":  "CLIENT",
-                       "deliveryMode":  "VENTE_DIRECTE",
-                       "deliveryPersonName":  "",
-                       "deliveryPersonPhone":  "",
-                       "id":  "CMD-2026-001",
-                       "items":  [
-                                     {
-                                         "costPrice":  460,
-                                         "productId":  1,
-                                         "productName":  "ensemble colliers et boucle d\u0027oreille  ",
-                                         "quantity":  3,
-                                         "selectedColor":  "",
-                                         "selectedSize":  "",
-                                         "total":  3900,
-                                         "unitPrice":  1300
-                                     }
-                                 ],
-                       "marginGross":  2520,
-                       "marginNet":  2520,
-                       "notes":  "",
-                       "orderSource":  "DIRECTE",
-                       "paymentMethod":  "ESPECES",
-                       "paymentStatus":  "PARTIEL",
-                       "payments":  [
-                                        {
-                                            "amount":  3000,
-                                            "date":  "2026-10-15 10:35:01",
-                                            "method":  "ESPECES",
-                                            "note":  "premiere partie"
-                                        }
-                                    ],
-                       "remainingAmount":  900,
-                       "status":  "LIVRE",
-                       "totalItems":  3900,
-                       "totalOrder":  3900
-                   }
-               ],
-    "products":  [
-                     {
-                         "available":  true,
-                         "category":  "colliers  \u0026  boucle d\u0027oreille",
-                         "colors":  "",
-                         "costPrice":  460,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  1,
-                         "image":  "https://i.ibb.co/PZkRtCV5/338e2d26c989.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/PZkRtCV5/338e2d26c989.jpg",
-                                        "https://i.ibb.co/0vckngT/82e89b49dceb.jpg"
-                                    ],
-                         "isFeatured":  true,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "ensemble colliers et boucle d\u0027oreille  ",
-                         "promoPrice":  1000,
-                         "published":  true,
-                         "salePrice":  1300,
-                         "sizes":  "",
-                         "stock":  9
-                     },
-                     {
-                         "available":  true,
-                         "category":  "bracelet ",
-                         "colors":  "",
-                         "costPrice":  670,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  2,
-                         "image":  "https://i.ibb.co/Z44gNPZ/5d10ae37d30a.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/Z44gNPZ/5d10ae37d30a.jpg",
-                                        "https://i.ibb.co/GQrPZG0W/26f84572dfb6.jpg",
-                                        "https://i.ibb.co/wZJhFxXv/70ac5dbed72d.jpg"
-                                    ],
-                         "isFeatured":  true,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "bracelet  simple",
-                         "promoPrice":  0,
-                         "published":  true,
-                         "salePrice":  1000,
-                         "sizes":  "",
-                         "stock":  3
-                     },
-                     {
-                         "available":  true,
-                         "category":  "bracelet ",
-                         "colors":  "",
-                         "costPrice":  840,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  3,
-                         "image":  "https://i.ibb.co/S4PP9mKQ/0b69c7a9bf15.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/S4PP9mKQ/0b69c7a9bf15.jpg",
-                                        "https://i.ibb.co/h1gDLVfJ/b2c4bc7bdd28.jpg",
-                                        "https://i.ibb.co/nNd0FDzr/e4b84aa67d07.jpg"
-                                    ],
-                         "isFeatured":  true,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "bracelet  de qualiter ",
-                         "promoPrice":  0,
-                         "published":  true,
-                         "salePrice":  1300,
-                         "sizes":  "",
-                         "stock":  3
-                     },
-                     {
-                         "available":  true,
-                         "category":  "packaging ",
-                         "colors":  "",
-                         "costPrice":  340,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  4,
-                         "image":  "https://i.ibb.co/PkxThnZ/10c7f52b147d.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/PkxThnZ/10c7f52b147d.jpg",
-                                        "https://i.ibb.co/v4f5myK5/4726772544ae.jpg",
-                                        "https://i.ibb.co/qMVmxWFZ/f2b4f6dd3edc.jpg"
-                                    ],
-                         "isFeatured":  true,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "boite a bijoux ",
-                         "promoPrice":  500,
-                         "published":  true,
-                         "salePrice":  700,
-                         "sizes":  "",
-                         "stock":  6
-                     },
-                     {
-                         "available":  true,
-                         "category":  "colliers  \u0026  boucle d\u0027oreille",
-                         "colors":  "",
-                         "costPrice":  500,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  5,
-                         "image":  "https://i.ibb.co/bM4zkRm5/e756b5bdb78b.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/bM4zkRm5/e756b5bdb78b.jpg",
-                                        "https://i.ibb.co/21nXtvZR/c439aa0a47bf.jpg",
-                                        "https://i.ibb.co/xSqvHYBy/99817217cc16.jpg"
-                                    ],
-                         "isFeatured":  false,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "ensemble bracelet, bague et boucle en résine ",
-                         "promoPrice":  1200,
-                         "published":  true,
-                         "salePrice":  1500,
-                         "sizes":  "",
-                         "stock":  1
-                     },
-                     {
-                         "available":  true,
-                         "category":  "chaine ",
-                         "colors":  "",
-                         "costPrice":  500,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  6,
-                         "image":  "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg",
-                                        "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg"
-                                    ],
-                         "isFeatured":  true,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "chaine de cheville ",
-                         "promoPrice":  0,
-                         "published":  true,
-                         "salePrice":  1000,
-                         "sizes":  "",
-                         "stock":  3
-                     },
-                     {
-                         "available":  true,
-                         "category":  "chaine ",
-                         "colors":  "",
-                         "costPrice":  670,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  7,
-                         "image":  "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg",
-                                        "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg"
-                                    ],
-                         "isFeatured":  false,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "chaine de hanche ",
-                         "promoPrice":  0,
-                         "published":  true,
-                         "salePrice":  1500,
-                         "sizes":  "",
-                         "stock":  6
-                     },
-                     {
-                         "available":  true,
-                         "category":  "soins corporel",
-                         "colors":  "",
-                         "costPrice":  1000,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  8,
-                         "image":  "https://i.ibb.co/B2KGYHFJ/e8c534a61388.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/B2KGYHFJ/e8c534a61388.jpg",
-                                        "https://i.ibb.co/39Vp1Z5P/d1a8dcc1f168.jpg",
-                                        "https://i.ibb.co/B2KGYHFJ/e8c534a61388.jpg"
-                                    ],
-                         "isFeatured":  true,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "nettoyant visage ",
-                         "promoPrice":  0,
-                         "published":  true,
-                         "salePrice":  1500,
-                         "sizes":  "",
-                         "stock":  6
-                     },
-                     {
-                         "available":  true,
-                         "category":  "parfum",
-                         "costPrice":  340,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  9,
-                         "image":  "https://i.ibb.co/8LNNj808/9403f311a64a.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/8LNNj808/9403f311a64a.jpg",
-                                        "https://i.ibb.co/8LNNj808/9403f311a64a.jpg",
-                                        "https://i.ibb.co/yFcBn7Ng/f1086b0ece12.jpg",
-                                        "https://i.ibb.co/fdHg5ftG/7c04f931a389.jpg"
-                                    ],
-                         "isFeatured":  false,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "huile de parfum",
-                         "promoPrice":  0,
-                         "published":  true,
-                         "salePrice":  500,
-                         "stock":  3
-                     },
-                     {
-                         "available":  true,
-                         "category":  "parfum",
-                         "costPrice":  340,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  10,
-                         "image":  "https://i.ibb.co/Xf8W3dzt/49ded6da72f7.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/Xf8W3dzt/49ded6da72f7.jpg",
-                                        "https://i.ibb.co/Xf8W3dzt/49ded6da72f7.jpg",
-                                        "https://i.ibb.co/NHmDg8x/d43e5e314c24.jpg",
-                                        "https://i.ibb.co/MDqBrL6Q/f36ed721cbdd.jpg"
-                                    ],
-                         "isFeatured":  false,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "parfum bic ",
-                         "promoPrice":  500,
-                         "published":  true,
-                         "salePrice":  700,
-                         "stock":  3
-                     },
-                     {
-                         "available":  true,
-                         "category":  "parfum",
-                         "costPrice":  670,
-                         "coverIndex":  0,
-                         "description":  "",
-                         "id":  11,
-                         "image":  "https://i.ibb.co/21KYKBns/dd2389d58c23.jpg",
-                         "images":  [
-                                        "https://i.ibb.co/21KYKBns/dd2389d58c23.jpg",
-                                        "https://i.ibb.co/21KYKBns/dd2389d58c23.jpg",
-                                        "https://i.ibb.co/RpgYpFPB/ed69ff4227f5.jpg"
-                                    ],
-                         "isFeatured":  false,
-                         "isPromo":  false,
-                         "minStockAlert":  3,
-                         "name":  "brume du corps ",
-                         "promoPrice":  1000,
-                         "published":  true,
-                         "salePrice":  1100,
-                         "stock":  4
-                     }
-                 ],
-    "settings":  {
-                     "address":  "Lomé, Togo",
-                     "adminPassword":  "password2026",
-                     "adminUsername":  "93849200",
-                     "city":  "Lomé, Togo",
-                     "currency":  "FCFA",
-                     "currentCash":  53500,
-                     "facebookUrl":  "https://www.facebook.com/profile.php?id=61587838474305",
-                     "fullWhatsapp":  "22893849200",
-                     "initialCash":  81500,
-                     "instagramUrl":  "https://instagram.com/maison_angy",
-                     "logoUrl":  "/images/logo.jpg",
-                     "slogan":  "Le style, pour tous. Sans compromis.",
-                     "storeName":  "Maison Angy Collection",
-                     "tiktokUrl":  "https://www.tiktok.com/@ange2647",
-                     "whatsappCountryCode":  "228",
-                     "whatsappNumber":  "93 84 92 00"
-                 },
-    "shipments":  [
-                      {
-                          "createdAt":  "2026-10-05T11:18:51.683Z",
-                          "date":  "2026-10-05",
-                          "id":  3,
-                          "items":  [
-                                        {
-                                            "costPrice":  340,
-                                            "productId":  9,
-                                            "productName":  "huile de parfum",
-                                            "quantity":  3,
-                                            "salePrice":  500,
-                                            "totalCost":  1020
-                                        },
-                                        {
-                                            "costPrice":  340,
-                                            "productId":  10,
-                                            "productName":  "parfum bic ",
-                                            "quantity":  3,
-                                            "salePrice":  700,
-                                            "totalCost":  1020
-                                        },
-                                        {
-                                            "costPrice":  670,
-                                            "productId":  11,
-                                            "productName":  "brume du corps ",
-                                            "quantity":  3,
-                                            "salePrice":  1100,
-                                            "totalCost":  2010
-                                        }
-                                    ],
-                          "notes":  "",
-                          "number":  "ARR-2026-003",
-                          "registeredBy":  "Ange Ines",
-                          "supplier":  "Grossiste Assigamé (Lomé)",
-                          "totalCost":  4050,
-                          "totalQuantity":  9
-                      },
-                      {
-                          "createdAt":  "2026-10-05T11:18:07.262Z",
-                          "date":  "2026-10-05",
-                          "id":  2,
-                          "items":  [
-                                        {
-                                            "costPrice":  1000,
-                                            "productId":  8,
-                                            "productName":  "nettoyant visage ",
-                                            "quantity":  6,
-                                            "salePrice":  1500,
-                                            "totalCost":  6000
-                                        }
-                                    ],
-                          "notes":  "",
-                          "number":  "ARR-2026-002",
-                          "registeredBy":  "Ange Ines",
-                          "supplier":  "nie\u0027s world vakpossito",
-                          "totalCost":  6000,
-                          "totalQuantity":  6
-                      },
-                      {
-                          "createdAt":  "2026-10-05T10:57:18.213Z",
-                          "date":  "2026-10-05",
-                          "id":  1,
-                          "items":  [
-                                        {
-                                            "costPrice":  460,
-                                            "productId":  1,
-                                            "productName":  "ensemble colliers et boucle d\u0027oreille  ",
-                                            "quantity":  12,
-                                            "salePrice":  1300,
-                                            "totalCost":  5520
-                                        },
-                                        {
-                                            "costPrice":  670,
-                                            "productId":  2,
-                                            "productName":  "bracelet  simple",
-                                            "quantity":  3,
-                                            "salePrice":  1000,
-                                            "totalCost":  2010
-                                        },
-                                        {
-                                            "costPrice":  840,
-                                            "productId":  3,
-                                            "productName":  "bracelet  de qualiter ",
-                                            "quantity":  3,
-                                            "salePrice":  1300,
-                                            "totalCost":  2520
-                                        },
-                                        {
-                                            "costPrice":  340,
-                                            "productId":  4,
-                                            "productName":  "boite a bijoux ",
-                                            "quantity":  6,
-                                            "salePrice":  700,
-                                            "totalCost":  2040
-                                        },
-                                        {
-                                            "costPrice":  500,
-                                            "productId":  5,
-                                            "productName":  "ensemble bracelet, bague et boucle en résine ",
-                                            "quantity":  1,
-                                            "salePrice":  1500,
-                                            "totalCost":  500
-                                        },
-                                        {
-                                            "costPrice":  500,
-                                            "productId":  6,
-                                            "productName":  "chaine de cheville ",
-                                            "quantity":  3,
-                                            "salePrice":  1000,
-                                            "totalCost":  1500
-                                        },
-                                        {
-                                            "costPrice":  670,
-                                            "productId":  7,
-                                            "productName":  "chaine de hanche ",
-                                            "quantity":  6,
-                                            "salePrice":  1500,
-                                            "totalCost":  4020
-                                        }
-                                    ],
-                          "notes":  "",
-                          "number":  "ARR-2026-001",
-                          "registeredBy":  "Ange Ines",
-                          "supplier":  "Grossiste Assigamé (Lomé)",
-                          "totalCost":  18110,
-                          "totalQuantity":  34
-                      }
-                  ],
-    "suppliers":  [
-                      "Grossiste Assigamé (Lomé)",
-                      "Fournisseur Cotonou / Nigéria",
-                      "Importateur Chine / Dubaï",
-                      "Autre Fournisseur"
-                  ],
-    "trips":  [
-                  {
-                      "cost":  3000,
-                      "dateTime":  "2026-10-05 16:46:50",
-                      "description":  "grand marcher , vakpossito",
-                      "id":  1,
-                      "notes":  "",
-                      "relatedSupplierOrder":  "",
-                      "transportType":  "TAXI_MOTO"
-                  }
-              ],
-    "users":  [
-                  {
-                      "createdAt":  "2026-09-21",
-                      "id":  1,
-                      "name":  "Ange Ines",
-                      "password":  "password2026",
-                      "permissions":  {
-                                          "cash":  true,
-                                          "delivery":  true,
-                                          "orders":  true,
-                                          "products":  true,
-                                          "profits":  true,
-                                          "settings":  true,
-                                          "team":  true,
-                                          "trips":  true
-                                      },
-                      "phone":  "93849200",
-                      "role":  "ADMIN",
-                      "roleLabel":  "Propriétaire \u0026 Administratrice"
-                  },
-                  {
-                      "createdAt":  "2026-09-21",
-                      "id":  2,
-                      "name":  "Gérante Boutique",
-                      "password":  "gerante2026",
-                      "permissions":  {
-                                          "cash":  false,
-                                          "delivery":  true,
-                                          "orders":  true,
-                                          "products":  true,
-                                          "profits":  false,
-                                          "settings":  false,
-                                          "team":  false,
-                                          "trips":  false
-                                      },
-                      "phone":  "90000000",
-                      "role":  "GERANTE",
-                      "roleLabel":  "Gérante de Vente"
-                  }
-              ]
+{
+  "cashTransactions": [
+    {
+      "commentaires": "Report solde réel de trésorerie au 1er Octobre 2026",
+      "creditClient": "",
+      "dateTime": "2026-10-01 08:00:00",
+      "depot": 81500,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 1,
+      "retrait": 0,
+      "total": 81500,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "nouvelle arrivages ",
+      "creditClient": "",
+      "dateTime": "2026-10-05 16:20:48",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 2,
+      "retrait": 28000,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Déplacement: grand marcher , vakpossito",
+      "creditClient": "",
+      "dateTime": "2026-10-05 16:46:50",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 3,
+      "retrait": 3000,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-001 - micale (Versement: 3000 F / Reste: 900 F)",
+      "creditClient": "micale (Reste: 900 F)",
+      "dateTime": "2026-10-15 10:35:01",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 3000,
+      "id": 4,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Vente Directe CMD-2026-002 - Alice (Acompte: 20000 F / Reste dû: 2700 F)",
+      "creditClient": "Alice (Reste: 2700 F)",
+      "dateTime": "2026-11-02 08:18:36",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 20000,
+      "id": 5,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "ancien dette d'une cliente ",
+      "creditClient": "",
+      "dateTime": "2026-11-02 08:25:30",
+      "depot": 2500,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 6,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-001 - micale (Versement: 900 F / Soldé ✅)",
+      "creditClient": "",
+      "dateTime": "2026-11-07 09:14:54",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 900,
+      "id": 7,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-003 - micale (Versement: 1000 F / Reste: 1000 F)",
+      "creditClient": "micale (Reste: 1000 F)",
+      "dateTime": "2026-11-07 09:16:08",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 1000,
+      "id": 8,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "category": "",
+      "commentaires": "pourboire micale",
+      "creditClient": "",
+      "dateTime": "2026-11-07 09:32:35",
+      "depot": 100,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 9,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "category": "",
+      "commentaires": "nouvelle arrivages ",
+      "creditClient": "",
+      "dateTime": "2026-11-07 19:58:03",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 10,
+      "retrait": 34000,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-004 - Alice (Versement: 2000 F / Soldé ✅)",
+      "creditClient": "",
+      "dateTime": "2026-11-07 19:58:57",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 2000,
+      "id": 11,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-002 - Alice (Versement: 2700 F / Soldé ✅)",
+      "creditClient": "",
+      "dateTime": "2026-11-07 19:59:02",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 2700,
+      "id": 12,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "category": "DEPLACEMENT",
+      "commentaires": "Déplacement: grand marcher  moi et alice ",
+      "creditClient": "",
+      "dateTime": "2026-11-07 20:00:36",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 0,
+      "fromTrip": true,
+      "id": 13,
+      "retrait": 2000,
+      "total": 0,
+      "tripId": 2,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-003 - micale (Versement: 1000 F / Soldé ✅)",
+      "creditClient": "",
+      "dateTime": "2026-11-09 10:30:07",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 1000,
+      "id": 14,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-005 - Marcelin (Versement: 1000 F / Soldé ✅)",
+      "creditClient": "",
+      "dateTime": "2026-11-09 10:30:26",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 1000,
+      "id": 15,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "category": "",
+      "commentaires": "vente de collant 3  ensuite top madonnas 8 a10  3000 dette",
+      "creditClient": "",
+      "dateTime": "2026-11-18 11:51:25",
+      "depot": 10000,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 16,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "category": "DEPLACEMENT",
+      "commentaires": "Déplacement: taxi marcher aller-retour avec Alice ",
+      "creditClient": "",
+      "dateTime": "2026-11-21 14:29:51",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 0,
+      "fromTrip": true,
+      "id": 18,
+      "retrait": 3000,
+      "total": 0,
+      "tripId": 3,
+      "user": "Ange Ines"
+    },
+    {
+      "category": "",
+      "commentaires": "nouvelle marchandise 21/11/2026",
+      "creditClient": "",
+      "dateTime": "2026-11-24 14:31:13",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 0,
+      "id": 19,
+      "retrait": 66000,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Vente Directe CMD-2026-010 - taff (Payé 100%)",
+      "creditClient": "",
+      "dateTime": "2026-11-24 14:38:02",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 1800,
+      "id": 20,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Vente Directe CMD-2026-011 - barbara (Payé 100%)",
+      "creditClient": "",
+      "dateTime": "2026-11-24 14:39:47",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 3000,
+      "id": 21,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Vente Directe CMD-2026-012 - Catherine (Acompte: 1500 F / Reste dû: 500 F)",
+      "creditClient": "Catherine (Reste: 500 F)",
+      "dateTime": "2026-11-24 14:41:33",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 1500,
+      "id": 22,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Vente Directe CMD-2026-013 - Delali (Payé 100%)",
+      "creditClient": "",
+      "dateTime": "2026-11-24 14:42:31",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 1000,
+      "id": 23,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-007 - Micale, delali, moi (Versement: 3500 F / Soldé ✅)",
+      "creditClient": "",
+      "dateTime": "2026-11-24 14:44:02",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 3500,
+      "id": 24,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    },
+    {
+      "commentaires": "Règlement dette CMD-2026-008 - Alice (Versement: 20000 F / Reste: 22700 F)",
+      "creditClient": "Alice (Reste: 22700 F)",
+      "dateTime": "2026-11-24 14:45:10",
+      "depot": 0,
+      "ecart": 0,
+      "encaissement": 20000,
+      "id": 25,
+      "retrait": 0,
+      "total": 0,
+      "user": "Ange Ines"
+    }
+  ],
+  "deliveryPersons": [
+    {
+      "id": 1,
+      "name": "Livreur Kodjo (Express Moto)",
+      "notes": "Courses rapides Lomé Centre & Bè (1 000 - 1 500 F)",
+      "phone": "90123456",
+      "status": "Actif",
+      "transportType": "Moto",
+      "zone": "Déckon, Tokoin, Bè, Grand Marché (Assigamé)"
+    },
+    {
+      "id": 2,
+      "name": "Livreur Folly (Moto Nord)",
+      "notes": "Zone Agoè & banlieue nord (1 500 - 2 000 F)",
+      "phone": "91234567",
+      "status": "Actif",
+      "transportType": "Moto",
+      "zone": "Agoè (Nyivé, Cacavéli, 2 Lions), Hedzranawoé, Kégué"
+    },
+    {
+      "id": 3,
+      "name": "Livreur Mawuli (Moto Ouest)",
+      "notes": "Zone Ouest Lomé",
+      "phone": "92345678",
+      "status": "Actif",
+      "transportType": "Moto",
+      "zone": "Adidogomé, Avédji, Totsi, Amadahomé"
+    },
+    {
+      "id": 4,
+      "name": "Gare Routière / Compagnie (Expéditions Togo)",
+      "notes": "Dépôt colis aux compagnies de transport",
+      "phone": "93456789",
+      "status": "Actif",
+      "transportType": "Bus / Car",
+      "zone": "Intérieur : Tsévié, Kpalimé, Atakpamé, Sokodé, Kara"
+    }
+  ],
+  "deliveryZones": [
+    {
+      "active": true,
+      "delai": "Livraison moto express",
+      "id": 1,
+      "name": "Kégué",
+      "price": 500
+    },
+    {
+      "active": true,
+      "delai": "Livraison moto rapide",
+      "id": 2,
+      "name": "Hedzranawoé",
+      "price": 800
+    },
+    {
+      "active": true,
+      "delai": "Centre des affaires Lomé",
+      "id": 3,
+      "name": "Déckon / Centre-ville / Assigamé",
+      "price": 1000
+    },
+    {
+      "active": true,
+      "delai": "Zone centrale Lomé",
+      "id": 4,
+      "name": "Tokoin (Wuiti, Hôpital, Ramco, Forever)",
+      "price": 1000
+    },
+    {
+      "active": true,
+      "delai": "Zone Sud-Est Lomé",
+      "id": 5,
+      "name": "Bè / Akodésséwa / Port",
+      "price": 1000
+    },
+    {
+      "active": true,
+      "delai": "Zone Nord Lomé",
+      "id": 6,
+      "name": "Agoè (Cacavéli, 2 Lions, Nyivé, Minamadou)",
+      "price": 1500
+    },
+    {
+      "active": true,
+      "delai": "Zone Ouest Lomé",
+      "id": 7,
+      "name": "Adidogomé / Totsi / Amadahomé",
+      "price": 1500
+    },
+    {
+      "active": true,
+      "delai": "Périphérie Est Lomé",
+      "id": 8,
+      "name": "Baguida / Avépozo",
+      "price": 2000
+    },
+    {
+      "active": true,
+      "delai": "Selon localisation exacte",
+      "id": 9,
+      "name": "Autre Quartier de Lomé",
+      "price": 1500
+    }
+  ],
+  "orders": [
+    {
+      "amountPaid": 1000,
+      "createdAt": "2026-11-24 14:42:31",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Delali",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-013",
+      "items": [
+        {
+          "costPrice": 500,
+          "productId": 6,
+          "productName": "chaine de cheville ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        }
+      ],
+      "marginGross": 500,
+      "marginNet": 500,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 1000,
+          "date": "2026-11-24 14:42:31",
+          "method": "ESPECES",
+          "note": "Règlement intégral"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 1000,
+      "totalOrder": 1000
+    },
+    {
+      "amountPaid": 1500,
+      "createdAt": "2026-11-24 14:41:33",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Catherine",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-012",
+      "items": [
+        {
+          "costPrice": 500,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1150,
+          "unitPrice": 1150
+        },
+        {
+          "costPrice": 140,
+          "productId": 15,
+          "productName": "bague ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 350,
+          "unitPrice": 350
+        },
+        {
+          "costPrice": 340,
+          "productId": 4,
+          "productName": "boite a bijoux ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 500,
+          "unitPrice": 500
+        }
+      ],
+      "marginGross": 1020,
+      "marginNet": 1020,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PARTIEL",
+      "payments": [
+        {
+          "amount": 1500,
+          "date": "2026-11-24 14:41:33",
+          "method": "ESPECES",
+          "note": "Acompte initial"
+        }
+      ],
+      "remainingAmount": 500,
+      "status": "LIVRE",
+      "totalItems": 2000,
+      "totalOrder": 2000
+    },
+    {
+      "amountPaid": 3000,
+      "createdAt": "2026-11-24 14:39:47",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "barbara",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-011",
+      "items": [
+        {
+          "costPrice": 500,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1250,
+          "unitPrice": 1250
+        },
+        {
+          "costPrice": 670,
+          "productId": 7,
+          "productName": "chaine de hanche ",
+          "quantity": 2,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1400,
+          "unitPrice": 700
+        },
+        {
+          "costPrice": 140,
+          "productId": 15,
+          "productName": "bague ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 350,
+          "unitPrice": 350
+        }
+      ],
+      "marginGross": 1020,
+      "marginNet": 1020,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 3000,
+          "date": "2026-11-24 14:39:47",
+          "method": "ESPECES",
+          "note": "Règlement intégral"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 3000,
+      "totalOrder": 3000
+    },
+    {
+      "amountPaid": 1800,
+      "createdAt": "2026-11-24 14:38:02",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "taff",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-010",
+      "items": [
+        {
+          "costPrice": 500,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1300,
+          "unitPrice": 1300
+        },
+        {
+          "costPrice": 840,
+          "productId": 3,
+          "productName": "bracelet  de qualiter ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 500,
+          "unitPrice": 500
+        }
+      ],
+      "marginGross": 460,
+      "marginNet": 460,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 1800,
+          "date": "2026-11-24 14:38:02",
+          "method": "ESPECES",
+          "note": "Règlement intégral"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 1800,
+      "totalOrder": 1800
+    },
+    {
+      "amountPaid": 0,
+      "createdAt": "2026-11-24 14:36:22",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "micale",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-009",
+      "items": [
+        {
+          "costPrice": 500,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 2,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 2600,
+          "unitPrice": 1300
+        },
+        {
+          "costPrice": 140,
+          "productId": 15,
+          "productName": "bague ",
+          "quantity": 3,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1050,
+          "unitPrice": 350
+        },
+        {
+          "costPrice": 340,
+          "productId": 4,
+          "productName": "boite a bijoux ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 400,
+          "unitPrice": 400
+        },
+        {
+          "costPrice": 500,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 950,
+          "unitPrice": 950
+        }
+      ],
+      "marginGross": 2740,
+      "marginNet": 2740,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "IMPAYE",
+      "remainingAmount": 5000,
+      "status": "LIVRE",
+      "totalItems": 5000,
+      "totalOrder": 5000
+    },
+    {
+      "amountPaid": 20000,
+      "createdAt": "2026-11-23 10:28:27",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Alice",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-008",
+      "items": [
+        {
+          "costPrice": 84,
+          "productId": 12,
+          "productName": "strass dent",
+          "quantity": 12,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 2400,
+          "unitPrice": 200
+        },
+        {
+          "costPrice": 208,
+          "productId": 13,
+          "productName": "boucle d'oreille  ",
+          "quantity": 12,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 4800,
+          "unitPrice": 400
+        },
+        {
+          "costPrice": 1000,
+          "productId": 14,
+          "productName": "ensemble bracelet et montre ",
+          "quantity": 10,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 15000,
+          "unitPrice": 1500
+        },
+        {
+          "costPrice": 167,
+          "productId": 15,
+          "productName": "bague ",
+          "quantity": 12,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 6000,
+          "unitPrice": 500
+        },
+        {
+          "costPrice": 1500,
+          "productId": 16,
+          "productName": "chaine de hanche grand ",
+          "quantity": 3,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 7500,
+          "unitPrice": 2500
+        },
+        {
+          "costPrice": 331,
+          "productId": 17,
+          "productName": "bague avec perle ",
+          "quantity": 3,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1500,
+          "unitPrice": 500
+        },
+        {
+          "costPrice": 3500,
+          "productId": 19,
+          "productName": "sac ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 4500,
+          "unitPrice": 4500
+        },
+        {
+          "costPrice": 6,
+          "productId": 20,
+          "productName": "strass nez ou visage ",
+          "quantity": 40,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 25
+        }
+      ],
+      "marginGross": 17959,
+      "marginNet": 17959,
+      "notes": "20.000 j'ai pris samedi au marche",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PARTIEL",
+      "payments": [
+        {
+          "amount": 20000,
+          "date": "2026-11-24 14:45:10",
+          "method": "ESPECES",
+          "note": "premiere partie 21/11/2026"
+        }
+      ],
+      "remainingAmount": 22700,
+      "status": "LIVRE",
+      "totalItems": 42700,
+      "totalOrder": 42700
+    },
+    {
+      "amountPaid": 3500,
+      "createdAt": "2026-11-23 10:19:51",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Micale, delali, moi",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-007",
+      "items": [
+        {
+          "costPrice": 340,
+          "productId": 10,
+          "productName": "parfum bic ",
+          "quantity": 3,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1500,
+          "unitPrice": 500
+        },
+        {
+          "costPrice": 670,
+          "productId": 11,
+          "productName": "brume du corps ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        },
+        {
+          "costPrice": 500,
+          "productId": 5,
+          "productName": "ensemble bracelet, bague et boucle en résine ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        }
+      ],
+      "marginGross": 1310,
+      "marginNet": 1310,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 3500,
+          "date": "2026-11-24 14:44:02",
+          "method": "ESPECES",
+          "note": "Règlement dette / Versement"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 3500,
+      "totalOrder": 3500
+    },
+    {
+      "amountPaid": 0,
+      "createdAt": "2026-11-23 10:15:50",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Alice",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-006",
+      "items": [
+        {
+          "costPrice": 460,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        },
+        {
+          "costPrice": 500,
+          "productId": 6,
+          "productName": "chaine de cheville ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        }
+      ],
+      "marginGross": 1040,
+      "marginNet": 1040,
+      "notes": "a récupérer",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "IMPAYE",
+      "remainingAmount": 2000,
+      "status": "LIVRE",
+      "totalItems": 2000,
+      "totalOrder": 2000
+    },
+    {
+      "amountPaid": 1000,
+      "createdAt": "2026-11-02 08:22:15",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Marcelin",
+      "customerPhone": "79871558",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-005",
+      "items": [
+        {
+          "costPrice": 460,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        }
+      ],
+      "marginGross": 540,
+      "marginNet": 540,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 1000,
+          "date": "2026-11-09 10:30:26",
+          "method": "ESPECES",
+          "note": "Règlement dette / Versement"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 1000,
+      "totalOrder": 1000
+    },
+    {
+      "amountPaid": 2000,
+      "createdAt": "2026-11-02 08:19:29",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Alice",
+      "customerPhone": "93226740",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-004",
+      "items": [
+        {
+          "costPrice": 840,
+          "productId": 3,
+          "productName": "bracelet  de qualiter ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        },
+        {
+          "costPrice": 840,
+          "productId": 3,
+          "productName": "bracelet  de qualiter ",
+          "quantity": 1,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1000,
+          "unitPrice": 1000
+        }
+      ],
+      "marginGross": 320,
+      "marginNet": 320,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 2000,
+          "date": "2026-11-07 19:58:57",
+          "method": "ESPECES",
+          "note": "Règlement dette / Versement"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 2000,
+      "totalOrder": 2000
+    },
+    {
+      "amountPaid": 22700,
+      "createdAt": "2026-11-02 08:18:36",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "Alice",
+      "customerPhone": "93226740",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-002",
+      "items": [
+        {
+          "costPrice": 460,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 4,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 5200,
+          "unitPrice": 1300
+        },
+        {
+          "costPrice": 670,
+          "productId": 2,
+          "productName": "bracelet  simple",
+          "quantity": 3,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 3000,
+          "unitPrice": 1000
+        },
+        {
+          "costPrice": 500,
+          "productId": 6,
+          "productName": "chaine de cheville ",
+          "quantity": 2,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 2000,
+          "unitPrice": 1000
+        },
+        {
+          "costPrice": 1000,
+          "productId": 8,
+          "productName": "nettoyant visage ",
+          "quantity": 6,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 9000,
+          "unitPrice": 1500
+        },
+        {
+          "costPrice": 340,
+          "productId": 9,
+          "productName": "huile de parfum",
+          "quantity": 3,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 1500,
+          "unitPrice": 500
+        },
+        {
+          "costPrice": 670,
+          "productId": 11,
+          "productName": "brume du corps ",
+          "quantity": 2,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 2000,
+          "unitPrice": 1000
+        }
+      ],
+      "marginGross": 7000,
+      "marginNet": 7000,
+      "notes": "Vente directe boutique (Acompte 20 000 F / Reste à payer 2 700 F)",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 20000,
+          "date": "2026-11-02 08:18:36",
+          "method": "ESPECES",
+          "note": "Acompte initial à la commande"
+        },
+        {
+          "amount": 2700,
+          "date": "2026-11-07 19:59:02",
+          "method": "ESPECES",
+          "note": "Règlement dette / Versement"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 22700,
+      "totalOrder": 22700
+    },
+    {
+      "amountPaid": 2000,
+      "createdAt": "2026-10-15 10:34:05",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "micale",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-003",
+      "items": [
+        {
+          "costPrice": 670,
+          "productId": 11,
+          "productName": "brume du corps ",
+          "quantity": 2,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 2000,
+          "unitPrice": 1000
+        }
+      ],
+      "marginGross": 660,
+      "marginNet": 660,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 1000,
+          "date": "2026-11-07 09:16:08",
+          "method": "ESPECES",
+          "note": "Règlement dette / Versement"
+        },
+        {
+          "amount": 1000,
+          "date": "2026-11-09 10:30:07",
+          "method": "ESPECES",
+          "note": "Règlement dette / Versement"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 2000,
+      "totalOrder": 2000
+    },
+    {
+      "amountPaid": 3900,
+      "createdAt": "2026-10-12 11:29:38",
+      "customerAddress": "Vente sur place / Maison",
+      "customerName": "micale",
+      "customerPhone": "",
+      "deliveryFee": 0,
+      "deliveryFeePayer": "CLIENT",
+      "deliveryMode": "VENTE_DIRECTE",
+      "deliveryPersonName": "",
+      "deliveryPersonPhone": "",
+      "id": "CMD-2026-001",
+      "items": [
+        {
+          "costPrice": 460,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 3,
+          "selectedColor": "",
+          "selectedSize": "",
+          "total": 3900,
+          "unitPrice": 1300
+        }
+      ],
+      "marginGross": 2520,
+      "marginNet": 2520,
+      "notes": "",
+      "orderSource": "DIRECTE",
+      "paymentMethod": "ESPECES",
+      "paymentStatus": "PAYE",
+      "payments": [
+        {
+          "amount": 3000,
+          "date": "2026-10-15 10:35:01",
+          "method": "ESPECES",
+          "note": "premiere partie"
+        },
+        {
+          "amount": 900,
+          "date": "2026-11-07 09:14:54",
+          "method": "ESPECES",
+          "note": "Règlement dette / Versement"
+        }
+      ],
+      "remainingAmount": 0,
+      "status": "LIVRE",
+      "totalItems": 3900,
+      "totalOrder": 3900
+    }
+  ],
+  "products": [
+    {
+      "available": true,
+      "category": "colliers  &  boucle d'oreille",
+      "colors": "",
+      "costPrice": 500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 1,
+      "image": "https://i.ibb.co/PZkRtCV5/338e2d26c989.jpg",
+      "images": [
+        "https://i.ibb.co/PZkRtCV5/338e2d26c989.jpg",
+        "https://i.ibb.co/0vckngT/82e89b49dceb.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "ensemble colliers et boucle d'oreille  ",
+      "promoPrice": 1000,
+      "published": false,
+      "salePrice": 1300,
+      "sizes": "",
+      "stock": 6
+    },
+    {
+      "available": true,
+      "category": "bracelet ",
+      "colors": "",
+      "costPrice": 350,
+      "coverIndex": 0,
+      "description": "",
+      "id": 2,
+      "image": "https://i.ibb.co/Z44gNPZ/5d10ae37d30a.jpg",
+      "images": [
+        "https://i.ibb.co/Z44gNPZ/5d10ae37d30a.jpg",
+        "https://i.ibb.co/GQrPZG0W/26f84572dfb6.jpg",
+        "https://i.ibb.co/wZJhFxXv/70ac5dbed72d.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "bracelet  simple",
+      "promoPrice": 0,
+      "published": false,
+      "salePrice": 1000,
+      "sizes": "",
+      "stock": 3
+    },
+    {
+      "available": true,
+      "category": "bracelet ",
+      "colors": "",
+      "costPrice": 840,
+      "coverIndex": 0,
+      "description": "",
+      "id": 3,
+      "image": "https://i.ibb.co/S4PP9mKQ/0b69c7a9bf15.jpg",
+      "images": [
+        "https://i.ibb.co/S4PP9mKQ/0b69c7a9bf15.jpg",
+        "https://i.ibb.co/h1gDLVfJ/b2c4bc7bdd28.jpg",
+        "https://i.ibb.co/nNd0FDzr/e4b84aa67d07.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "bracelet  de qualiter ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1300,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "packaging ",
+      "colors": "",
+      "costPrice": 340,
+      "coverIndex": 0,
+      "description": "",
+      "id": 4,
+      "image": "https://i.ibb.co/PkxThnZ/10c7f52b147d.jpg",
+      "images": [
+        "https://i.ibb.co/PkxThnZ/10c7f52b147d.jpg",
+        "https://i.ibb.co/v4f5myK5/4726772544ae.jpg",
+        "https://i.ibb.co/qMVmxWFZ/f2b4f6dd3edc.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "boite a bijoux ",
+      "promoPrice": 500,
+      "published": true,
+      "salePrice": 700,
+      "sizes": "",
+      "stock": 4
+    },
+    {
+      "available": true,
+      "category": "colliers  &  boucle d'oreille",
+      "colors": "",
+      "costPrice": 500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 5,
+      "image": "https://i.ibb.co/bM4zkRm5/e756b5bdb78b.jpg",
+      "images": [
+        "https://i.ibb.co/bM4zkRm5/e756b5bdb78b.jpg",
+        "https://i.ibb.co/21nXtvZR/c439aa0a47bf.jpg",
+        "https://i.ibb.co/xSqvHYBy/99817217cc16.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "ensemble bracelet, bague et boucle en résine ",
+      "promoPrice": 1200,
+      "published": true,
+      "salePrice": 1500,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "chaine ",
+      "colors": "",
+      "costPrice": 500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 6,
+      "image": "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg",
+      "images": [
+        "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg",
+        "https://i.ibb.co/spj6TJN7/786b0288dd46.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "chaine de cheville ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1000,
+      "sizes": "",
+      "stock": 2
+    },
+    {
+      "available": true,
+      "category": "chaine ",
+      "colors": "",
+      "costPrice": 670,
+      "coverIndex": 0,
+      "description": "",
+      "id": 7,
+      "image": "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg",
+      "images": [
+        "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg",
+        "https://i.ibb.co/hRM5FmKm/5ee4515d471e.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "chaine de hanche ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1500,
+      "sizes": "",
+      "stock": 1
+    },
+    {
+      "available": true,
+      "category": "soins corporel",
+      "colors": "",
+      "costPrice": 1000,
+      "coverIndex": 0,
+      "description": "",
+      "id": 8,
+      "image": "https://i.ibb.co/B2KGYHFJ/e8c534a61388.jpg",
+      "images": [
+        "https://i.ibb.co/B2KGYHFJ/e8c534a61388.jpg",
+        "https://i.ibb.co/39Vp1Z5P/d1a8dcc1f168.jpg",
+        "https://i.ibb.co/B2KGYHFJ/e8c534a61388.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "nettoyant visage ",
+      "promoPrice": 0,
+      "published": false,
+      "salePrice": 1500,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "parfum",
+      "costPrice": 340,
+      "coverIndex": 0,
+      "description": "",
+      "id": 9,
+      "image": "https://i.ibb.co/8LNNj808/9403f311a64a.jpg",
+      "images": [
+        "https://i.ibb.co/8LNNj808/9403f311a64a.jpg",
+        "https://i.ibb.co/8LNNj808/9403f311a64a.jpg",
+        "https://i.ibb.co/yFcBn7Ng/f1086b0ece12.jpg",
+        "https://i.ibb.co/fdHg5ftG/7c04f931a389.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "huile de parfum",
+      "promoPrice": 0,
+      "published": false,
+      "salePrice": 500,
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "parfum",
+      "costPrice": 340,
+      "coverIndex": 0,
+      "description": "",
+      "id": 10,
+      "image": "https://i.ibb.co/Xf8W3dzt/49ded6da72f7.jpg",
+      "images": [
+        "https://i.ibb.co/Xf8W3dzt/49ded6da72f7.jpg",
+        "https://i.ibb.co/Xf8W3dzt/49ded6da72f7.jpg",
+        "https://i.ibb.co/NHmDg8x/d43e5e314c24.jpg",
+        "https://i.ibb.co/MDqBrL6Q/f36ed721cbdd.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "parfum bic ",
+      "promoPrice": 500,
+      "published": true,
+      "salePrice": 700,
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "parfum",
+      "colors": "",
+      "costPrice": 670,
+      "coverIndex": 0,
+      "description": "",
+      "id": 11,
+      "image": "https://i.ibb.co/21KYKBns/dd2389d58c23.jpg",
+      "images": [
+        "https://i.ibb.co/21KYKBns/dd2389d58c23.jpg",
+        "https://i.ibb.co/21KYKBns/dd2389d58c23.jpg",
+        "https://i.ibb.co/RpgYpFPB/ed69ff4227f5.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "brume du corps ",
+      "promoPrice": 1000,
+      "published": true,
+      "salePrice": 1100,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "accessoire de bouche  ",
+      "colors": "",
+      "costPrice": 84,
+      "coverIndex": 0,
+      "description": "",
+      "id": 12,
+      "image": "https://i.ibb.co/vvdS5sHf/fcfd389857ae.jpg",
+      "images": [
+        "https://i.ibb.co/vvdS5sHf/fcfd389857ae.jpg",
+        "https://i.ibb.co/Z1Rk4T1T/5a418d540147.jpg",
+        "https://i.ibb.co/Dgb4V8J8/87d627cbd03e.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": true,
+      "minStockAlert": 3,
+      "name": "strass dent",
+      "promoPrice": 200,
+      "published": true,
+      "salePrice": 250,
+      "sizes": "",
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "colliers  &  boucle d'oreille",
+      "costPrice": 208,
+      "coverIndex": 0,
+      "description": "",
+      "id": 13,
+      "image": "https://i.ibb.co/bjGJ8rd9/d38af8453244.jpg",
+      "images": [
+        "https://i.ibb.co/bjGJ8rd9/d38af8453244.jpg",
+        "https://i.ibb.co/bjGJ8rd9/d38af8453244.jpg",
+        "https://i.ibb.co/TxYHFY54/14bd912b304f.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "boucle d'oreille  ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 400,
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "bracelet ",
+      "costPrice": 1000,
+      "coverIndex": 0,
+      "description": "3 pièce ou 2 pièce",
+      "id": 14,
+      "image": "https://i.ibb.co/7BNC3kb/d5f6e0d68450.jpg",
+      "images": [
+        "https://i.ibb.co/7BNC3kb/d5f6e0d68450.jpg",
+        "https://i.ibb.co/7BNC3kb/d5f6e0d68450.jpg",
+        "https://i.ibb.co/VpNF6fMZ/446363e18550.jpg",
+        "https://i.ibb.co/LhSzTDhk/ac5e790d881f.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "ensemble bracelet et montre ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 1500,
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "bracelet ",
+      "costPrice": 140,
+      "coverIndex": 0,
+      "description": "",
+      "id": 15,
+      "image": "https://i.ibb.co/C5cPLMrP/62f4a741ae92.jpg",
+      "images": [
+        "https://i.ibb.co/C5cPLMrP/62f4a741ae92.jpg",
+        "https://i.ibb.co/C5cPLMrP/62f4a741ae92.jpg",
+        "https://i.ibb.co/DDpyRMc3/93828579c923.jpg",
+        "https://i.ibb.co/TqnSNfL7/61ed238422da.jpg",
+        "https://i.ibb.co/ynGQ9xY7/445100549cb9.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "bague ",
+      "promoPrice": 400,
+      "published": true,
+      "salePrice": 350,
+      "stock": 107
+    },
+    {
+      "available": true,
+      "category": "chaine ",
+      "costPrice": 1500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 16,
+      "image": "https://i.ibb.co/Y7NkXYSF/82f7bed8f37d.jpg",
+      "images": [
+        "https://i.ibb.co/Y7NkXYSF/82f7bed8f37d.jpg",
+        "https://i.ibb.co/Y7NkXYSF/82f7bed8f37d.jpg",
+        "https://i.ibb.co/DH9L0nTP/41d058d360c4.jpg",
+        "https://i.ibb.co/q3dHqdQL/0f37c9f1f07a.jpg",
+        "https://i.ibb.co/Nd6g08Yr/7682a6d4b209.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "chaine de hanche grand ",
+      "promoPrice": 2000,
+      "published": true,
+      "salePrice": 2500,
+      "stock": 3
+    },
+    {
+      "available": true,
+      "category": "bracelet ",
+      "costPrice": 331,
+      "coverIndex": 0,
+      "description": "",
+      "id": 17,
+      "image": "https://i.ibb.co/r2vDN4Wz/8d8a822e633d.jpg",
+      "images": [
+        "https://i.ibb.co/r2vDN4Wz/8d8a822e633d.jpg",
+        "https://i.ibb.co/r2vDN4Wz/8d8a822e633d.jpg",
+        "https://i.ibb.co/TBQCSR1M/e5ac24f20404.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "bague avec perle ",
+      "promoPrice": 0,
+      "published": true,
+      "salePrice": 500,
+      "stock": 0
+    },
+    {
+      "available": true,
+      "category": "habit femme",
+      "costPrice": 1000,
+      "coverIndex": 0,
+      "description": "",
+      "id": 18,
+      "image": "https://i.ibb.co/ycnGpWRB/b919d21207a7.jpg",
+      "images": [
+        "https://i.ibb.co/ycnGpWRB/b919d21207a7.jpg",
+        "https://i.ibb.co/ycnGpWRB/b919d21207a7.jpg"
+      ],
+      "isFeatured": true,
+      "isPromo": true,
+      "minStockAlert": 3,
+      "name": "haut tendance ",
+      "promoPrice": 1500,
+      "published": true,
+      "salePrice": 1500,
+      "stock": 2
+    },
+    {
+      "available": true,
+      "category": "sac",
+      "costPrice": 3500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 19,
+      "image": "https://i.ibb.co/pjr9pkwT/d1ec4ef4d16d.jpg",
+      "images": [
+        "https://i.ibb.co/pjr9pkwT/d1ec4ef4d16d.jpg",
+        "https://i.ibb.co/pjr9pkwT/d1ec4ef4d16d.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "sac ",
+      "promoPrice": 4500,
+      "published": false,
+      "salePrice": 4500,
+      "stock": 1
+    },
+    {
+      "available": true,
+      "category": "Collants & Lingerie",
+      "colors": "",
+      "costPrice": 6,
+      "coverIndex": 0,
+      "description": "",
+      "id": 20,
+      "image": "https://i.ibb.co/3yj3hFX2/d284f5ccd45e.jpg",
+      "images": [
+        "https://i.ibb.co/3yj3hFX2/d284f5ccd45e.jpg",
+        "https://i.ibb.co/3yj3hFX2/d284f5ccd45e.jpg",
+        "https://i.ibb.co/HDyWbywB/16ea9c38741b.jpg",
+        "https://i.ibb.co/3yj3hFX2/d284f5ccd45e.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "strass nez ou visage ",
+      "promoPrice": 25,
+      "published": true,
+      "salePrice": 25,
+      "sizes": "",
+      "stock": 120
+    },
+    {
+      "available": true,
+      "category": "piercing ",
+      "costPrice": 334,
+      "coverIndex": 0,
+      "description": "",
+      "id": 21,
+      "image": "https://i.ibb.co/q3QJLQkW/ff4e26cca1e5.jpg",
+      "images": [
+        "https://i.ibb.co/q3QJLQkW/ff4e26cca1e5.jpg",
+        "https://i.ibb.co/q3QJLQkW/ff4e26cca1e5.jpg",
+        "https://i.ibb.co/nsH8Bxfs/8c6706dc980a.jpg"
+      ],
+      "isFeatured": false,
+      "isPromo": true,
+      "minStockAlert": 3,
+      "name": "faux piercing nez ",
+      "promoPrice": 800,
+      "published": true,
+      "salePrice": 1000,
+      "stock": 3
+    },
+    {
+      "available": true,
+      "category": "robe de soirée ",
+      "colors": "",
+      "costPrice": 3500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 22,
+      "image": "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "robe de soirée orange ",
+      "promoPrice": 4500,
+      "published": true,
+      "salePrice": 5000,
+      "sizes": "",
+      "stock": 3
+    },
+    {
+      "available": true,
+      "category": "robe de soirée ",
+      "colors": "",
+      "costPrice": 3000,
+      "coverIndex": 0,
+      "description": "",
+      "id": 24,
+      "image": "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "robe de soirée longue ",
+      "promoPrice": 4500,
+      "published": true,
+      "salePrice": 5000,
+      "sizes": "",
+      "stock": 2
+    },
+    {
+      "available": true,
+      "category": "robe de soirée ",
+      "costPrice": 3500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 25,
+      "image": "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "robe violette ",
+      "promoPrice": 4500,
+      "published": false,
+      "salePrice": 5000,
+      "stock": 1
+    },
+    {
+      "available": true,
+      "category": "robe de soirée ",
+      "costPrice": 3500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 26,
+      "image": "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "robe de soirée avec ceinture ",
+      "promoPrice": 4500,
+      "published": false,
+      "salePrice": 5000,
+      "stock": 1
+    },
+    {
+      "available": true,
+      "category": "top ",
+      "costPrice": 2000,
+      "coverIndex": 0,
+      "description": "",
+      "id": 27,
+      "image": "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "top haut ",
+      "promoPrice": 5500,
+      "published": true,
+      "salePrice": 2500,
+      "stock": 4
+    },
+    {
+      "available": true,
+      "category": "chaussure ",
+      "costPrice": 3500,
+      "coverIndex": 0,
+      "description": "",
+      "id": 28,
+      "image": "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=80"
+      ],
+      "isFeatured": false,
+      "isPromo": false,
+      "minStockAlert": 3,
+      "name": "chaussure  simple ",
+      "promoPrice": 4500,
+      "published": true,
+      "salePrice": 4500,
+      "stock": 2
+    }
+  ],
+  "settings": {
+    "address": "Lomé, Togo",
+    "adminPassword": "password2026",
+    "adminUsername": "93849200",
+    "city": "Lomé, Togo",
+    "currency": "FCFA",
+    "currentCash": 20500,
+    "facebookUrl": "https://www.facebook.com/profile.php?id=61587838474305",
+    "fullWhatsapp": "22893849200",
+    "initialCash": 81500,
+    "instagramUrl": "https://instagram.com/maison_angy",
+    "logoUrl": "/images/logo.jpg",
+    "slogan": "Le style, pour tous. Sans compromis.",
+    "storeName": "Maison Angy Collection",
+    "tiktokUrl": "https://www.tiktok.com/@ange2647",
+    "whatsappCountryCode": "228",
+    "whatsappNumber": "93 84 92 00"
+  },
+  "shipments": [
+    {
+      "createdAt": "2026-11-24T14:28:47.727Z",
+      "date": "2026-11-24",
+      "id": 10,
+      "items": [
+        {
+          "costPrice": 500,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 12,
+          "salePrice": 1300,
+          "totalCost": 6000
+        },
+        {
+          "costPrice": 350,
+          "productId": 2,
+          "productName": "bracelet  simple",
+          "quantity": 3,
+          "salePrice": 1000,
+          "totalCost": 1050
+        },
+        {
+          "costPrice": 3500,
+          "productId": 22,
+          "productName": "robe de soirée orange ",
+          "quantity": 3,
+          "salePrice": 5000,
+          "totalCost": 10500
+        },
+        {
+          "costPrice": 3000,
+          "productId": 24,
+          "productName": "robe de soirée longue ",
+          "quantity": 2,
+          "salePrice": 5000,
+          "totalCost": 6000
+        },
+        {
+          "costPrice": 3500,
+          "productId": 26,
+          "productName": "robe de soirée avec ceinture ",
+          "quantity": 1,
+          "salePrice": 5000,
+          "totalCost": 3500
+        },
+        {
+          "costPrice": 2000,
+          "productId": 27,
+          "productName": "top haut ",
+          "quantity": 4,
+          "salePrice": 2500,
+          "totalCost": 8000
+        },
+        {
+          "costPrice": 3500,
+          "productId": 28,
+          "productName": "chaussure  simple ",
+          "quantity": 2,
+          "salePrice": 4500,
+          "totalCost": 7000
+        },
+        {
+          "costPrice": 500,
+          "productId": 6,
+          "productName": "chaine de cheville ",
+          "quantity": 3,
+          "salePrice": 1000,
+          "totalCost": 1500
+        },
+        {
+          "costPrice": 1500,
+          "productId": 16,
+          "productName": "chaine de hanche grand ",
+          "quantity": 3,
+          "salePrice": 2500,
+          "totalCost": 4500
+        },
+        {
+          "costPrice": 140,
+          "productId": 15,
+          "productName": "bague ",
+          "quantity": 100,
+          "salePrice": 350,
+          "totalCost": 14000
+        },
+        {
+          "costPrice": 3500,
+          "productId": 25,
+          "productName": "robe violette ",
+          "quantity": 1,
+          "salePrice": 5000,
+          "totalCost": 3500
+        }
+      ],
+      "notes": "sam/21/11/2026",
+      "number": "ARR-2026-010",
+      "paidFromCash": false,
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 65550,
+      "totalQuantity": 134
+    },
+    {
+      "createdAt": "2026-11-07T19:51:49.123Z",
+      "date": "2026-11-07",
+      "id": 9,
+      "items": [
+        {
+          "costPrice": 334,
+          "productId": 21,
+          "productName": "faux piercing nez ",
+          "quantity": 3,
+          "salePrice": 1000,
+          "totalCost": 1002
+        }
+      ],
+      "notes": "5 fournisseur",
+      "number": "ARR-2026-008",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 1002,
+      "totalQuantity": 3
+    },
+    {
+      "createdAt": "2026-11-07T19:50:43.514Z",
+      "date": "2026-11-07",
+      "id": 8,
+      "items": [
+        {
+          "costPrice": 6,
+          "productId": 20,
+          "productName": "strass nez ou visage ",
+          "quantity": 160,
+          "salePrice": 25,
+          "totalCost": 960
+        }
+      ],
+      "notes": "5 fournisseur",
+      "number": "ARR-2026-008",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 960,
+      "totalQuantity": 160
+    },
+    {
+      "createdAt": "2026-11-07T19:41:12.267Z",
+      "date": "2026-11-07",
+      "id": 7,
+      "items": [
+        {
+          "costPrice": 3500,
+          "productId": 19,
+          "productName": "sac ",
+          "quantity": 2,
+          "salePrice": 4500,
+          "totalCost": 7000
+        }
+      ],
+      "notes": "4 fournisseur",
+      "number": "ARR-2026-007",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 7000,
+      "totalQuantity": 2
+    },
+    {
+      "createdAt": "2026-11-07T19:36:47.834Z",
+      "date": "2026-11-07",
+      "id": 6,
+      "items": [
+        {
+          "costPrice": 1000,
+          "productId": 18,
+          "productName": "haut tendance ",
+          "quantity": 2,
+          "salePrice": 1500,
+          "totalCost": 2000
+        }
+      ],
+      "notes": "3 fournisseur",
+      "number": "ARR-2026-006",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 2000,
+      "totalQuantity": 2
+    },
+    {
+      "createdAt": "2026-11-07T19:32:22.571Z",
+      "date": "2026-11-07",
+      "id": 5,
+      "items": [
+        {
+          "costPrice": 167,
+          "productId": 15,
+          "productName": "bague ",
+          "quantity": 24,
+          "salePrice": 500,
+          "totalCost": 4008
+        },
+        {
+          "costPrice": 331,
+          "productId": 17,
+          "productName": "bague avec perle ",
+          "quantity": 3,
+          "salePrice": 500,
+          "totalCost": 993
+        },
+        {
+          "costPrice": 1500,
+          "productId": 16,
+          "productName": "chaine de hanche grand ",
+          "quantity": 3,
+          "salePrice": 2500,
+          "totalCost": 4500
+        }
+      ],
+      "notes": "2 fournisseur",
+      "number": "ARR-2026-005",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 9501,
+      "totalQuantity": 30
+    },
+    {
+      "createdAt": "2026-11-07T19:29:03.437Z",
+      "date": "2026-11-07",
+      "id": 4,
+      "items": [
+        {
+          "costPrice": 84,
+          "productId": 12,
+          "productName": "strass dent",
+          "quantity": 12,
+          "salePrice": 250,
+          "totalCost": 1008
+        },
+        {
+          "costPrice": 208,
+          "productId": 13,
+          "productName": "boucle d'oreille  ",
+          "quantity": 12,
+          "salePrice": 400,
+          "totalCost": 2496
+        },
+        {
+          "costPrice": 1000,
+          "productId": 14,
+          "productName": "ensemble bracelet et montre ",
+          "quantity": 10,
+          "salePrice": 1500,
+          "totalCost": 10000
+        }
+      ],
+      "notes": "premier fournisseur",
+      "number": "ARR-2026-004",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 13504,
+      "totalQuantity": 34
+    },
+    {
+      "createdAt": "2026-10-05T11:18:51.683Z",
+      "date": "2026-10-05",
+      "id": 3,
+      "items": [
+        {
+          "costPrice": 340,
+          "productId": 9,
+          "productName": "huile de parfum",
+          "quantity": 3,
+          "salePrice": 500,
+          "totalCost": 1020
+        },
+        {
+          "costPrice": 340,
+          "productId": 10,
+          "productName": "parfum bic ",
+          "quantity": 3,
+          "salePrice": 700,
+          "totalCost": 1020
+        },
+        {
+          "costPrice": 670,
+          "productId": 11,
+          "productName": "brume du corps ",
+          "quantity": 3,
+          "salePrice": 1100,
+          "totalCost": 2010
+        }
+      ],
+      "notes": "",
+      "number": "ARR-2026-003",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 4050,
+      "totalQuantity": 9
+    },
+    {
+      "createdAt": "2026-10-05T11:18:07.262Z",
+      "date": "2026-10-05",
+      "id": 2,
+      "items": [
+        {
+          "costPrice": 1000,
+          "productId": 8,
+          "productName": "nettoyant visage ",
+          "quantity": 6,
+          "salePrice": 1500,
+          "totalCost": 6000
+        }
+      ],
+      "notes": "",
+      "number": "ARR-2026-002",
+      "registeredBy": "Ange Ines",
+      "supplier": "nie's world vakpossito",
+      "totalCost": 6000,
+      "totalQuantity": 6
+    },
+    {
+      "createdAt": "2026-10-05T10:57:18.213Z",
+      "date": "2026-10-05",
+      "id": 1,
+      "items": [
+        {
+          "costPrice": 460,
+          "productId": 1,
+          "productName": "ensemble colliers et boucle d'oreille  ",
+          "quantity": 12,
+          "salePrice": 1300,
+          "totalCost": 5520
+        },
+        {
+          "costPrice": 670,
+          "productId": 2,
+          "productName": "bracelet  simple",
+          "quantity": 3,
+          "salePrice": 1000,
+          "totalCost": 2010
+        },
+        {
+          "costPrice": 840,
+          "productId": 3,
+          "productName": "bracelet  de qualiter ",
+          "quantity": 3,
+          "salePrice": 1300,
+          "totalCost": 2520
+        },
+        {
+          "costPrice": 340,
+          "productId": 4,
+          "productName": "boite a bijoux ",
+          "quantity": 6,
+          "salePrice": 700,
+          "totalCost": 2040
+        },
+        {
+          "costPrice": 500,
+          "productId": 5,
+          "productName": "ensemble bracelet, bague et boucle en résine ",
+          "quantity": 1,
+          "salePrice": 1500,
+          "totalCost": 500
+        },
+        {
+          "costPrice": 500,
+          "productId": 6,
+          "productName": "chaine de cheville ",
+          "quantity": 3,
+          "salePrice": 1000,
+          "totalCost": 1500
+        },
+        {
+          "costPrice": 670,
+          "productId": 7,
+          "productName": "chaine de hanche ",
+          "quantity": 6,
+          "salePrice": 1500,
+          "totalCost": 4020
+        }
+      ],
+      "notes": "",
+      "number": "ARR-2026-001",
+      "registeredBy": "Ange Ines",
+      "supplier": "Grossiste Assigamé (Lomé)",
+      "totalCost": 18110,
+      "totalQuantity": 34
+    }
+  ],
+  "suppliers": [
+    "Grossiste Assigamé (Lomé)",
+    "Fournisseur Cotonou / Nigéria",
+    "Importateur Chine / Dubaï",
+    "Autre Fournisseur"
+  ],
+  "trips": [
+    {
+      "category": "DEPLACEMENT",
+      "cost": 3000,
+      "dateTime": "2026-11-21 14:29:51",
+      "description": "taxi marcher aller-retour avec Alice ",
+      "id": 3,
+      "notes": "",
+      "relatedSupplierOrder": "",
+      "transportType": "TAXI_MOTO"
+    },
+    {
+      "category": "DEPLACEMENT",
+      "cost": 2000,
+      "dateTime": "2026-11-07 20:00:36",
+      "description": "grand marcher  moi et alice ",
+      "id": 2,
+      "notes": "",
+      "relatedSupplierOrder": "",
+      "transportType": "TAXI"
+    },
+    {
+      "cost": 3000,
+      "dateTime": "2026-10-05 16:46:50",
+      "description": "grand marcher , vakpossito",
+      "id": 1,
+      "notes": "",
+      "relatedSupplierOrder": "",
+      "transportType": "TAXI_MOTO"
+    }
+  ],
+  "users": [
+    {
+      "createdAt": "2026-09-21",
+      "id": 1,
+      "name": "Ange Ines",
+      "password": "password2026",
+      "permissions": {
+        "cash": true,
+        "delivery": true,
+        "orders": true,
+        "products": true,
+        "profits": true,
+        "settings": true,
+        "team": true,
+        "trips": true
+      },
+      "phone": "93849200",
+      "role": "ADMIN",
+      "roleLabel": "Propriétaire & Administratrice"
+    },
+    {
+      "createdAt": "2026-09-21",
+      "id": 2,
+      "name": "Barnabé",
+      "password": "gerante2026",
+      "permissions": {
+        "cash": false,
+        "delivery": true,
+        "orders": true,
+        "products": true,
+        "profits": false,
+        "settings": false,
+        "trips": false
+      },
+      "phone": "79871558",
+      "role": "GERANTE",
+      "roleLabel": "Assistant personel"
+    }
+  ]
 }

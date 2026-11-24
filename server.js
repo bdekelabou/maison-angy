@@ -1440,7 +1440,7 @@ const server = http.createServer(async (req, res) => {
       }
     } else {
       const headers = { 'Content-Type': contentType };
-      if (ext === '.html' || pathname === '/admin' || pathname === '/admin.html' || pathname === '/' || pathname === '/index.html') {
+      if (ext === '.html' || pathname === '/admin' || pathname === '/admin.html' || pathname === '/' || pathname === '/index.html' || pathname === '/sw.js') {
         headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
         headers['Pragma'] = 'no-cache';
         headers['Expires'] = '0';

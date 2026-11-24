@@ -8,6 +8,19 @@
   <meta http-equiv="Expires" content="0">
   <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
   <title>Maison Angy - Espace de Gestion & Caisse</title>
+  <script>
+    // Kill old service workers & purge CacheStorage for admin
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (var i = 0; i < regs.length; i++) regs[i].unregister();
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (var i = 0; i < names.length; i++) caches.delete(names[i]);
+      });
+    }
+  </script>
   <link rel="stylesheet" href="/css/admin.css">
   <style>
     /* Login screen styling */
@@ -122,9 +135,14 @@
           <span>Livreurs & Tarifs</span>
         </button>
 
-        <button class="nav-item" onclick="switchView('PRODUCTS')" id="nav-PRODUCTS">
+        <button class="nav-item" onclick="window.productTabFilter='ACTIVE'; switchView('PRODUCTS')" id="nav-PRODUCTS">
           <span>👗</span>
           <span>Stock & Articles</span>
+        </button>
+
+        <button class="nav-item" onclick="switchView('LOSSES')" id="nav-LOSSES" style="color:#ef4444; font-weight:700;">
+          <span>💔</span>
+          <span>Pertes & Cadeaux Live</span>
         </button>
 
         <button class="nav-item" onclick="switchView('SHIPMENTS')" id="nav-SHIPMENTS">
@@ -195,6 +213,9 @@
             </button>
             <button class="btn-action-primary" onclick="openProductModal()">
               <span>👗 + Article</span>
+            </button>
+            <button class="btn-action-primary" style="background:#fff1f2; border:1.5px solid #f43f5e; color:#9f1239; font-weight:800;" onclick="openStockLossModal()" title="Déclarer une chaîne cassée ou un cadeau Live">
+              <span>💔 Perte/Cadeau</span>
             </button>
             <button class="btn-action-primary" style="background:#334155; color:#fff;" onclick="openTripModal('DEPLACEMENT')">
               <span>⛽ + Déplacement / Charge</span>
@@ -275,6 +296,8 @@
         : { products: true, orders: true, delivery: true, trips: false, cash: false, profits: false, settings: false, team: false });
 
       const navProducts = document.getElementById('nav-PRODUCTS');
+      const navLosses = document.getElementById('nav-LOSSES');
+      if (navLosses) navLosses.style.display = (perms.products !== false) ? 'flex' : 'none';
       const navOrders = document.getElementById('nav-ORDERS');
       const navDelivery = document.getElementById('nav-DELIVERY_PERSONS');
       const navTrips = document.getElementById('nav-TRIPS');
@@ -676,6 +699,12 @@
     }
 
     function switchView(viewName) {
+      if (viewName === 'LOSSES') {
+        window.productTabFilter = 'LOSSES';
+        viewName = 'PRODUCTS';
+      } else if (viewName === 'PRODUCTS' && window.productTabFilter !== 'ARCHIVED' && window.productTabFilter !== 'LOSSES') {
+        window.productTabFilter = 'ACTIVE';
+      }
       currentView = viewName;
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       const activeBtn = document.getElementById('nav-' + viewName);
@@ -748,6 +777,9 @@
             <button class="btn-action-primary" onclick="openProductModal()">
               <span>👗 + Nouvel Article</span>
             </button>
+            <button class="btn-action-primary" style="background:#dc2626; color:#fff; border:1px solid #b91c1c; font-weight:700;" onclick="openStockLossModal()">
+              <span>💔 + Perte ou Cadeau Live</span>
+            </button>
             <button class="btn-action-primary" style="background:#334155; color:#fff; border:1px solid #64748b;" onclick="openTripModal('DEPLACEMENT')">
               <span>⛽ + Déplacement / Salaire</span>
             </button>
@@ -798,6 +830,15 @@
               <h4>Articles en Stock</h4>
               <div class="kpi-value">${products.length} réf. (${products.reduce((acc, p) => acc + (p.stock || 0), 0)} pcs)</div>
               <div class="kpi-sub">${(s.lowStockCount || 0) > 0 ? `⚠️ ${s.lowStockCount} article(s) en stock bas` : 'Stock prêt pour les Lives'}</div>
+            </div>
+          </div>
+
+          <div class="kpi-card red" style="cursor:pointer;" onclick="switchView('LOSSES')">
+            <div class="kpi-icon red">💔</div>
+            <div class="kpi-info">
+              <h4>Pertes & Cadeaux Live</h4>
+              <div class="kpi-value" style="color:#b91c1c;">${(appData.stockLosses || []).length} enregistrement(s)</div>
+              <div class="kpi-sub">Chaînes coupées, cadeaux TikTok, testeurs</div>
             </div>
           </div>
         </div>
