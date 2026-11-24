@@ -1652,93 +1652,98 @@
 
       document.getElementById('modalContainer').innerHTML = `
         <div class="admin-modal-overlay active">
-          <div class="admin-modal-card" style="max-width:580px;">
-            <div class="modal-head" style="background:#0f172a; color:#fff;">
+          <div class="admin-modal-card" style="max-width:580px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; border-radius:12px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+            <!-- HEADER FIXE -->
+            <div class="modal-head" style="flex-shrink:0; background:#0f172a; color:#fff; padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <h3 style="color:#fef08a; margin:0;" id="lossModalTitle">💔 Déclarer une Perte ou un Cadeau Live</h3>
+                <h3 style="color:#fef08a; margin:0; font-size:1.15rem;" id="lossModalTitle">💔 Déclarer une Perte ou un Cadeau Live</h3>
                 <span style="font-size:0.75rem; color:#94a3b8;">Sortie de stock immédiate & déduction automatique du bénéfice</span>
               </div>
-              <button class="close-btn" onclick="closeModal()" style="color:#fff;">&times;</button>
+              <button onclick="closeModal()" style="background:rgba(255,255,255,0.15); color:#fff; border:none; width:32px; height:32px; border-radius:50%; font-size:1.25rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;" title="Fermer">&times;</button>
             </div>
 
-            <form onsubmit="handleSaveStockLoss(event)" style="padding:1.25rem;">
-              <!-- TYPE SELECTOR: PERTE vs CADEAU -->
-              <div style="margin-bottom:1.1rem;">
-                <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.4rem; color:#0f172a;">
-                  Que voulez-vous enregistrer ? *
-                </label>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
-                  <label id="lblTypePerte" style="display:flex; align-items:center; gap:8px; padding:0.7rem 0.9rem; border-radius:8px; border:2px solid ${defaultType === 'PERTE' ? '#dc2626' : '#cbd5e1'}; background:${defaultType === 'PERTE' ? '#fef2f2' : '#fff'}; cursor:pointer; font-weight:700; color:${defaultType === 'PERTE' ? '#991b1b' : '#475569'};">
-                    <input type="radio" name="loss_type" value="PERTE" ${defaultType === 'PERTE' ? 'checked' : ''} onchange="onLossTypeChange(this.value)" style="cursor:pointer;" />
-                    <span>💔 Perte / Casse / Avarie</span>
+            <!-- FORMULAIRE FLEX SCROLLABLE -->
+            <form onsubmit="handleSaveStockLoss(event)" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+              <div class="modal-body" style="overflow-y:auto; flex:1 1 auto; min-height:0; padding:1.25rem;">
+                <!-- TYPE SELECTOR: PERTE vs CADEAU -->
+                <div style="margin-bottom:1.1rem;">
+                  <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.4rem; color:#0f172a;">
+                    Que voulez-vous enregistrer ? *
                   </label>
-                  <label id="lblTypeOffert" style="display:flex; align-items:center; gap:8px; padding:0.7rem 0.9rem; border-radius:8px; border:2px solid ${defaultType === 'OFFERT' ? '#059669' : '#cbd5e1'}; background:${defaultType === 'OFFERT' ? '#ecfdf5' : '#fff'}; cursor:pointer; font-weight:700; color:${defaultType === 'OFFERT' ? '#065f46' : '#475569'};">
-                    <input type="radio" name="loss_type" value="OFFERT" ${defaultType === 'OFFERT' ? 'checked' : ''} onchange="onLossTypeChange(this.value)" style="cursor:pointer;" />
-                    <span>🎁 Cadeau Live / Échantillon</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- ARTICLE CHOISI -->
-              <div style="margin-bottom:1rem;">
-                <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
-                  Article concerné *
-                </label>
-                <select id="loss_productId" required onchange="onLossProductChange(this.value)" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:700; font-size:0.9rem; background:#fff;">
-                  ${products.map(p => `
-                    <option value="${p.id}" ${p.id === selectedProdId ? 'selected' : ''}>
-                      ${p.name} — Stock: ${p.stock} pcs — Coût achat: ${(p.costPrice || 0).toLocaleString('fr-FR')} ${curr}
-                    </option>
-                  `).join('')}
-                </select>
-              </div>
-
-              <!-- QUANTITE ET DATE -->
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:1rem;">
-                <div>
-                  <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
-                    Quantité sortie du stock *
-                  </label>
-                  <input type="number" id="loss_quantity" min="1" max="${initialProd ? Math.max(1, initialProd.stock) : 999}" value="1" required oninput="updateLossCalculation()" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:800; font-size:1rem;" />
-                  <div id="lossStockWarning" style="font-size:0.75rem; color:#64748b; margin-top:3px;">
-                    Stock dispo actuel : <strong>${initialProd ? initialProd.stock : 0} pcs</strong>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+                    <label id="lblTypePerte" style="display:flex; align-items:center; gap:8px; padding:0.7rem 0.9rem; border-radius:8px; border:2px solid ${defaultType === 'PERTE' ? '#dc2626' : '#cbd5e1'}; background:${defaultType === 'PERTE' ? '#fef2f2' : '#fff'}; cursor:pointer; font-weight:700; color:${defaultType === 'PERTE' ? '#991b1b' : '#475569'};">
+                      <input type="radio" name="loss_type" value="PERTE" ${defaultType === 'PERTE' ? 'checked' : ''} onchange="onLossTypeChange(this.value)" style="cursor:pointer;" />
+                      <span>💔 Perte / Casse / Avarie</span>
+                    </label>
+                    <label id="lblTypeOffert" style="display:flex; align-items:center; gap:8px; padding:0.7rem 0.9rem; border-radius:8px; border:2px solid ${defaultType === 'OFFERT' ? '#059669' : '#cbd5e1'}; background:${defaultType === 'OFFERT' ? '#ecfdf5' : '#fff'}; cursor:pointer; font-weight:700; color:${defaultType === 'OFFERT' ? '#065f46' : '#475569'};">
+                      <input type="radio" name="loss_type" value="OFFERT" ${defaultType === 'OFFERT' ? 'checked' : ''} onchange="onLossTypeChange(this.value)" style="cursor:pointer;" />
+                      <span>🎁 Cadeau Live / Échantillon</span>
+                    </label>
                   </div>
                 </div>
 
-                <div>
+                <!-- ARTICLE CHOISI -->
+                <div style="margin-bottom:1rem;">
                   <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
-                    Date de l'événement *
+                    Article concerné *
                   </label>
-                  <input type="date" id="loss_date" required value="${today}" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:600;" />
+                  <select id="loss_productId" required onchange="onLossProductChange(this.value)" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:700; font-size:0.9rem; background:#fff;">
+                    ${products.map(p => `
+                      <option value="${p.id}" ${p.id === selectedProdId ? 'selected' : ''}>
+                        ${p.name} — Stock: ${p.stock} pcs — Coût achat: ${(p.costPrice || 0).toLocaleString('fr-FR')} ${curr}
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+
+                <!-- QUANTITE ET DATE -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:1rem;">
+                  <div>
+                    <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
+                      Quantité sortie du stock *
+                    </label>
+                    <input type="number" id="loss_quantity" min="1" max="${initialProd ? Math.max(1, initialProd.stock) : 999}" value="1" required oninput="updateLossCalculation()" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:800; font-size:1rem;" />
+                    <div id="lossStockWarning" style="font-size:0.75rem; color:#64748b; margin-top:3px;">
+                      Stock dispo actuel : <strong>${initialProd ? initialProd.stock : 0} pcs</strong>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
+                      Date de l'événement *
+                    </label>
+                    <input type="date" id="loss_date" required value="${today}" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:600;" />
+                  </div>
+                </div>
+
+                <!-- MOTIF PRESET + COMMENTAIRE -->
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;" id="lossReasonLabel">
+                    Motif précis de la perte / casse *
+                  </label>
+                  <select id="loss_preset_reason" onchange="onLossPresetReasonChange(this.value)" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:600; margin-bottom:0.5rem; background:#fff;">
+                  </select>
+                  <input type="text" id="loss_reason_detail" placeholder="Détails supplémentaires (ex: Chaîne coupée en ouvrant le sachet, cliente gagnante...)" style="width:100%; padding:0.55rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;" />
+                </div>
+
+                <!-- ENREGISTRE PAR -->
+                <div style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.35rem; color:#475569;">
+                    Enregistré par
+                  </label>
+                  <input type="text" id="loss_registeredBy" value="Ange Ines" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;" />
+                </div>
+
+                <!-- BOX IMPACT TEMPS REEL -->
+                <div id="lossImpactBox" style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:8px; padding:0.85rem; margin-bottom:0.5rem;">
                 </div>
               </div>
 
-              <!-- MOTIF PRESET + COMMENTAIRE -->
-              <div style="margin-bottom:1rem;">
-                <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;" id="lossReasonLabel">
-                  Motif précis de la perte / casse *
-                </label>
-                <select id="loss_preset_reason" onchange="onLossPresetReasonChange(this.value)" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:600; margin-bottom:0.5rem; background:#fff;">
-                </select>
-                <input type="text" id="loss_reason_detail" placeholder="Détails supplémentaires (ex: Chaîne coupée en ouvrant le sachet, cliente gagnante...)" style="width:100%; padding:0.55rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;" />
-              </div>
-
-              <!-- ENREGISTRE PAR -->
-              <div style="margin-bottom:1rem;">
-                <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.35rem; color:#475569;">
-                  Enregistré par
-                </label>
-                <input type="text" id="loss_registeredBy" value="Ange Ines" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;" />
-              </div>
-
-              <!-- BOX IMPACT TEMPS REEL -->
-              <div id="lossImpactBox" style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:8px; padding:0.85rem; margin-bottom:1.25rem;">
-              </div>
-
-              <div class="modal-foot" style="padding:0; display:flex; justify-content:space-between; align-items:center;">
-                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
-                <button type="submit" id="btnSubmitLoss" class="btn-primary-modal" style="background:#dc2626; font-weight:800;">
-                  💔 Enregistrer la Perte & Déduire du Stock
+              <!-- PIED DU MODAL FIXE TOUJOURS VISIBLE -->
+              <div class="modal-foot" style="flex-shrink:0; position:sticky; bottom:0; z-index:10; background:#f8fafc; border-top:1px solid #cbd5e1; padding:0.85rem 1.25rem; display:flex; justify-content:space-between; align-items:center; box-shadow:0 -4px 12px rgba(0,0,0,0.05);">
+                <button type="button" class="btn-secondary" onclick="closeModal()" style="padding:0.6rem 1.2rem; font-weight:700;">Annuler</button>
+                <button type="submit" id="btnSubmitLoss" class="btn-primary-modal" style="background:#dc2626; font-weight:800; padding:0.65rem 1.25rem; font-size:0.9rem;">
+                  💔 Enregistrer la Sortie de Stock
                 </button>
               </div>
             </form>
