@@ -375,10 +375,13 @@
       const p = (appData.products || []).find(prod => prod.id === id);
       if (!p) return;
       const willArchive = !p.isArchived;
-      const confirmMsg = willArchive 
-        ? `Voulez-vous archiver "${p.name}" ? Il sera masqué du catalogue actif et de la boutique, mais conservé dans l'onglet "📁 Articles Archivés".`
-        : `Voulez-vous désarchiver "${p.name}" et le remettre en vente active ?`;
-      if (!confirm(confirmMsg)) return;
+
+      // Optimistic instant feedback
+      p.isArchived = willArchive;
+      p.published = !willArchive;
+      window.productTabFilter = willArchive ? 'ARCHIVED' : 'ACTIVE';
+      showToast(willArchive ? `📁 "${p.name}" a été déplacé dans les Articles Archivés !` : `↩️ "${p.name}" est remis en vente active !`);
+      renderView();
 
       try {
         const res = await fetch('/api/products/' + id, {
@@ -387,11 +390,14 @@
           body: JSON.stringify({ isArchived: willArchive, published: !willArchive })
         });
         const json = await res.json();
-        showToast(willArchive ? '📁 Article archivé avec succès !' : '↩️ Article restauré dans le stock actif !');
+        if (!json || !json.success) {
+          console.warn('Archive sync issue, reloading data...');
+        }
         await loadData();
         renderView();
       } catch (err) {
-        alert('Erreur: ' + err.message);
+        console.error('Erreur archivage:', err);
+        showToast('⚠️ Erreur de synchronisation: ' + err.message);
       }
     }
 
@@ -1319,7 +1325,8 @@
       const categories = ['ALL', ...Array.from(new Set(allProducts.map(p => p.category).filter(Boolean)))];
       const q = (window.productSearchQuery || '').trim().toLowerCase();
       const products = baseList.filter(p => {
-        if (window.hideZeroStock && p.stock <= 0) return false;
+        // Never hide zero stock in the ARCHIVED tab (as archived items are almost always 0 stock!)
+        if (window.productTabFilter !== 'ARCHIVED' && window.hideZeroStock && p.stock <= 0) return false;
         if (window.productCatFilter && window.productCatFilter !== 'ALL' && p.category !== window.productCatFilter) return false;
         if (!q) return true;
         return (p.name || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
@@ -3214,7 +3221,11 @@
       e.preventDefault();
 
       // Validate images (2 to 5 images)
-      const cleanImages = window.productModalImages.map(img => (img || '').trim()).filter(Boolean);
+      let cleanImages = (window.productModalImages || []).map(img => (img || '').trim()).filter(Boolean);
+      const existingProd = id ? (appData.products || []).find(pr => pr.id === id) : null;
+      if (cleanImages.length < 2 && existingProd && Array.isArray(existingProd.images) && existingProd.images.length >= 2) {
+        cleanImages = [...existingProd.images];
+      }
       if (cleanImages.length < 2) {
         alert('Veuillez renseigner au moins 2 photos pour cet article (2 à 5 photos requises).');
         return;
