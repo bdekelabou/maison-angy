@@ -225,6 +225,7 @@
       deliveryPersons: [],
       trips: [],
       cashTransactions: [],
+      stockLosses: [],
       stats: {}
     };
     let currentView = 'DASHBOARD';
@@ -777,7 +778,7 @@
               <div class="kpi-info">
                 <h4>Bénéfice Net Réel</h4>
                 <div class="kpi-value" style="color:${netReal >= 0 ? '#059669' : '#dc2626'};">${netReal.toLocaleString('fr-FR')} ${curr}</div>
-                <div class="kpi-sub">Gain brut (${grossMargin.toLocaleString('fr-FR')} F) - Frais (${tripsAndCharges.toLocaleString('fr-FR')} F)</div>
+                <div class="kpi-sub">Gain brut (${grossMargin.toLocaleString('fr-FR')} F) - Frais & Pertes (${((s.totalTripsCost || 0) + (s.totalSalariesCost || 0) + (s.totalOtherCharges || 0) + (s.totalLossesCost || 0) + (s.totalGiftsCost || 0)).toLocaleString('fr-FR')} F)</div>
               </div>
             </div>
           ` : ''}
@@ -1249,6 +1250,29 @@
       const activeProducts = allProducts.filter(p => !p.isArchived);
       const archivedProducts = allProducts.filter(p => p.isArchived === true);
 
+      if (window.productTabFilter === 'LOSSES') {
+        return `
+          <div class="panel">
+            <!-- SOUS-ONGLETS DE GESTION DU STOCK AVEC ARCHIVAGE ET PERTES/CADEAUX -->
+            <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc; flex-wrap:wrap;">
+              <button onclick="window.productTabFilter='ACTIVE'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter !== 'ARCHIVED' && window.productTabFilter !== 'LOSSES' ? '#fff' : 'transparent'}; color:${window.productTabFilter !== 'ARCHIVED' && window.productTabFilter !== 'LOSSES' ? '#0f172a' : '#64748b'}; border:${window.productTabFilter !== 'ARCHIVED' && window.productTabFilter !== 'LOSSES' ? '1px solid #cbd5e1; border-bottom:3px solid #c59b27;' : 'none'};">
+                👗 Articles en Vente (${activeProducts.length})
+              </button>
+              <button onclick="window.productTabFilter='ARCHIVED'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter === 'ARCHIVED' ? '#fff' : 'transparent'}; color:${window.productTabFilter === 'ARCHIVED' ? '#92400e' : '#64748b'}; border:${window.productTabFilter === 'ARCHIVED' ? '1px solid #cbd5e1; border-bottom:3px solid #f59e0b;' : 'none'};">
+                📁 Articles Archivés / Finis (${archivedProducts.length})
+              </button>
+              <button onclick="window.productTabFilter='LOSSES'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter === 'LOSSES' ? '#fff' : 'transparent'}; color:${window.productTabFilter === 'LOSSES' ? '#991b1b' : '#64748b'}; border:${window.productTabFilter === 'LOSSES' ? '1px solid #cbd5e1; border-bottom:3px solid #ef4444;' : 'none'};">
+                💔 Pertes & Cadeaux Live (${(appData.stockLosses || []).length})
+              </button>
+              <button onclick="switchView('SHIPMENTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                📦 Historique des Arrivages (${(appData.shipments || []).length})
+              </button>
+            </div>
+            ${renderStockLossesContent()}
+          </div>
+        `;
+      }
+
       const baseList = window.productTabFilter === 'ARCHIVED' ? archivedProducts : activeProducts;
 
       const categories = ['ALL', ...Array.from(new Set(allProducts.map(p => p.category).filter(Boolean)))];
@@ -1262,13 +1286,16 @@
 
       return `
         <div class="panel">
-          <!-- SOUS-ONGLETS DE GESTION DU STOCK AVEC ARCHIVAGE -->
+          <!-- SOUS-ONGLETS DE GESTION DU STOCK AVEC ARCHIVAGE ET PERTES/CADEAUX -->
           <div style="display:flex; gap:0.5rem; padding:0.75rem 1.25rem 0; border-bottom:1px solid #cbd5e1; background:#f8fafc; flex-wrap:wrap;">
-            <button onclick="window.productTabFilter='ACTIVE'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter !== 'ARCHIVED' ? '#fff' : 'transparent'}; color:${window.productTabFilter !== 'ARCHIVED' ? '#0f172a' : '#64748b'}; border:${window.productTabFilter !== 'ARCHIVED' ? '1px solid #cbd5e1; border-bottom:3px solid #c59b27;' : 'none'};">
+            <button onclick="window.productTabFilter='ACTIVE'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter !== 'ARCHIVED' && window.productTabFilter !== 'LOSSES' ? '#fff' : 'transparent'}; color:${window.productTabFilter !== 'ARCHIVED' && window.productTabFilter !== 'LOSSES' ? '#0f172a' : '#64748b'}; border:${window.productTabFilter !== 'ARCHIVED' && window.productTabFilter !== 'LOSSES' ? '1px solid #cbd5e1; border-bottom:3px solid #c59b27;' : 'none'};">
               👗 Articles en Vente (${activeProducts.length})
             </button>
             <button onclick="window.productTabFilter='ARCHIVED'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter === 'ARCHIVED' ? '#fff' : 'transparent'}; color:${window.productTabFilter === 'ARCHIVED' ? '#92400e' : '#64748b'}; border:${window.productTabFilter === 'ARCHIVED' ? '1px solid #cbd5e1; border-bottom:3px solid #f59e0b;' : 'none'};">
               📁 Articles Archivés / Finis (${archivedProducts.length})
+            </button>
+            <button onclick="window.productTabFilter='LOSSES'; renderView();" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:700; font-size:0.88rem; cursor:pointer; background:${window.productTabFilter === 'LOSSES' ? '#fff' : 'transparent'}; color:${window.productTabFilter === 'LOSSES' ? '#991b1b' : '#64748b'}; border:${window.productTabFilter === 'LOSSES' ? '1px solid #cbd5e1; border-bottom:3px solid #ef4444;' : 'none'};">
+              💔 Pertes & Cadeaux Live (${(appData.stockLosses || []).length})
             </button>
             <button onclick="switchView('SHIPMENTS')" style="border-radius:6px 6px 0 0; padding:0.65rem 1.2rem; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:#64748b; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
               📦 Historique des Arrivages (${(appData.shipments || []).length})
@@ -1289,6 +1316,9 @@
                 <input type="checkbox" ${window.hideZeroStock ? 'checked' : ''} onchange="window.hideZeroStock=this.checked; renderView();" style="cursor:pointer;" />
                 🚫 Masquer stock 0
               </label>
+              <button class="btn-action-primary" style="background:#fff1f2; border:1.5px solid #f43f5e; color:#9f1239;" onclick="openStockLossModal()" title="Déclarer une perte (chaîne cassée, flacon abîmé...) ou un cadeau offert pendant les Lives">
+                <span>💔 / 🎁 Perte ou Cadeau Live</span>
+              </button>
               <button class="btn-action-primary" style="background:#0f172a; border:1.5px solid #c59b27; color:#fef3c7;" onclick="window.editingShipmentId=null; openNewShipmentModal()">
                 <span>📦 + Nouvel Arrivage</span>
               </button>
@@ -1373,6 +1403,9 @@
                             <button class="btn-sm-action" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; font-weight:700; white-space:nowrap;" onclick="openNewShipmentModal(${p.id})" title="Ajouter du stock (Nouvel arrivage)">
                               📦 +Stock
                             </button>
+                            <button class="btn-sm-action" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-weight:700; padding:4px 8px; font-size:0.75rem; white-space:nowrap;" onclick="openStockLossModal(${p.id})" title="Déclarer une perte (chaîne cassée, flacon brisé...) ou un cadeau Live">
+                              💔 Perte/Cadeau
+                            </button>
                             <button class="btn-sm-action" style="background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; font-weight:700; padding:4px 8px; font-size:0.75rem; white-space:nowrap;" onclick="toggleProductArchived(${p.id})" title="Mettre cet article en archive">
                               📁 Archiver
                             </button>
@@ -1396,6 +1429,481 @@
         </div>
       `;
     }
+
+    // --- GESTION DES PERTES, CASSE & CADEAUX / ECHANTILLONS LIVE ---
+    function renderStockLossesContent() {
+      const curr = appData.settings.currency || 'FCFA';
+      const losses = appData.stockLosses || [];
+
+      const totalLossesCount = losses.filter(l => l.type === 'PERTE' || l.type === 'AVARIE').reduce((sum, l) => sum + (l.quantity || 1), 0);
+      const totalLossesCost = losses.filter(l => l.type === 'PERTE' || l.type === 'AVARIE').reduce((sum, l) => sum + (l.totalCost || 0), 0);
+
+      const totalGiftsCount = losses.filter(l => l.type === 'OFFERT' || l.type === 'CADEAU' || l.type === 'ECHANTILLON').reduce((sum, l) => sum + (l.quantity || 1), 0);
+      const totalGiftsCost = losses.filter(l => l.type === 'OFFERT' || l.type === 'CADEAU' || l.type === 'ECHANTILLON').reduce((sum, l) => sum + (l.totalCost || 0), 0);
+
+      const totalDeductedFromNet = totalLossesCost + totalGiftsCost;
+      const totalPieces = totalLossesCount + totalGiftsCount;
+
+      window.lossesTypeFilter = window.lossesTypeFilter || 'ALL';
+      const q = (window.lossesSearchQuery || '').trim().toLowerCase();
+
+      const filtered = losses.filter(l => {
+        if (window.lossesTypeFilter === 'PERTE' && (l.type !== 'PERTE' && l.type !== 'AVARIE')) return false;
+        if (window.lossesTypeFilter === 'OFFERT' && (l.type !== 'OFFERT' && l.type !== 'CADEAU' && l.type !== 'ECHANTILLON')) return false;
+        if (!q) return true;
+        return (l.productName || '').toLowerCase().includes(q) || (l.reason || '').toLowerCase().includes(q) || (l.registeredBy || '').toLowerCase().includes(q);
+      });
+
+      return `
+        <div class="panel-header" style="flex-wrap:wrap; gap:0.85rem; padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0;">
+          <div>
+            <div class="panel-title" style="display:flex; align-items:center; gap:0.5rem; color:#991b1b;">
+              💔 Pertes & 🎁 Cadeaux / Échantillons Live (${losses.length} déclarations)
+            </div>
+            <p style="color:#64748b; font-size:0.82rem; margin-top:2px;">
+              Suivi des chaînes coupées, articles abîmés, et cadeaux / échantillons offerts aux clientes pendant vos Lives TikTok.
+            </p>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+            <button class="btn-action-primary" style="background:#dc2626; border:1px solid #b91c1c; color:#fff;" onclick="openStockLossModal(null, 'PERTE')">
+              💔 + Déclarer une Perte / Casse
+            </button>
+            <button class="btn-action-primary" style="background:#059669; border:1px solid #047857; color:#fff;" onclick="openStockLossModal(null, 'OFFERT')">
+              🎁 + Offrir Cadeau / Échantillon Live
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 KPI CARDS -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; padding:1.25rem 1.5rem 0.5rem;">
+          <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:1rem; display:flex; gap:0.85rem; align-items:center;">
+            <div style="font-size:2rem; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:#fee2e2; border-radius:8px;">💔</div>
+            <div>
+              <div style="font-size:0.75rem; font-weight:700; color:#991b1b; text-transform:uppercase;">Pertes & Casse (Chaîne coupée...)</div>
+              <div style="font-size:1.35rem; font-weight:800; color:#b91c1c; margin-top:2px;">${totalLossesCost.toLocaleString('fr-FR')} ${curr}</div>
+              <div style="font-size:0.75rem; color:#7f1d1d; font-weight:600;">${totalLossesCount} pièce(s) cassée(s) ou abîmée(s)</div>
+            </div>
+          </div>
+
+          <div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:10px; padding:1rem; display:flex; gap:0.85rem; align-items:center;">
+            <div style="font-size:2rem; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:#d1fae5; border-radius:8px;">🎁</div>
+            <div>
+              <div style="font-size:0.75rem; font-weight:700; color:#065f46; text-transform:uppercase;">Offert / Cadeaux Live & Échantillons</div>
+              <div style="font-size:1.35rem; font-weight:800; color:#059669; margin-top:2px;">${totalGiftsCost.toLocaleString('fr-FR')} ${curr}</div>
+              <div style="font-size:0.75rem; color:#047857; font-weight:600;">${totalGiftsCount} pièce(s) offerte(s) aux clientes</div>
+            </div>
+          </div>
+
+          <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1rem; display:flex; gap:0.85rem; align-items:center;">
+            <div style="font-size:2rem; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:#e2e8f0; border-radius:8px;">📉</div>
+            <div>
+              <div style="font-size:0.75rem; font-weight:700; color:#334155; text-transform:uppercase;">Impact Comptable Total Déduit</div>
+              <div style="font-size:1.35rem; font-weight:800; color:#0f172a; margin-top:2px;">-${totalDeductedFromNet.toLocaleString('fr-FR')} ${curr}</div>
+              <div style="font-size:0.75rem; color:#475569; font-weight:600;">Déduit du Bénéfice Net Réel (${totalPieces} pcs au total)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECHERCHE ET FILTRES -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; padding:1rem 1.5rem; flex-wrap:wrap;">
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <input type="text" value="${(window.lossesSearchQuery || '').replace(/"/g, '&quot;')}" oninput="window.lossesSearchQuery=this.value; renderView();" placeholder="🔍 Chercher par article, motif..." style="padding:0.48rem 0.85rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.82rem; min-width:220px;" />
+            <select onchange="window.lossesTypeFilter=this.value; renderView();" style="padding:0.48rem 0.75rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.82rem; font-weight:600; background:#fff;">
+              <option value="ALL" ${window.lossesTypeFilter === 'ALL' ? 'selected' : ''}>📋 Tous les enregistrements (${losses.length})</option>
+              <option value="PERTE" ${window.lossesTypeFilter === 'PERTE' ? 'selected' : ''}>💔 Pertes / Casse uniquement</option>
+              <option value="OFFERT" ${window.lossesTypeFilter === 'OFFERT' ? 'selected' : ''}>🎁 Cadeaux / Échantillons Live uniquement</option>
+            </select>
+          </div>
+          <div style="font-size:0.8rem; color:#64748b;">
+            💡 <em>Chaque déclaration retire immédiatement l'article du stock et son coût d'achat du bénéfice net réel.</em>
+          </div>
+        </div>
+
+        <!-- TABLE HISTORIQUE -->
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Article Sorti</th>
+                <th>Quantité</th>
+                <th>Coût Achat Unit.</th>
+                <th>Perte Financière</th>
+                <th>Motif & Circonstance</th>
+                <th>Déclaré par</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.length === 0 ? `
+                <tr>
+                  <td colspan="9" style="text-align:center; padding:3.5rem 1rem;">
+                    <div style="font-size:2.5rem; margin-bottom:0.75rem;">✨</div>
+                    <h3>Aucune perte ni cadeau enregistré</h3>
+                    <p style="color:#64748b; margin-top:0.4rem; margin-bottom:1.25rem;">
+                      Tout votre stock est intact ! En cas de bijou cassé ou de cadeau offert pendant un Live TikTok, déclarez-le ici.
+                    </p>
+                    <div style="display:flex; justify-content:center; gap:0.75rem;">
+                      <button class="btn-action-primary" style="background:#dc2626;" onclick="openStockLossModal(null, 'PERTE')">💔 Déclarer une Perte</button>
+                      <button class="btn-action-primary" style="background:#059669;" onclick="openStockLossModal(null, 'OFFERT')">🎁 Offrir un Cadeau Live</button>
+                    </div>
+                  </td>
+                </tr>
+              ` : filtered.map(l => {
+                const isLoss = l.type === 'PERTE' || l.type === 'AVARIE';
+                return `
+                  <tr>
+                    <td style="white-space:nowrap; font-size:0.82rem; color:#475569;">
+                      <strong>${l.date || (l.createdAt ? l.createdAt.slice(0, 10) : '-')}</strong>
+                    </td>
+                    <td>
+                      <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:6px; background:${isLoss ? '#fee2e2' : '#dcfce7'}; color:${isLoss ? '#991b1b' : '#166534'}; border:1px solid ${isLoss ? '#fca5a5' : '#86efac'};">
+                        ${isLoss ? '💔 PERTE / CASSE' : '🎁 CADEAU / ÉCHANTILLON'}
+                      </span>
+                    </td>
+                    <td>
+                      <strong style="color:#0f172a; font-size:0.9rem;">${l.productName}</strong>
+                    </td>
+                    <td>
+                      <span style="font-weight:800; font-size:0.9rem; color:#b91c1c; background:#fef2f2; padding:2px 8px; border-radius:6px; border:1px solid #fecaca;">
+                        -${l.quantity} pc${l.quantity > 1 ? 's' : ''}
+                      </span>
+                    </td>
+                    <td style="color:#475569; font-weight:600;">
+                      ${(l.costPrice || 0).toLocaleString('fr-FR')} ${curr}
+                    </td>
+                    <td>
+                      <strong style="color:${isLoss ? '#dc2626' : '#059669'}; font-size:0.92rem;">
+                        ${(l.totalCost || 0).toLocaleString('fr-FR')} ${curr}
+                      </strong>
+                    </td>
+                    <td>
+                      <div style="font-size:0.85rem; font-weight:600; color:#1e293b;">
+                        ${l.reason || '-'}
+                      </div>
+                    </td>
+                    <td style="font-size:0.8rem; color:#64748b;">
+                      ${l.registeredBy || 'Ange Ines'}
+                    </td>
+                    <td style="text-align:right;">
+                      <button class="btn-sm-action danger" onclick="deleteStockLoss(${l.id})" style="font-size:0.75rem; padding:4px 8px; background:#fff1f2; border:1px solid #fecdd3; color:#be123c;" title="Annuler cette déclaration et remettre les pièces en stock">
+                        🗑️ Annuler & Restaurer
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // Modal: Déclarer Perte ou Cadeau Live
+    function openStockLossModal(preselectProdId = null, defaultType = 'PERTE') {
+      const products = (appData.products || []).filter(p => !p.isArchived);
+      const curr = appData.settings.currency || 'FCFA';
+      const today = new Date().toISOString().slice(0, 10);
+
+      let selectedProdId = preselectProdId ? parseInt(preselectProdId) : (products[0] ? products[0].id : null);
+      let initialProd = products.find(p => p.id === selectedProdId) || products[0];
+
+      document.getElementById('modalContainer').innerHTML = `
+        <div class="admin-modal-overlay active">
+          <div class="admin-modal-card" style="max-width:580px;">
+            <div class="modal-head" style="background:#0f172a; color:#fff;">
+              <div>
+                <h3 style="color:#fef08a; margin:0;" id="lossModalTitle">💔 Déclarer une Perte ou un Cadeau Live</h3>
+                <span style="font-size:0.75rem; color:#94a3b8;">Sortie de stock immédiate & déduction automatique du bénéfice</span>
+              </div>
+              <button class="close-btn" onclick="closeModal()" style="color:#fff;">&times;</button>
+            </div>
+
+            <form onsubmit="handleSaveStockLoss(event)" style="padding:1.25rem;">
+              <!-- TYPE SELECTOR: PERTE vs CADEAU -->
+              <div style="margin-bottom:1.1rem;">
+                <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.4rem; color:#0f172a;">
+                  Que voulez-vous enregistrer ? *
+                </label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+                  <label id="lblTypePerte" style="display:flex; align-items:center; gap:8px; padding:0.7rem 0.9rem; border-radius:8px; border:2px solid ${defaultType === 'PERTE' ? '#dc2626' : '#cbd5e1'}; background:${defaultType === 'PERTE' ? '#fef2f2' : '#fff'}; cursor:pointer; font-weight:700; color:${defaultType === 'PERTE' ? '#991b1b' : '#475569'};">
+                    <input type="radio" name="loss_type" value="PERTE" ${defaultType === 'PERTE' ? 'checked' : ''} onchange="onLossTypeChange(this.value)" style="cursor:pointer;" />
+                    <span>💔 Perte / Casse / Avarie</span>
+                  </label>
+                  <label id="lblTypeOffert" style="display:flex; align-items:center; gap:8px; padding:0.7rem 0.9rem; border-radius:8px; border:2px solid ${defaultType === 'OFFERT' ? '#059669' : '#cbd5e1'}; background:${defaultType === 'OFFERT' ? '#ecfdf5' : '#fff'}; cursor:pointer; font-weight:700; color:${defaultType === 'OFFERT' ? '#065f46' : '#475569'};">
+                    <input type="radio" name="loss_type" value="OFFERT" ${defaultType === 'OFFERT' ? 'checked' : ''} onchange="onLossTypeChange(this.value)" style="cursor:pointer;" />
+                    <span>🎁 Cadeau Live / Échantillon</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- ARTICLE CHOISI -->
+              <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
+                  Article concerné *
+                </label>
+                <select id="loss_productId" required onchange="onLossProductChange(this.value)" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:700; font-size:0.9rem; background:#fff;">
+                  ${products.map(p => `
+                    <option value="${p.id}" ${p.id === selectedProdId ? 'selected' : ''}>
+                      ${p.name} — Stock: ${p.stock} pcs — Coût achat: ${(p.costPrice || 0).toLocaleString('fr-FR')} ${curr}
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <!-- QUANTITE ET DATE -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:1rem;">
+                <div>
+                  <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
+                    Quantité sortie du stock *
+                  </label>
+                  <input type="number" id="loss_quantity" min="1" max="${initialProd ? Math.max(1, initialProd.stock) : 999}" value="1" required oninput="updateLossCalculation()" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:800; font-size:1rem;" />
+                  <div id="lossStockWarning" style="font-size:0.75rem; color:#64748b; margin-top:3px;">
+                    Stock dispo actuel : <strong>${initialProd ? initialProd.stock : 0} pcs</strong>
+                  </div>
+                </div>
+
+                <div>
+                  <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;">
+                    Date de l'événement *
+                  </label>
+                  <input type="date" id="loss_date" required value="${today}" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:600;" />
+                </div>
+              </div>
+
+              <!-- MOTIF PRESET + COMMENTAIRE -->
+              <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:0.35rem; color:#0f172a;" id="lossReasonLabel">
+                  Motif précis de la perte / casse *
+                </label>
+                <select id="loss_preset_reason" onchange="onLossPresetReasonChange(this.value)" style="width:100%; padding:0.6rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:600; margin-bottom:0.5rem; background:#fff;">
+                </select>
+                <input type="text" id="loss_reason_detail" placeholder="Détails supplémentaires (ex: Chaîne coupée en ouvrant le sachet, cliente gagnante...)" style="width:100%; padding:0.55rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;" />
+              </div>
+
+              <!-- ENREGISTRE PAR -->
+              <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.35rem; color:#475569;">
+                  Enregistré par
+                </label>
+                <input type="text" id="loss_registeredBy" value="Ange Ines" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;" />
+              </div>
+
+              <!-- BOX IMPACT TEMPS REEL -->
+              <div id="lossImpactBox" style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:8px; padding:0.85rem; margin-bottom:1.25rem;">
+              </div>
+
+              <div class="modal-foot" style="padding:0; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button type="submit" id="btnSubmitLoss" class="btn-primary-modal" style="background:#dc2626; font-weight:800;">
+                  💔 Enregistrer la Perte & Déduire du Stock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+
+      onLossTypeChange(defaultType);
+    }
+
+    function onLossTypeChange(type) {
+      const isLoss = type === 'PERTE';
+      const lblPerte = document.getElementById('lblTypePerte');
+      const lblOffert = document.getElementById('lblTypeOffert');
+      const reasonLabel = document.getElementById('lossReasonLabel');
+      const presetSel = document.getElementById('loss_preset_reason');
+      const btnSubmit = document.getElementById('btnSubmitLoss');
+      const title = document.getElementById('lossModalTitle');
+
+      if (lblPerte && lblOffert) {
+        lblPerte.style.border = isLoss ? '2px solid #dc2626' : '1.5px solid #cbd5e1';
+        lblPerte.style.background = isLoss ? '#fef2f2' : '#fff';
+        lblPerte.style.color = isLoss ? '#991b1b' : '#475569';
+
+        lblOffert.style.border = !isLoss ? '2px solid #059669' : '1.5px solid #cbd5e1';
+        lblOffert.style.background = !isLoss ? '#ecfdf5' : '#fff';
+        lblOffert.style.color = !isLoss ? '#065f46' : '#475569';
+      }
+
+      if (title) {
+        title.textContent = isLoss ? '💔 Déclarer une Perte / Casse' : '🎁 Enregistrer un Cadeau / Échantillon Live';
+      }
+
+      if (reasonLabel) {
+        reasonLabel.textContent = isLoss ? 'Motif précis de la perte / casse *' : 'Type d\'offre ou de cadeau Live *';
+      }
+
+      if (presetSel) {
+        if (isLoss) {
+          presetSel.innerHTML = `
+            <option value="Chaîne coupée / Fermoir brisé">🔗 Chaîne coupée / Fermoir brisé</option>
+            <option value="Article cassé / fêlé / abîmé">💥 Article cassé / fêlé / abîmé</option>
+            <option value="Flacon brume ou parfum qui a coulé / cassé">🧴 Flacon brume ou parfum qui a coulé / cassé</option>
+            <option value="Bijou oxydé ou rayé">✨ Bijou oxydé ou rayé</option>
+            <option value="Article perdu ou manquant">🔍 Article perdu ou égaré</option>
+            <option value="Défaut d\'usine constaté">🏭 Défaut d\'usine constaté</option>
+            <option value="Autre perte / casse">❓ Autre motif de perte</option>
+          `;
+        } else {
+          presetSel.innerHTML = `
+            <option value="Cadeau gagnante Live TikTok">🎁 Cadeau gagnante concours Live TikTok</option>
+            <option value="Échantillon / Testeur pour le Live">🧪 Échantillon / Testeur pour présentation Live</option>
+            <option value="Cadeau fidélité cliente">⭐ Cadeau fidélité offert à une cliente</option>
+            <option value="Geste commercial / Remise en nature">🤝 Geste commercial / Remise en nature</option>
+            <option value="Autre cadeau offert">🎀 Autre cadeau offert</option>
+          `;
+        }
+      }
+
+      if (btnSubmit) {
+        btnSubmit.style.background = isLoss ? '#dc2626' : '#059669';
+        btnSubmit.textContent = isLoss ? '💔 Enregistrer la Perte & Déduire du Stock' : '🎁 Enregistrer le Cadeau & Déduire du Stock';
+      }
+
+      updateLossCalculation();
+    }
+
+    function onLossProductChange(prodId) {
+      const pId = parseInt(prodId);
+      const p = (appData.products || []).find(prod => prod.id === pId);
+      const qtyInput = document.getElementById('loss_quantity');
+      const warn = document.getElementById('lossStockWarning');
+      if (p) {
+        if (qtyInput) {
+          qtyInput.max = Math.max(1, p.stock || 0);
+          if (parseInt(qtyInput.value) > p.stock && p.stock > 0) {
+            qtyInput.value = p.stock;
+          }
+        }
+        if (warn) {
+          warn.innerHTML = `Stock dispo actuel : <strong>${p.stock} pcs</strong>`;
+        }
+      }
+      updateLossCalculation();
+    }
+
+    function onLossPresetReasonChange(val) {
+      updateLossCalculation();
+    }
+
+    function updateLossCalculation() {
+      const pId = parseInt(document.getElementById('loss_productId')?.value || 0);
+      const p = (appData.products || []).find(prod => prod.id === pId);
+      const qty = parseInt(document.getElementById('loss_quantity')?.value || 1);
+      const typeRadio = document.querySelector('input[name="loss_type"]:checked');
+      const isLoss = !typeRadio || typeRadio.value === 'PERTE';
+      const curr = appData.settings?.currency || 'FCFA';
+
+      const box = document.getElementById('lossImpactBox');
+      if (!box) return;
+
+      if (!p) {
+        box.innerHTML = `<span style="color:#64748b;">Sélectionnez un article pour voir l'impact.</span>`;
+        return;
+      }
+
+      const costPrice = p.costPrice || 0;
+      const totalCost = qty * costPrice;
+      const newStock = Math.max(0, (p.stock || 0) - qty);
+      const isZero = newStock === 0;
+
+      box.style.background = isLoss ? '#fef2f2' : '#ecfdf5';
+      box.style.border = isLoss ? '1.5px solid #fecaca' : '1.5px solid #a7f3d0';
+
+      box.innerHTML = `
+        <div style="font-size:0.84rem; font-weight:800; color:${isLoss ? '#991b1b' : '#065f46'}; margin-bottom:6px;">
+          📊 Récapitulatif de l'impact en direct :
+        </div>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.8rem; color:#334155; line-height:1.55;">
+          <li><strong>${qty} pièce(s)</strong> de <strong>${p.name}</strong> seront déduites immédiatement du stock.</li>
+          <li>Nouveau stock restant : <strong style="color:${isZero ? '#b91c1c' : '#15803d'};">${newStock} pcs</strong> ${isZero ? '⚠️ (Stock épuisé)' : ''}.</li>
+          <li>Coût d'achat : <strong>${costPrice.toLocaleString('fr-FR')} ${curr}</strong> par pièce.</li>
+          <li>Perte financière déduite du Bénéfice Net Réel : <strong style="color:${isLoss ? '#dc2626' : '#059669'}; font-size:0.95rem;">-${totalCost.toLocaleString('fr-FR')} ${curr}</strong>.</li>
+          <li style="color:#64748b; font-size:0.75rem;">💰 <em>La caisse physique reste inchangée (la marchandise a déjà été réglée à l'arrivage fournisseur).</em></li>
+        </ul>
+      `;
+    }
+
+    async function handleSaveStockLoss(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btnSubmitLoss');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Enregistrement...';
+      }
+
+      const typeRadio = document.querySelector('input[name="loss_type"]:checked');
+      const lossType = typeRadio ? typeRadio.value : 'PERTE';
+      const pId = parseInt(document.getElementById('loss_productId')?.value);
+      const qty = parseInt(document.getElementById('loss_quantity')?.value) || 1;
+      const dateVal = document.getElementById('loss_date')?.value || new Date().toISOString().slice(0, 10);
+      const presetReason = document.getElementById('loss_preset_reason')?.value || '';
+      const detail = (document.getElementById('loss_reason_detail')?.value || '').trim();
+      const regBy = (document.getElementById('loss_registeredBy')?.value || 'Ange Ines').trim();
+
+      const fullReason = presetReason + (detail ? ' — ' + detail : '');
+
+      try {
+        const res = await fetch('/api/losses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: lossType,
+            productId: pId,
+            quantity: qty,
+            date: dateVal,
+            reason: fullReason,
+            registeredBy: regBy
+          })
+        });
+
+        const json = await res.json();
+        if (json.success) {
+          showToast(lossType === 'PERTE' ? '✅ Perte enregistrée et stock déduit.' : '✅ Cadeau Live enregistré et stock déduit.');
+          closeModal();
+          await loadData();
+          window.productTabFilter = 'LOSSES';
+          renderView();
+        } else {
+          alert('Erreur: ' + (json.error || 'Impossible d\'enregistrer'));
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Enregistrer';
+          }
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Enregistrer';
+        }
+      }
+    }
+
+    async function deleteStockLoss(id) {
+      const loss = (appData.stockLosses || []).find(l => l.id === id);
+      const label = loss ? `"${loss.productName}" (-${loss.quantity} pcs)` : 'cette déclaration';
+      if (!confirm(`Annuler ${label} ? Les pièces seront automatiquement remises en stock et la perte annulée du bénéfice.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/losses/' + id, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast('✅ Déclaration annulée et stock restauré !');
+          await loadData();
+          renderView();
+        } else {
+          alert('Erreur: ' + (json.error || 'Impossible d\'annuler'));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    }
+
 
     // 5. TRIPS & EXPENSES VIEW (Déplacements Marchandises + Salaires + Charges)
     async function deleteTrip(id) {
@@ -1619,6 +2127,7 @@
       const monthSet = new Set(['2026-10', new Date().toISOString().slice(0, 7)]);
       deliveredOrders.forEach(o => monthSet.add(extractYearMonth(o.date || o.createdAt)));
       allTrips.forEach(t => monthSet.add(extractYearMonth(t.date || t.dateTime)));
+      (appData.stockLosses || []).forEach(l => monthSet.add(extractYearMonth(l.date || l.createdAt)));
       allCash.forEach(c => {
         if (c.category === 'SALAIRE' || c.category === 'CHARGE' || /salaire|paie|gérante|assistante/i.test(c.commentaires || '')) {
           monthSet.add(extractYearMonth(c.date || c.dateTime));
@@ -1631,6 +2140,7 @@
         const ords = ym === 'ALL' ? deliveredOrders : deliveredOrders.filter(o => extractYearMonth(o.date || o.createdAt) === ym);
         const trps = ym === 'ALL' ? allTrips : allTrips.filter(t => extractYearMonth(t.date || t.dateTime) === ym);
         const csh = ym === 'ALL' ? allCash : allCash.filter(c => extractYearMonth(c.date || c.dateTime) === ym);
+        const lss = ym === 'ALL' ? (appData.stockLosses || []) : (appData.stockLosses || []).filter(l => extractYearMonth(l.date || l.createdAt) === ym);
 
         const sales = ords.reduce((sum, o) => sum + (o.totalItems || 0), 0);
         const costOfGoods = ords.reduce((sum, o) => sum + ((o.totalItems || 0) - (o.marginNet || o.marginGross || 0)), 0);
@@ -1643,20 +2153,28 @@
         const cashSalaire = csh.filter(c => !c.tripId && (c.category === 'SALAIRE' || /salaire|paie|gérante|assistante/i.test(c.commentaires || ''))).reduce((sum, c) => sum + (c.retrait || 0), 0);
         const cashCharge = csh.filter(c => !c.tripId && c.category === 'CHARGE').reduce((sum, c) => sum + (c.retrait || 0), 0);
 
+        const totalLosses = lss.filter(l => l.type === 'PERTE' || l.type === 'AVARIE').reduce((sum, l) => sum + (parseFloat(l.totalCost) || 0), 0);
+        const totalGifts = lss.filter(l => l.type === 'OFFERT' || l.type === 'CADEAU' || l.type === 'ECHANTILLON').reduce((sum, l) => sum + (parseFloat(l.totalCost) || 0), 0);
+        const totalPertesEtCadeaux = totalLosses + totalGifts;
+
         const totalDeplacements = tripsDeplacement;
         const totalSalaires = tripsSalaire + cashSalaire;
         const totalCharges = tripsCharge + cashCharge;
-        const netReal = grossGain - totalDeplacements - totalSalaires - totalCharges;
+        const netReal = grossGain - totalDeplacements - totalSalaires - totalCharges - totalPertesEtCadeaux;
 
         return {
           orders: ords,
           trips: trps,
+          losses: lss,
           sales,
           costOfGoods,
           grossGain,
           totalDeplacements,
           totalSalaires,
           totalCharges,
+          totalLosses,
+          totalGifts,
+          totalPertesEtCadeaux,
           netReal
         };
       }
@@ -1671,7 +2189,7 @@
             <div>
               <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#c59b27; font-weight:700;">📊 Calcul Comptable Réel — Maison Angy</span>
               <h3 style="font-size:1.25rem; margin-top:0.2rem; color:#fff;">Bilan : ${formatMonthLabel(selMonth)}</h3>
-              <p style="font-size:0.82rem; color:#cbd5e1; margin-top:2px;">Formule appliquée : <strong>Gain Brut Ventes</strong> − <strong>Déplacements Marchandises</strong> − <strong>Salaires & Charges</strong> = <strong>Bénéfice Net Réel</strong></p>
+              <p style="font-size:0.82rem; color:#cbd5e1; margin-top:2px;">Formule appliquée : <strong>Gain Brut Ventes</strong> − <strong>Déplacements Marchandises</strong> − <strong>Salaires & Charges</strong> − <strong>Pertes & Cadeaux Live</strong> = <strong>Bénéfice Net Réel</strong></p>
             </div>
             <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
               <select onchange="changeProfitMonth(this.value)" style="padding:0.55rem 0.9rem; border-radius:8px; border:1.5px solid #c59b27; background:#0f172a; color:#fef3c7; font-weight:700; font-size:0.85rem; cursor:pointer;">
@@ -1717,6 +2235,15 @@
             </div>
           </div>
 
+          <div class="kpi-card red" style="border-left:4px solid #ef4444; background:#fff;">
+            <div class="kpi-icon red" style="background:#fee2e2; color:#b91c1c;">4️⃣</div>
+            <div class="kpi-info">
+              <h4 style="color:#991b1b;">− Pertes & Cadeaux Live</h4>
+              <div class="kpi-value" style="color:#dc2626;">-${cur.totalPertesEtCadeaux.toLocaleString('fr-FR')} ${curr}</div>
+              <div class="kpi-sub">Pertes (${cur.totalLosses.toLocaleString('fr-FR')} F) + Cadeaux (${cur.totalGifts.toLocaleString('fr-FR')} F)</div>
+            </div>
+          </div>
+
           <div class="kpi-card gold" style="border:2px solid ${cur.netReal >= 0 ? '#10b981' : '#ef4444'}; background:${cur.netReal >= 0 ? '#f0fdf4' : '#fef2f2'};">
             <div class="kpi-icon gold">✅</div>
             <div class="kpi-info">
@@ -1748,6 +2275,7 @@
                   <th>Gain Brut (Marge Ventes)</th>
                   <th>− Déplacements Marchandises</th>
                   <th>− Salaires & Charges</th>
+                  <th>− Pertes & Cadeaux</th>
                   <th>= Bénéfice Net Réel (Reste)</th>
                   <th style="text-align:right;">Détail</th>
                 </tr>
@@ -1763,6 +2291,7 @@
                       <td><strong style="color:#059669;">+${m.grossGain.toLocaleString('fr-FR')} ${curr}</strong></td>
                       <td><strong style="color:#ea580c;">-${m.totalDeplacements.toLocaleString('fr-FR')} ${curr}</strong></td>
                       <td><strong style="color:#7c3aed;">-${(m.totalSalaires + m.totalCharges).toLocaleString('fr-FR')} ${curr}</strong></td>
+                      <td><strong style="color:#dc2626;">-${m.totalPertesEtCadeaux.toLocaleString('fr-FR')} ${curr}</strong></td>
                       <td>
                         <span style="padding:0.3rem 0.7rem; border-radius:8px; font-weight:800; font-size:0.9rem; background:${m.netReal >= 0 ? '#dcfce7' : '#fee2e2'}; color:${m.netReal >= 0 ? '#15803d' : '#b91c1c'};">
                           ${m.netReal >= 0 ? '+' : ''}${m.netReal.toLocaleString('fr-FR')} ${curr}
@@ -1779,8 +2308,8 @@
           </div>
         </div>
 
-        <!-- DETAIL DES VENTES ET DES CHARGES DU MOIS SELECTIONNE -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap:1.25rem;">
+        <!-- DETAIL DES VENTES, CHARGES ET PERTES/CADEAUX DU MOIS SELECTIONNE -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:1.25rem;">
           <div class="panel">
             <div class="panel-header">
               <div class="panel-title">🛍️ Gains Bruts par Vente Livrée (${cur.orders.length})</div>
@@ -1849,6 +2378,41 @@
                     </tr>
                     `;
                   }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">💔 Pertes & Cadeaux Déduits (${cur.losses.length})</div>
+              <button class="btn-sm-action" onclick="openStockLossModal(null, 'PERTE')">+ Déclarer</button>
+            </div>
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Article</th>
+                    <th>Qté</th>
+                    <th>Coût Déduit</th>
+                    <th>Motif</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${cur.losses.length === 0 ? `
+                    <tr><td colspan="6" style="text-align:center; padding:2rem; color:#64748b;">Aucune perte ni cadeau sur cette période.</td></tr>
+                  ` : cur.losses.slice().reverse().map(l => `
+                    <tr>
+                      <td style="font-size:0.78rem; color:#64748b; white-space:nowrap;">${l.date || (l.createdAt ? l.createdAt.slice(0, 10) : '-')}</td>
+                      <td><span style="font-size:0.72rem; font-weight:700; padding:2px 6px; border-radius:4px; background:${l.type === 'PERTE' || l.type === 'AVARIE' ? '#fee2e2' : '#dcfce7'}; color:${l.type === 'PERTE' || l.type === 'AVARIE' ? '#991b1b' : '#166534'};">${l.type === 'PERTE' || l.type === 'AVARIE' ? '💔 PERTE' : '🎁 OFFERT'}</span></td>
+                      <td><strong>${l.productName}</strong></td>
+                      <td><span style="font-weight:700; color:#b91c1c;">-${l.quantity} pc${l.quantity > 1 ? 's' : ''}</span></td>
+                      <td><strong style="color:#b91c1c;">-${(l.totalCost || 0).toLocaleString('fr-FR')} F</strong></td>
+                      <td style="font-size:0.8rem; color:#475569;">${l.reason || '-'}</td>
+                    </tr>
+                  `).join('')}
                 </tbody>
               </table>
             </div>

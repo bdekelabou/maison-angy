@@ -22,9 +22,10 @@ function normalizeDbObject(data) {
     cashTransactions: data.cashTransactions || [],
     users: data.users || [],
     shipments: data.shipments || [],
-    suppliers: data.suppliers || []
+    suppliers: data.suppliers || [],
+    stockLosses: data.stockLosses || []
   };
-  ['products', 'orders', 'deliveryPersons', 'deliveryZones', 'trips', 'cashTransactions', 'users', 'shipments', 'suppliers'].forEach(k => {
+  ['products', 'orders', 'deliveryPersons', 'deliveryZones', 'trips', 'cashTransactions', 'users', 'shipments', 'suppliers', 'stockLosses'].forEach(k => {
     if (!Array.isArray(dbObj[k])) {
       if (typeof dbObj[k] === 'object' && dbObj[k] !== null) {
         dbObj[k] = Object.values(dbObj[k]).filter(Boolean);
@@ -173,8 +174,18 @@ function computeStats(db) {
   const totalSalariesCost = tripsSalaries + cashSalaries;
   const totalOtherCharges = tripsCharges + cashCharges;
 
-  // Bénéfice Net Réel = Gain Brut - Déplacements Marchandises - Salaires - Charges
-  const totalNetMargin = totalGrossMargin - totalTripsCost - totalSalariesCost - totalOtherCharges;
+  // Pertes (articles cassés/abîmés) et Cadeaux/Échantillons Live
+  const stockLosses = db.stockLosses || [];
+  const totalLossesCost = stockLosses
+    .filter(l => l.type === 'PERTE' || l.type === 'AVARIE')
+    .reduce((sum, l) => sum + (parseFloat(l.totalCost) || 0), 0);
+
+  const totalGiftsCost = stockLosses
+    .filter(l => l.type === 'OFFERT' || l.type === 'CADEAU' || l.type === 'ECHANTILLON')
+    .reduce((sum, l) => sum + (parseFloat(l.totalCost) || 0), 0);
+
+  // Bénéfice Net Réel = Gain Brut - Déplacements Marchandises - Salaires - Charges - Pertes - Cadeaux Live
+  const totalNetMargin = totalGrossMargin - totalTripsCost - totalSalariesCost - totalOtherCharges - totalLossesCost - totalGiftsCost;
 
   const totalDebts = validOrders
     .reduce((sum, o) => sum + (o.remainingAmount !== undefined ? o.remainingAmount : 0), 0);
@@ -192,6 +203,8 @@ function computeStats(db) {
     totalTripsCost,
     totalSalariesCost,
     totalOtherCharges,
+    totalLossesCost,
+    totalGiftsCost,
     totalNetMargin,
     totalDebts,
     debtOrdersCount,
@@ -451,6 +464,7 @@ const server = http.createServer(async (req, res) => {
         users: db.users || [],
         shipments: db.shipments || [],
         suppliers: db.suppliers || ['Grossiste Assigamé (Lomé)', 'Fournisseur Cotonou / Nigéria', 'Importateur Chine / Dubaï', 'Autre Fournisseur'],
+        stockLosses: db.stockLosses || [],
         deliveryZones: db.deliveryZones || [],
         stats: computeStats(db)
       }));
@@ -657,6 +671,76 @@ const server = http.createServer(async (req, res) => {
       } else {
         res.writeHead(404);
         res.end(JSON.stringify({ success: false, error: 'Not found' }));
+      }
+      return;
+    }
+
+
+    // --- STOCK LOSSES & GIFTS (PERTES & CADEAUX LIVES) ---
+    if (pathname === '/api/losses' && req.method === 'GET') {
+      res.writeHead(200);
+      res.end(JSON.stringify(db.stockLosses || []));
+      return;
+    }
+
+    if (pathname === '/api/losses' && req.method === 'POST') {
+      const data = await parseBody(req);
+      if (!db.stockLosses) db.stockLosses = [];
+      const pId = parseInt(data.productId);
+      const p = db.products.find(prod => prod.id === pId);
+      const qty = parseInt(data.quantity) || 1;
+      const cost = p ? (p.costPrice || 0) : (parseFloat(data.costPrice) || 0);
+      const totalCost = qty * cost;
+
+      if (p) {
+        p.stock = Math.max(0, (p.stock || 0) - qty);
+      }
+
+      const newLoss = {
+        id: db.stockLosses.length > 0 ? Math.max(...db.stockLosses.map(l => l.id || 0)) + 1 : 1,
+        date: data.date || new Date().toISOString().split('T')[0],
+        type: data.type === 'OFFERT' ? 'OFFERT' : 'PERTE',
+        category: data.category || (data.type === 'OFFERT' ? 'CADEAU_LIVE' : 'CASSE'),
+        productId: pId,
+        productName: p ? p.name : (data.productName || 'Article'),
+        quantity: qty,
+        costPrice: cost,
+        totalCost: totalCost,
+        reason: data.reason || (data.type === 'OFFERT' ? 'Offert sur Live TikTok / Cadeau' : 'Article cassé ou abîmé'),
+        registeredBy: data.registeredBy || 'Ange Ines',
+        createdAt: new Date().toISOString()
+      };
+
+      db.stockLosses.unshift(newLoss);
+      await saveDb(db);
+
+      res.writeHead(201);
+      res.end(JSON.stringify({
+        success: true,
+        loss: newLoss,
+        products: db.products,
+        stats: computeStats(db)
+      }));
+      return;
+    }
+
+    if (pathname.startsWith('/api/losses/') && req.method === 'DELETE') {
+      const id = parseInt(pathname.split('/').pop());
+      if (!db.stockLosses) db.stockLosses = [];
+      const idx = db.stockLosses.findIndex(l => l.id === id);
+      if (idx !== -1) {
+        const loss = db.stockLosses[idx];
+        const p = db.products.find(prod => prod.id === loss.productId);
+        if (p) {
+          p.stock = (p.stock || 0) + (loss.quantity || 1);
+        }
+        db.stockLosses.splice(idx, 1);
+        await saveDb(db);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, products: db.products, stats: computeStats(db) }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Loss record not found' }));
       }
       return;
     }
