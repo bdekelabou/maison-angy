@@ -528,10 +528,12 @@ const server = http.createServer(async (req, res) => {
         createdAt: new Date().toISOString()
       };
 
-      newShipment.paidFromCash = !!data.payFromCash;
+      // Par défaut on paie avec la caisse sauf si explicitement false
+      const payFromCash = (data.payFromCash !== false && data.payFromCash !== 'false');
+      newShipment.paidFromCash = payFromCash;
 
-      // Si l'utilisateur a choisi de payer cet arrivage avec la caisse
-      if (data.payFromCash && totalCost > 0) {
+      // Si payFromCash est activé
+      if (payFromCash && totalCost > 0) {
         if (!db.cashTransactions) db.cashTransactions = [];
         const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
         db.cashTransactions.push({
@@ -1353,7 +1355,14 @@ const server = http.createServer(async (req, res) => {
         res.end('Erreur serveur: ' + err.code);
       }
     } else {
-      res.writeHead(200, { 'Content-Type': contentType });
+      const headers = { 'Content-Type': contentType };
+      if (ext === '.html' || pathname === '/admin' || pathname === '/admin.html' || pathname === '/' || pathname === '/index.html') {
+        headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+        headers['Pragma'] = 'no-cache';
+        headers['Expires'] = '0';
+        headers['Surrogate-Control'] = 'no-store';
+      }
+      res.writeHead(200, headers);
       res.end(content);
     }
   });

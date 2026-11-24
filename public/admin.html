@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
   <title>Maison Angy - Espace de Gestion & Caisse</title>
   <link rel="stylesheet" href="/css/admin.css">
@@ -179,6 +182,9 @@
 
         <div class="topbar-right">
           <div id="topUserBadge" style="font-size:0.82rem; color:#475569; background:#f1f5f9; padding:0.38rem 0.75rem; border-radius:9999px; display:inline-flex; align-items:center; gap:0.35rem; white-space:nowrap; border:1px solid #e2e8f0;"></div>
+          <button onclick="forceRefreshApp()" style="display:inline-flex; align-items:center; gap:4px; background:#f8fafc; color:#0f172a; border:1.5px solid #cbd5e1; padding:0.38rem 0.65rem; border-radius:9999px; font-weight:700; font-size:0.78rem; cursor:pointer;" title="Recharger la page pour voir les dernières nouveautés">
+            🔄 Actualiser
+          </button>
           <div class="cash-pill" title="Trésorerie disponible en caisse">
             <span>🪙 Caisse : <strong id="topbarCash">81 500 FCFA</strong></span>
           </div>
@@ -658,6 +664,14 @@
       } else {
         badge.style.display = 'none';
       }
+    }
+
+    
+    function forceRefreshApp() {
+      showToast('🔄 Rechargement de la dernière version...');
+      setTimeout(() => {
+        window.location.href = '/admin?v=' + Date.now();
+      }, 300);
     }
 
     function switchView(viewName) {
@@ -1341,25 +1355,32 @@
                         <span style="padding:0.28rem 0.65rem; border-radius:9999px; font-weight:700; font-size:0.82rem; white-space:nowrap; background:${isLow ? '#fee2e2' : '#ecfdf5'}; color:${isLow ? '#b91c1c' : '#15803d'};">
                           ${p.stock} pcs ${isLow ? '⚠️' : ''}
                         </span>
+                        ${(!p.isArchived && p.stock <= 0) ? `
+                          <div style="margin-top:4px;">
+                            <button class="btn-sm-action" style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74; font-size:0.7rem; font-weight:800; padding:2px 6px;" onclick="toggleProductArchived(${p.id})" title="Archiver cet article car stock à 0">
+                              📁 Archiver ?
+                            </button>
+                          </div>
+                        ` : ''}
                       </td>
                       <td style="text-align:right;">
                         <div style="display:inline-flex; gap:0.3rem; align-items:center; flex-wrap:nowrap;">
                           ${p.isArchived ? `
-                            <button class="btn-sm-action" style="background:#fef3c7; color:#92400e; border:1px solid #fcd34d; font-weight:700; white-space:nowrap;" onclick="toggleProductArchived(${p.id})" title="Désarchiver (remettre dans le stock actif)">
-                              ↩️ Restaurer
+                            <button class="btn-sm-action" style="background:#ecfdf5; color:#065f46; border:1.5px solid #10b981; font-weight:800; padding:4px 10px; font-size:0.78rem; white-space:nowrap;" onclick="toggleProductArchived(${p.id})" title="Désarchiver (remettre dans le stock actif)">
+                              ↩️ Désarchiver & Remettre en Vente
                             </button>
                           ` : `
                             <button class="btn-sm-action" style="background:#0f172a; color:#fef3c7; border:1px solid #c59b27; font-weight:700; white-space:nowrap;" onclick="openNewShipmentModal(${p.id})" title="Ajouter du stock (Nouvel arrivage)">
                               📦 +Stock
+                            </button>
+                            <button class="btn-sm-action" style="background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; font-weight:700; padding:4px 8px; font-size:0.75rem; white-space:nowrap;" onclick="toggleProductArchived(${p.id})" title="Mettre cet article en archive">
+                              📁 Archiver
                             </button>
                             <button class="btn-sm-action" onclick="toggleProductFeatured(${p.id})" title="${p.isFeatured ? 'Retirer de la mise en avant' : 'Mettre en avant sur la boutique'}">
                               ${p.isFeatured ? '⭐' : '☆'}
                             </button>
                             <button class="btn-sm-action" onclick="toggleProductPublished(${p.id})" title="${p.published === false ? 'Publier sur la boutique' : 'Masquer de la boutique'}">
                               ${p.published === false ? '🙈' : '👁️'}
-                            </button>
-                            <button class="btn-sm-action" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;" onclick="toggleProductArchived(${p.id})" title="Archiver cet article fini pour ne plus encombrer le tableau">
-                              📁
                             </button>
                           `}
                           <button class="btn-sm-action" onclick="openProductModal(${p.id})" title="Modifier cet article">✏️</button>
@@ -3164,20 +3185,27 @@
                 </div>
 
                 <!-- OPTION PAIEMENT FOURNISSEUR DIRECT DEPUIS LA CAISSE -->
-                <div style="margin-top:0.85rem; padding:0.85rem 1.1rem; background:#fffbeb; border:1.5px solid #fcd34d; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                  <div style="display:flex; align-items:flex-start; gap:0.65rem; max-width:440px;">
-                    <input type="checkbox" id="ship_pay_cash" checked style="width:19px; height:19px; margin-top:2px; accent-color:#d97706; cursor:pointer;" onchange="updateShipmentCashPreview()" />
-                    <div>
-                      <label for="ship_pay_cash" style="font-weight:700; color:#92400e; font-size:0.88rem; cursor:pointer; display:block;">
-                        💳 Payer cet arrivage immédiatement avec la caisse
-                      </label>
-                      <div style="font-size:0.75rem; color:#b45309; margin-top:2px;">
-                        Déduit automatiquement le montant de l'achat de la caisse (Solde actuel : <strong>${(appData.settings.currentCash || 0).toLocaleString('fr-FR')} FCFA</strong>).
-                      </div>
-                    </div>
+                <div style="margin-top:1rem; padding:1.1rem; background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:2px solid #f59e0b; border-radius:10px;">
+                  <div style="font-weight:800; color:#78350f; font-size:0.95rem; margin-bottom:0.65rem; display:flex; align-items:center; gap:6px;">
+                    <span>🪙</span>
+                    <span>Paiement de la Marchandise au Fournisseur :</span>
                   </div>
-                  <div id="shipCashDeductPreview" style="font-weight:800; font-size:1.1rem; color:#b45309; text-align:right; white-space:nowrap;">
-                    -0 FCFA
+
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <label style="display:flex; align-items:center; gap:8px; background:#fff; padding:0.65rem 0.85rem; border-radius:8px; border:2px solid #10b981; cursor:pointer; font-weight:700; font-size:0.88rem; color:#065f46;">
+                      <input type="radio" name="ship_payment_source" id="ship_pay_cash_radio" value="CASH" checked style="width:18px; height:18px; accent-color:#10b981;" onchange="updateShipmentCashPreview()" />
+                      <span>✅ Payer avec la caisse boutique</span>
+                    </label>
+
+                    <label style="display:flex; align-items:center; gap:8px; background:#fff; padding:0.65rem 0.85rem; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer; font-weight:600; font-size:0.85rem; color:#475569;">
+                      <input type="radio" name="ship_payment_source" id="ship_pay_other_radio" value="OTHER" style="width:18px; height:18px;" onchange="updateShipmentCashPreview()" />
+                      <span>⚪ Payé hors caisse (Autre)</span>
+                    </label>
+                  </div>
+
+                  <div id="shipCashDeductNotice" style="margin-top:0.65rem; font-size:0.82rem; color:#92400e; font-weight:700; background:rgba(255,255,255,0.7); padding:6px 10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Montant qui sera retiré de la caisse (Solde: ${(appData.settings.currentCash || 0).toLocaleString('fr-FR')} FCFA) :</span>
+                    <strong id="shipCashDeductPreview" style="font-size:1.15rem; color:#b45309;">-0 FCFA</strong>
                   </div>
                 </div>
 
@@ -3208,9 +3236,10 @@
         totalCost += ((r.quantity || 0) * (r.costPrice || 0));
       });
       const deductPrev = document.getElementById('shipCashDeductPreview');
-      const payCashCb = document.getElementById('ship_pay_cash');
+      const paySource = document.querySelector('input[name="ship_payment_source"]:checked');
+      const isCash = paySource ? (paySource.value === 'CASH') : true;
       if (deductPrev) {
-        if (payCashCb && payCashCb.checked) {
+        if (isCash) {
           deductPrev.textContent = '-' + totalCost.toLocaleString('fr-FR') + ' ' + curr;
           deductPrev.style.color = '#b45309';
         } else {
@@ -3242,7 +3271,7 @@
               <select onchange="updateShipmentRowProduct(${idx}, this.value)" style="width:100%; padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.82rem; font-weight:600;">
                 ${products.map(p => `
                   <option value="${p.id}" ${p.id === row.productId ? 'selected' : ''}>
-                    ${p.name} (Stock actuel: ${p.stock} pcs)
+                    ${p.name} ${p.isArchived ? '📁 (Archivé - sera réactivé)' : `(Stock: ${p.stock} pcs)`}
                   </option>
                 `).join('')}
               </select>
@@ -3329,7 +3358,8 @@
 
     async function handleSaveShipment(e) {
       e.preventDefault();
-      const payFromCash = document.getElementById('ship_pay_cash') ? document.getElementById('ship_pay_cash').checked : false;
+      const paySource = document.querySelector('input[name="ship_payment_source"]:checked');
+      const payFromCash = paySource ? (paySource.value === 'CASH') : true;
       const payload = {
         number: document.getElementById('ship_number').value.trim(),
         supplier: document.getElementById('ship_supplier').value.trim(),
